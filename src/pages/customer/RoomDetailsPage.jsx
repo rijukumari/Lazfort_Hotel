@@ -177,11 +177,10 @@ export const RoomDetailsPage = () => {
               <button
                 key={idx}
                 onClick={() => setSelectedImageIndex(idx)}
-                className={`relative w-24 h-16 sm:w-32 sm:h-20 rounded-2xl overflow-hidden flex-shrink-0 border-2 transition-all ${
-                  selectedImageIndex === idx
-                    ? 'border-accent shadow-gold scale-105'
-                    : 'border-transparent opacity-70 hover:opacity-100'
-                }`}
+                className={`relative w-24 h-16 sm:w-32 sm:h-20 rounded-2xl overflow-hidden flex-shrink-0 border-2 transition-all ${selectedImageIndex === idx
+                  ? 'border-accent shadow-gold scale-105'
+                  : 'border-transparent opacity-70 hover:opacity-100'
+                  }`}
               >
                 <img src={img} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover" />
               </button>

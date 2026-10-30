@@ -55,25 +55,6 @@ export const AddRoomCategoryPage = () => {
           title="Configure Room Category"
           description="Define a luxury suite classification, base nightly tariffs, and included sovereign privileges."
           badge="Classification Master"
-          actions={
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                onClick={() => navigate('/hotel-admin/rooms')}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="gold"
-                icon={Sparkles}
-                type="submit"
-                form="add-category-form"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Saving Category...' : 'Save Category'}
-              </Button>
-            </div>
-          }
         />
       </div>
 
@@ -156,6 +137,7 @@ export const AddRoomCategoryPage = () => {
             </Button>
             <Button
               variant="gold"
+              icon={Sparkles}
               type="submit"
               disabled={isSubmitting}
             >

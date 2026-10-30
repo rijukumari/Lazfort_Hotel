@@ -83,11 +83,10 @@ export const RoomSearchForm = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className={`relative z-20 transition-all ${
-        isHeroLayout
-          ? 'bg-white/95 dark:bg-[#101724]/90 backdrop-blur-2xl p-4 sm:p-6 rounded-3xl border border-accent/40 shadow-2xl shadow-black/20'
-          : 'bg-white/80 dark:bg-surface-dark/90 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-border dark:border-border-dark shadow-lg'
-      } ${className}`}
+      className={`relative z-20 transition-all ${isHeroLayout
+        ? 'bg-white/95 dark:bg-[#101724]/90 backdrop-blur-2xl p-4 sm:p-6 rounded-3xl border border-accent/40 shadow-2xl shadow-black/20'
+        : 'bg-white/80 dark:bg-surface-dark/90 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-border dark:border-border-dark shadow-lg'
+        } ${className}`}
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4 items-end">
         {/* Check-In Date */}
@@ -218,4 +217,5 @@ export const RoomSearchForm = ({
 };
 
 export default RoomSearchForm;
+
 

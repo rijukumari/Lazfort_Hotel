@@ -1,13 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader, StatusBadge, Button } from '../../components/ui';
+import { PageHeader, StatusBadge, Button, ConfirmDialog } from '../../components/ui';
 import { DataTable } from '../../components/data-display/DataTable';
-import { UserPlus, Edit, Eye } from 'lucide-react';
+import { UserPlus, Edit, Eye, Trash2 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
+import { useToast } from '../../context/ToastContext';
 
 export const GuestsManagementPage = () => {
   const navigate = useNavigate();
-  const { guests } = useERP();
+  const { guests, deleteGuest } = useERP();
+  const { showToast } = useToast();
+  const [deleteGuestId, setDeleteGuestId] = useState(null);
+
+  const handleConfirmDelete = () => {
+    if (!deleteGuestId) return;
+    deleteGuest(deleteGuestId);
+    setDeleteGuestId(null);
+    showToast('Guest Removed', 'Guest profile removed successfully.', 'success');
+  };
 
   const columns = [
     {
@@ -85,6 +95,13 @@ export const GuestsManagementPage = () => {
           >
             Profile
           </button>
+          <button
+            onClick={() => setDeleteGuestId(item.id)}
+            className="p-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-colors"
+            title="Remove Guest Dossier"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
         </div>
       ),
     },
@@ -114,6 +131,19 @@ export const GuestsManagementPage = () => {
         searchPlaceholder="Search guest by name, email, or nationality..."
         pageSize={6}
       />
+
+      {/* Delete Confirmation */}
+      {deleteGuestId && (
+        <ConfirmDialog
+          isOpen={true}
+          onClose={() => setDeleteGuestId(null)}
+          onConfirm={handleConfirmDelete}
+          title="Remove VIP Guest Record?"
+          message="Are you sure you want to remove this guest dossier from the active registry? All historical stays and preferences will be archived."
+          confirmText="Confirm Removal"
+          variant="danger"
+        />
+      )}
     </div>
   );
 };

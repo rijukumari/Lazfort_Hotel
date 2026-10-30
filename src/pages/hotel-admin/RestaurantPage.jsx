@@ -1,45 +1,29 @@
 import React, { useState } from 'react';
-import { PageHeader, StatCard, Modal, FormField, Select, Input, Button } from '../../components/ui';
+import { useNavigate } from 'react-router-dom';
+import { PageHeader, StatCard, Button, ConfirmDialog } from '../../components/ui';
 import { DataTable } from '../../components/data-display/DataTable';
 import { useERP } from '../../context/ERPContext';
 import { useToast } from '../../context/ToastContext';
-import { mockMenuItems } from '../../data/mockERPData';
-import { UtensilsCrossed, Wine, Clock, Plus } from 'lucide-react';
+import { UtensilsCrossed, Wine, Clock, Plus, CheckCircle, Trash2 } from 'lucide-react';
 
 export const RestaurantPage = () => {
-  const { restaurantOrders, submitRestaurantOrder, rooms } = useERP();
+  const navigate = useNavigate();
+  const { restaurantOrders, updateRestaurantOrderStatus, deleteRestaurantOrder } = useERP();
   const { showToast } = useToast();
-
-  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-  const [selectedRoomNumber, setSelectedRoomNumber] = useState(rooms.find(r => r.status === 'occupied')?.roomNumber || '101');
-  const [selectedMenuItemId, setSelectedMenuItemId] = useState(mockMenuItems[0].id);
-  const [itemQuantity, setItemQuantity] = useState(1);
+  const [deleteOrderId, setDeleteOrderId] = useState(null);
 
   const totalSales = restaurantOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
 
-  const handleCreateOrderSubmit = (e) => {
-    e.preventDefault();
-    const item = mockMenuItems.find(m => m.id === selectedMenuItemId) || mockMenuItems[0];
+  const handleStatusChange = (orderId, newStatus) => {
+    updateRestaurantOrderStatus(orderId, newStatus);
+    showToast('Order Status Updated', `Order #${orderId} marked as ${newStatus}.`, 'success');
+  };
 
-    const res = submitRestaurantOrder({
-      outletName: 'Le Grand Colbert Haute Gastronomie',
-      orderType: 'Room Service',
-      roomNumber: selectedRoomNumber,
-      paymentStatus: 'charged_to_room',
-      items: [
-        {
-          menuItemId: item.id,
-          name: item.name,
-          quantity: itemQuantity,
-          unitPrice: item.price,
-        }
-      ],
-    });
-
-    if (res?.success) {
-      showToast('Order Placed', res.message, 'success');
-      setIsOrderModalOpen(false);
-    }
+  const handleConfirmDelete = () => {
+    if (!deleteOrderId) return;
+    deleteRestaurantOrder(deleteOrderId);
+    setDeleteOrderId(null);
+    showToast('Order Cancelled', 'Dining order removed from queue.', 'success');
   };
 
   const columns = [
@@ -114,6 +98,31 @@ export const RestaurantPage = () => {
         </span>
       ),
     },
+    {
+      key: 'actions',
+      header: 'Actions',
+      render: item => (
+        <div className="flex items-center gap-1.5 whitespace-nowrap">
+          {item.status !== 'delivered' && (
+            <button
+              onClick={() => handleStatusChange(item.id, 'delivered')}
+              className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 transition-all text-xs flex items-center gap-1 font-semibold"
+              title="Mark Order as Delivered"
+            >
+              <CheckCircle className="w-3.5 h-3.5" />
+              <span>Deliver</span>
+            </button>
+          )}
+          <button
+            onClick={() => setDeleteOrderId(item.id)}
+            className="p-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-all text-xs"
+            title="Cancel / Remove Order"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -126,7 +135,7 @@ export const RestaurantPage = () => {
           <Button
             variant="gold"
             icon={Plus}
-            onClick={() => setIsOrderModalOpen(true)}
+            onClick={() => navigate('/hotel-admin/restaurant/order')}
           >
             New In-Suite Order
           </Button>
@@ -175,69 +184,18 @@ export const RestaurantPage = () => {
         />
       </div>
 
-      {/* Place In-Suite Order Modal */}
-      <Modal
-        isOpen={isOrderModalOpen}
-        onClose={() => setIsOrderModalOpen(false)}
-        title="Dispatch In-Suite Fine Dining Order"
-        subtitle="Post Michelin dining course directly to active Guest Folio"
-        maxWidth="lg"
-      >
-        <form onSubmit={handleCreateOrderSubmit} className="space-y-4">
-          <FormField label="Target Suite (Occupied Stays)" required>
-            <Select
-              value={selectedRoomNumber}
-              onChange={e => setSelectedRoomNumber(e.target.value)}
-            >
-              {rooms.map(r => (
-                <option key={r.id} value={r.roomNumber}>
-                  Suite {r.roomNumber} — {r.type} ({(r.status || '').toUpperCase()})
-                </option>
-              ))}
-            </Select>
-          </FormField>
-
-          <FormField label="Michelin Signature Course" required>
-            <Select
-              value={selectedMenuItemId}
-              onChange={e => setSelectedMenuItemId(e.target.value)}
-            >
-              {mockMenuItems.map(m => (
-                <option key={m.id} value={m.id}>
-                  {m.name} (${m.price.toLocaleString()} • {m.category})
-                </option>
-              ))}
-            </Select>
-          </FormField>
-
-          <FormField label="Portions / Quantity" required>
-            <Input
-              type="number"
-              min={1}
-              max={10}
-              required
-              value={itemQuantity}
-              onChange={e => setItemQuantity(Number(e.target.value))}
-            />
-          </FormField>
-
-          <div className="flex items-center justify-end gap-3 pt-3">
-            <Button
-              variant="outline"
-              type="button"
-              onClick={() => setIsOrderModalOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="gold"
-              type="submit"
-            >
-              Transmit Order to Kitchen
-            </Button>
-          </div>
-        </form>
-      </Modal>
+      {/* Delete Confirmation */}
+      {deleteOrderId && (
+        <ConfirmDialog
+          isOpen={true}
+          onClose={() => setDeleteOrderId(null)}
+          onConfirm={handleConfirmDelete}
+          title="Cancel Gastronomy Order?"
+          message="Are you sure you want to cancel this order ticket? The kitchen dispatch will be notified immediately."
+          confirmText="Confirm Cancel"
+          variant="danger"
+        />
+      )}
     </div>
   );
 };

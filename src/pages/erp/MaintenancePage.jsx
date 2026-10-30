@@ -5,12 +5,14 @@ import { DataTable } from '../../components/data-display/DataTable';
 import { Tabs } from '../../components/ui/Tabs';
 import { Modal } from '../../components/ui/Modal';
 import { ModalFooter } from '../../components/ui/ModalFooter';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { FormField, Input, Select, Textarea } from '../../components/forms/FormField';
 import { useERP } from '../../context/ERPContext';
 import { useToast } from '../../context/ToastContext';
 import {
   CheckCircle,
   Plus,
+  Trash2,
 } from 'lucide-react';
 
 export const MaintenancePage = () => {
@@ -20,6 +22,7 @@ export const MaintenancePage = () => {
     rooms = [],
     createMaintenanceTicket,
     resolveMaintenanceTicket,
+    deleteMaintenanceTicket,
     getActiveMaintenanceCount,
   } = useERP();
   const { showToast } = useToast();
@@ -27,6 +30,14 @@ export const MaintenancePage = () => {
   const [activeTab, setActiveTab] = useState('tickets');
   const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteTicketId, setDeleteTicketId] = useState(null);
+
+  const handleConfirmDelete = () => {
+    if (!deleteTicketId) return;
+    deleteMaintenanceTicket(deleteTicketId);
+    setDeleteTicketId(null);
+    showToast('Ticket Removed', 'Maintenance ticket deleted successfully.', 'success');
+  };
 
   // New Ticket State
   const [ticketTitle, setTicketTitle] = useState('');
@@ -121,9 +132,8 @@ export const MaintenancePage = () => {
       key: 'blocksRoom',
       header: 'Room Status',
       render: t => (
-        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-lg ${
-          t.blocksRoom ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30' : 'text-charcoal-muted'
-        }`}>
+        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-lg ${t.blocksRoom ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30' : 'text-charcoal-muted'
+          }`}>
           {t.blocksRoom ? 'BLOCKED' : 'Operational'}
         </span>
       ),
@@ -137,9 +147,8 @@ export const MaintenancePage = () => {
       key: 'status',
       header: 'Ticket Status',
       render: t => (
-        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-lg ${
-          t.status === 'resolved' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-amber-500/15 text-amber-500'
-        }`}>
+        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-lg ${t.status === 'resolved' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-amber-500/15 text-amber-500'
+          }`}>
           {t.status?.replace(/_/g, ' ')}
         </span>
       ),
@@ -148,7 +157,7 @@ export const MaintenancePage = () => {
       key: 'actions',
       header: 'Actions',
       render: t => (
-        <div>
+        <div className="flex items-center gap-1.5">
           {t.status !== 'resolved' && (
             <button
               onClick={() => handleResolveTicket(t.id, t.title)}
@@ -158,6 +167,13 @@ export const MaintenancePage = () => {
               Resolve
             </button>
           )}
+          <button
+            onClick={() => setDeleteTicketId(t.id)}
+            className="p-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-all text-xs"
+            title="Delete Ticket"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
         </div>
       ),
     },
@@ -382,6 +398,19 @@ export const MaintenancePage = () => {
           />
         </form>
       </Modal>
+
+      {/* Delete Ticket Confirmation */}
+      {deleteTicketId && (
+        <ConfirmDialog
+          isOpen={true}
+          onClose={() => setDeleteTicketId(null)}
+          onConfirm={handleConfirmDelete}
+          title="Delete Maintenance Work Order?"
+          message="Are you sure you want to permanently delete this engineering work order? This action cannot be undone."
+          confirmText="Confirm Delete"
+          variant="danger"
+        />
+      )}
     </div>
   );
 };

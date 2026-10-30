@@ -142,11 +142,10 @@ export const RoomCard = ({
               type="button"
               disabled={!effectiveAvailable}
               onClick={() => onBookNow(room)}
-              className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wider rounded-2xl btn-3d flex items-center justify-center gap-1.5 transition-all ${
-                effectiveAvailable
-                  ? 'gold-gradient-bg text-primary-900 shadow-gold hover:scale-[1.02] active:scale-[0.98]'
-                  : 'bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed border border-gray-300 dark:border-gray-700'
-              }`}
+              className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wider rounded-2xl btn-3d flex items-center justify-center gap-1.5 transition-all ${effectiveAvailable
+                ? 'gold-gradient-bg text-primary-900 shadow-gold hover:scale-[1.02] active:scale-[0.98]'
+                : 'bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed border border-gray-300 dark:border-gray-700'
+                }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>{effectiveAvailable ? 'Book Suite' : 'Reserved'}</span>

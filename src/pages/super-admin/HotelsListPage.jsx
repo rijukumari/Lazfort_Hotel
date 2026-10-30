@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader, Button, SearchBar, Select, StatusBadge, Pagination, EmptyState } from '../../components/ui';
+import { PageHeader, Button, SearchBar, Select, StatusBadge, Pagination, EmptyState, ConfirmDialog } from '../../components/ui';
 import { HotelCard } from '../../components/hotel/HotelCard';
 import { DataTable } from '../../components/data-display/DataTable';
 import { useERP } from '../../context/ERPContext';
+import { useToast } from '../../context/ToastContext';
 import {
   Plus,
   LayoutGrid,
@@ -12,12 +13,22 @@ import {
   MapPin,
   Eye,
   Edit,
+  Trash2,
   Star,
 } from 'lucide-react';
 
 export const HotelsListPage = () => {
-  const { hotels } = useERP();
+  const { hotels, deleteHotel } = useERP();
   const navigate = useNavigate();
+  const { showToast } = useToast();
+  const [deleteHotelId, setDeleteHotelId] = useState(null);
+
+  const handleConfirmDelete = () => {
+    if (!deleteHotelId) return;
+    deleteHotel(deleteHotelId);
+    setDeleteHotelId(null);
+    showToast('Hotel Property Removed', 'Property successfully removed from portfolio.', 'success');
+  };
 
   // View state
   const [viewMode, setViewMode] = useState('grid');
@@ -172,6 +183,13 @@ export const HotelsListPage = () => {
           >
             <Eye className="w-4 h-4" />
           </button>
+          <button
+            onClick={() => setDeleteHotelId(item.id)}
+            className="p-1.5 text-xs text-rose-500 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+            title="Delete Property"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
         </div>
       ),
     },
@@ -189,21 +207,19 @@ export const HotelsListPage = () => {
             <div className="flex items-center bg-white/90 dark:bg-primary-900/90 border border-border/80 dark:border-accent/25 rounded-2xl p-1 shadow-sm">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-xl transition-all ${
-                  viewMode === 'grid'
-                    ? 'gold-gradient-bg text-primary-900 font-bold shadow-sm'
-                    : 'text-charcoal-muted hover:text-accent'
-                }`}
+                className={`p-2 rounded-xl transition-all ${viewMode === 'grid'
+                  ? 'gold-gradient-bg text-primary-900 font-bold shadow-sm'
+                  : 'text-charcoal-muted hover:text-accent'
+                  }`}
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode('table')}
-                className={`p-2 rounded-xl transition-all ${
-                  viewMode === 'table'
-                    ? 'gold-gradient-bg text-primary-900 font-bold shadow-sm'
-                    : 'text-charcoal-muted hover:text-accent'
-                }`}
+                className={`p-2 rounded-xl transition-all ${viewMode === 'table'
+                  ? 'gold-gradient-bg text-primary-900 font-bold shadow-sm'
+                  : 'text-charcoal-muted hover:text-accent'
+                  }`}
               >
                 <List className="w-4 h-4" />
               </button>
@@ -332,19 +348,12 @@ export const HotelsListPage = () => {
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {paginatedHotels.map(hotel => (
-              <div key={hotel.id} className="relative group">
-                <HotelCard
-                  hotel={hotel}
-                  onSelect={() => navigate(`/super-admin/hotels/details?id=${hotel.id}`)}
-                />
-                <button
-                  onClick={() => navigate(`/super-admin/hotels/edit/${hotel.id}`)}
-                  className="absolute top-3 right-16 p-2 rounded-xl bg-black/60 backdrop-blur-md text-white hover:text-accent border border-white/20 hover:border-accent transition-all z-30"
-                  title="Quick Edit Property"
-                >
-                  <Edit className="w-3.5 h-3.5" />
-                </button>
-              </div>
+              <HotelCard
+                key={hotel.id}
+                hotel={hotel}
+                onSelect={() => navigate(`/super-admin/hotels/details?id=${hotel.id}`)}
+                onEdit={() => navigate(`/super-admin/hotels/edit/${hotel.id}`)}
+              />
             ))}
           </div>
 
@@ -360,6 +369,19 @@ export const HotelsListPage = () => {
           columns={columns}
           keyExtractor={item => item.id}
           pageSize={8}
+        />
+      )}
+
+      {/* Delete Confirmation */}
+      {deleteHotelId && (
+        <ConfirmDialog
+          isOpen={true}
+          onClose={() => setDeleteHotelId(null)}
+          onConfirm={handleConfirmDelete}
+          title="Decommission Hotel Property?"
+          message="Are you sure you want to permanently decommission this property? All rooms, staff, and active folios associated with this property will be detached."
+          confirmText="Confirm Decommission"
+          variant="danger"
         />
       )}
     </div>

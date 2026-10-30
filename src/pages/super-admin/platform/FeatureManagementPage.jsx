@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
@@ -136,8 +137,27 @@ const initialPlatformFeatures = [
 ];
 
 export const FeatureManagementPage = () => {
+  const navigate = useNavigate();
   const { showToast } = useToast();
-  const [features, setFeatures] = useState(initialPlatformFeatures);
+  const [features, setFeatures] = useState(() => {
+    try {
+      const stored = localStorage.getItem('lazfort_platform_features');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {
+      console.warn('Failed to load platform features', e);
+    }
+    return initialPlatformFeatures;
+  });
+
+  const persistFeatures = (updated) => {
+    setFeatures(updated);
+    try {
+      localStorage.setItem('lazfort_platform_features', JSON.stringify(updated));
+    } catch (e) {
+      console.warn('Failed to persist features', e);
+    }
+  };
+
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
 
@@ -171,20 +191,19 @@ export const FeatureManagementPage = () => {
   }, [features, searchQuery, categoryFilter]);
 
   const toggleFeature = (id) => {
-    setFeatures(prev =>
-      prev.map(f => {
-        if (f.id === id) {
-          const nextState = !f.isEnabled;
-          showToast(
-            nextState ? 'Feature Activated' : 'Feature Deactivated',
-            `Module ${f.name} is now ${nextState ? 'active' : 'disabled'} platform-wide.`,
-            nextState ? 'success' : 'warning'
-          );
-          return { ...f, isEnabled: nextState };
-        }
-        return f;
-      })
-    );
+    const updated = features.map(f => {
+      if (f.id === id) {
+        const nextState = !f.isEnabled;
+        showToast(
+          nextState ? 'Feature Activated' : 'Feature Deactivated',
+          `Module ${f.name} is now ${nextState ? 'active' : 'disabled'} platform-wide.`,
+          nextState ? 'success' : 'warning'
+        );
+        return { ...f, isEnabled: nextState };
+      }
+      return f;
+    });
+    persistFeatures(updated);
   };
 
   const handleCreateFeature = (e) => {
@@ -202,7 +221,7 @@ export const FeatureManagementPage = () => {
       maxAllocationLimit: newLimit,
     };
 
-    setFeatures(prev => [newFeat, ...prev]);
+    persistFeatures([newFeat, ...features]);
     setIsAddModalOpen(false);
     setNewCode('');
     setNewName('');
@@ -214,9 +233,8 @@ export const FeatureManagementPage = () => {
     e.preventDefault();
     if (!editingFeature) return;
 
-    setFeatures(prev =>
-      prev.map(f => (f.id === editingFeature.id ? editingFeature : f))
-    );
+    const updated = features.map(f => (f.id === editingFeature.id ? editingFeature : f));
+    persistFeatures(updated);
     setEditingFeature(null);
     showToast('Feature Updated', `Configuration updated for ${editingFeature.name}.`, 'success');
   };
@@ -287,16 +305,16 @@ export const FeatureManagementPage = () => {
       render: (f) => (
         <div className="flex items-center gap-1.5">
           <button
-            onClick={() => setSelectedFeature(f)}
+            onClick={() => navigate(`/super-admin/subscriptions/features/details/${f.id}`)}
             className="p-1.5 rounded-lg border border-border dark:border-white/10 hover:bg-ivory dark:hover:bg-white/5 text-charcoal-muted hover:text-accent transition-colors"
-            title="Inspect Module Details"
+            title="Inspect Module Details on Dedicated Page"
           >
             <Eye className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => setEditingFeature(f)}
+            onClick={() => navigate(`/super-admin/subscriptions/features/edit/${f.id}`)}
             className="p-1.5 rounded-lg border border-border dark:border-white/10 hover:bg-ivory dark:hover:bg-white/5 text-charcoal-muted hover:text-accent transition-colors"
-            title="Configure Allocation"
+            title="Configure Allocation on Dedicated Page"
           >
             <Edit className="w-3.5 h-3.5" />
           </button>
@@ -312,7 +330,7 @@ export const FeatureManagementPage = () => {
         description="Central feature management switchboard controlling all PMS, ERP, POS, and IoT capabilities"
         actions={
           <button
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => navigate('/super-admin/subscriptions/features/add')}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl gold-gradient-bg text-primary-950 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold"
           >
             <Plus className="w-4 h-4" />

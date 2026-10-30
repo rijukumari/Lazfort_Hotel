@@ -1,12 +1,13 @@
 import React from 'react';
 import { StatusBadge } from '../ui/StatusBadge';
-import { Edit, Eye, Power, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Edit, Eye, Power, ShieldCheck, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 
 export const FeatureTable = ({
   features,
   onViewDetails,
   onEdit,
   onToggleStatus,
+  onDelete,
   currentPage = 1,
   totalPages = 1,
   onPageChange,
@@ -135,6 +136,16 @@ export const FeatureTable = ({
                         >
                           <Power className="w-4 h-4" />
                         </button>
+
+                        {onDelete && (
+                          <button
+                            onClick={() => onDelete(feat)}
+                            className="p-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-colors"
+                            title="Delete Feature"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

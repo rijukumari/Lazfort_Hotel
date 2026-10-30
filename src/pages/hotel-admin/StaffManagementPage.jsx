@@ -1,14 +1,24 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader, StatusBadge, Button } from '../../components/ui';
+import { PageHeader, StatusBadge, Button, ConfirmDialog } from '../../components/ui';
 import { useERP } from '../../context/ERPContext';
 import { mockStaff } from '../../data/mockStaff';
 import { DataTable } from '../../components/data-display/DataTable';
-import { Plus, Edit, Eye, Clock } from 'lucide-react';
+import { Plus, Edit, Eye, Clock, Trash2 } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 
 export const StaffManagementPage = () => {
   const navigate = useNavigate();
-  const { staff = mockStaff } = useERP();
+  const { staff = mockStaff, deleteStaff } = useERP();
+  const { showToast } = useToast();
+  const [deleteStaffId, setDeleteStaffId] = useState(null);
+
+  const handleConfirmDelete = () => {
+    if (!deleteStaffId) return;
+    deleteStaff(deleteStaffId);
+    setDeleteStaffId(null);
+    showToast('Staff Member Removed', 'Staff profile successfully removed from operations.', 'success');
+  };
 
   const columns = [
     {
@@ -94,6 +104,13 @@ export const StaffManagementPage = () => {
           >
             <Eye className="w-3.5 h-3.5" />
           </button>
+          <button
+            onClick={() => setDeleteStaffId(item.id)}
+            className="p-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-colors"
+            title="Remove Staff Member"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
         </div>
       ),
     },
@@ -123,6 +140,19 @@ export const StaffManagementPage = () => {
         searchPlaceholder="Search staff by name, role, or division..."
         pageSize={8}
       />
+
+      {/* Delete Confirmation */}
+      {deleteStaffId && (
+        <ConfirmDialog
+          isOpen={true}
+          onClose={() => setDeleteStaffId(null)}
+          onConfirm={handleConfirmDelete}
+          title="Remove Staff Personnel?"
+          message="Are you sure you want to decommission this staff member profile? Their access credentials will be immediately revoked."
+          confirmText="Confirm Decommission"
+          variant="danger"
+        />
+      )}
     </div>
   );
 };

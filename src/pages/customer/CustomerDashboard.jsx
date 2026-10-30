@@ -210,11 +210,10 @@ export const CustomerDashboard = () => {
 
         <button
           onClick={() => navigate('/customer/vip-benefits')}
-          className={`p-3.5 rounded-2xl border shadow-sm transition-all text-left flex flex-col justify-between group ${
-            isVip
-              ? 'bg-gradient-to-tr from-accent/20 to-accent/5 border-accent/40 shadow-gold'
-              : 'bg-white/80 dark:bg-surface-dark/90 border-border dark:border-white/10'
-          }`}
+          className={`p-3.5 rounded-2xl border shadow-sm transition-all text-left flex flex-col justify-between group ${isVip
+            ? 'bg-gradient-to-tr from-accent/20 to-accent/5 border-accent/40 shadow-gold'
+            : 'bg-white/80 dark:bg-surface-dark/90 border-border dark:border-white/10'
+            }`}
         >
           <div className="w-8 h-8 rounded-xl bg-accent/20 flex items-center justify-center text-accent group-hover:scale-110 transition-transform mb-2">
             <Crown className="w-4 h-4" />
@@ -248,21 +247,19 @@ export const CustomerDashboard = () => {
         </div>
 
         <div
-          className={`card-luxury-3d p-6 sm:p-7 rounded-3xl border transition-all ${
-            isVip
-              ? 'bg-gradient-to-r from-accent/15 via-primary-950/70 to-accent/10 border-accent/40 shadow-gold'
-              : 'bg-white/70 dark:bg-surface-dark/70 border-border dark:border-white/10'
-          }`}
+          className={`card-luxury-3d p-6 sm:p-7 rounded-3xl border transition-all ${isVip
+            ? 'bg-gradient-to-r from-accent/15 via-primary-950/70 to-accent/10 border-accent/40 shadow-gold'
+            : 'bg-white/70 dark:bg-surface-dark/70 border-border dark:border-white/10'
+            }`}
         >
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="space-y-2 max-w-2xl">
               <div className="flex items-center gap-2">
                 <span
-                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider ${
-                    isVip
-                      ? 'bg-accent/25 text-accent border border-accent/40'
-                      : 'bg-charcoal/10 dark:bg-white/10 text-charcoal-muted dark:text-gray-300 border border-charcoal/20'
-                  }`}
+                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider ${isVip
+                    ? 'bg-accent/25 text-accent border border-accent/40'
+                    : 'bg-charcoal/10 dark:bg-white/10 text-charcoal-muted dark:text-gray-300 border border-charcoal/20'
+                    }`}
                 >
                   {isVip ? <Crown className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
                   <span>{isVip ? `VIP Active (${tier} Tier)` : 'Standard Customer Status'}</span>
@@ -368,13 +365,16 @@ export const CustomerDashboard = () => {
 
                   <button
                     onClick={() => {
-                      setSelectedInvoice(currentBooking);
-                      setIsInvoiceOpen(true);
+                      if (currentBooking?.id) {
+                        navigate(`/customer/bookings/${currentBooking.id}`);
+                      } else {
+                        navigate('/customer/bookings');
+                      }
                     }}
                     className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline font-semibold"
                   >
                     <FileText className="w-4 h-4" />
-                    <span>View Official Folio</span>
+                    <span>View Official Folio on Page</span>
                   </button>
                 </div>
 
@@ -420,11 +420,10 @@ export const CustomerDashboard = () => {
                   <button
                     type="button"
                     onClick={handleUnlockDoor}
-                    className={`p-3.5 rounded-2xl border text-left transition-all flex items-center justify-between ${
-                      isDoorUnlocked
-                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-600 dark:text-emerald-400 shadow-sm'
-                        : 'bg-accent/10 border-accent/40 text-accent hover:border-accent'
-                    }`}
+                    className={`p-3.5 rounded-2xl border text-left transition-all flex items-center justify-between ${isDoorUnlocked
+                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                      : 'bg-accent/10 border-accent/40 text-accent hover:border-accent'
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-xl bg-accent/20 flex items-center justify-center text-accent">
@@ -469,11 +468,10 @@ export const CustomerDashboard = () => {
                 <div className="flex items-center gap-3 pt-3">
                   <button
                     onClick={handleToggleDnd}
-                    className={`px-3 py-1.5 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-1.5 ${
-                      isDndActive
-                        ? 'bg-rose-500/15 border-rose-500 text-rose-600 dark:text-rose-400'
-                        : 'btn-secondary-3d text-charcoal-muted dark:text-gray-300'
-                    }`}
+                    className={`px-3 py-1.5 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-1.5 ${isDndActive
+                      ? 'bg-rose-500/15 border-rose-500 text-rose-600 dark:text-rose-400'
+                      : 'btn-secondary-3d text-charcoal-muted dark:text-gray-300'
+                      }`}
                   >
                     <BellRing className="w-3.5 h-3.5" />
                     <span>{isDndActive ? 'DND Active' : 'Do Not Disturb'}</span>
@@ -481,11 +479,10 @@ export const CustomerDashboard = () => {
 
                   <button
                     onClick={handleToggleMakeUp}
-                    className={`px-3 py-1.5 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-1.5 ${
-                      isMakeUpActive
-                        ? 'bg-emerald-500/15 border-emerald-500 text-emerald-600 dark:text-emerald-400'
-                        : 'btn-secondary-3d text-charcoal-muted dark:text-gray-300'
-                    }`}
+                    className={`px-3 py-1.5 rounded-xl border text-[11px] font-semibold transition-all flex items-center gap-1.5 ${isMakeUpActive
+                      ? 'bg-emerald-500/15 border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                      : 'btn-secondary-3d text-charcoal-muted dark:text-gray-300'
+                      }`}
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>{isMakeUpActive ? 'Make-Up Queued' : 'Make Up Room'}</span>

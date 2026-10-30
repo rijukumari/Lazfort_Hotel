@@ -18,14 +18,49 @@ export const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState('profile');
 
   // Policy Settings state
-  const [checkInTime, setCheckInTime] = useState('15:00');
-  const [checkOutTime, setCheckOutTime] = useState('12:00');
-  const [vatRate, setVatRate] = useState(10);
-  const [currency, setCurrency] = useState('EUR (€)');
+  const [checkInTime, setCheckInTime] = useState(() => {
+    try {
+      const stored = localStorage.getItem('lazfort_hotel_settings');
+      if (stored) return JSON.parse(stored).checkInTime || '15:00';
+    } catch {}
+    return '15:00';
+  });
+  const [checkOutTime, setCheckOutTime] = useState(() => {
+    try {
+      const stored = localStorage.getItem('lazfort_hotel_settings');
+      if (stored) return JSON.parse(stored).checkOutTime || '12:00';
+    } catch {}
+    return '12:00';
+  });
+  const [vatRate, setVatRate] = useState(() => {
+    try {
+      const stored = localStorage.getItem('lazfort_hotel_settings');
+      if (stored) return JSON.parse(stored).vatRate || 10;
+    } catch {}
+    return 10;
+  });
+  const [currency, setCurrency] = useState(() => {
+    try {
+      const stored = localStorage.getItem('lazfort_hotel_settings');
+      if (stored) return JSON.parse(stored).currency || 'EUR (€)';
+    } catch {}
+    return 'EUR (€)';
+  });
 
   const handleSavePolicies = e => {
     e.preventDefault();
-    showToast('Policies Saved', 'Hotel operational policies and statutory VAT rates updated.', 'success');
+    try {
+      localStorage.setItem('lazfort_hotel_settings', JSON.stringify({
+        checkInTime,
+        checkOutTime,
+        vatRate,
+        currency,
+        updatedAt: new Date().toISOString(),
+      }));
+      showToast('Policies Saved', 'Hotel operational policies and statutory VAT rates updated.', 'success');
+    } catch {
+      showToast('Error', 'Failed to save settings.', 'error');
+    }
   };
 
   const handleResetData = () => {

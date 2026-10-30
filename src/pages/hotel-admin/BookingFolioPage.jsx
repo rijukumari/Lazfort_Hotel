@@ -13,20 +13,35 @@ import {
 } from 'lucide-react';
 
 export const BookingFolioPage = () => {
-  const { id } = useParams();
+  const { id, bookingId, folioId } = useParams();
+  const effectiveId = folioId || bookingId || id;
   const navigate = useNavigate();
-  const { bookings, checkInGuest, checkOutGuest } = useERP();
+  const { bookings, folios = [], checkInGuest, checkOutGuest } = useERP();
   const { showToast } = useToast();
 
-  const booking = bookings.find(b => b.id === id) || bookings[0];
+  const reservedSubpaths = ['new', 'confirmed', 'pending', 'checked-in', 'checked-out', 'cancelled', 'calendar'];
+  const booking = (effectiveId && !reservedSubpaths.includes(effectiveId))
+    ? (bookings.find(b => b.id === effectiveId || b.bookingCode === effectiveId) ||
+       folios.find(f => f.id === effectiveId || f.bookingId === effectiveId || f.bookingCode === effectiveId))
+    : null;
 
   if (!booking) {
     return (
-      <div className="space-y-6">
-        <Link to="/hotel-admin/bookings" className="text-xs text-charcoal-muted hover:text-accent">
-          ← Back to Reservations
-        </Link>
-        <p className="text-sm">Reservation record not found.</p>
+      <div className="space-y-6 max-w-xl mx-auto py-16 text-center animate-in fade-in duration-300">
+        <h2 className="font-serif text-2xl font-bold text-primary dark:text-white">
+          Reservation Folio Not Found
+        </h2>
+        <p className="text-xs text-charcoal-muted">
+          No reservation folio statement found for reference <span className="font-mono text-accent">{effectiveId || 'unknown'}</span>.
+        </p>
+        <div className="pt-2">
+          <Button
+            variant="gold"
+            onClick={() => navigate('/hotel-admin/bookings')}
+          >
+            ← Return to Reservations
+          </Button>
+        </div>
       </div>
     );
   }

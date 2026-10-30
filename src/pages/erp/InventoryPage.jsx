@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../components/ui/StatCard';
 import { DataTable } from '../../components/data-display/DataTable';
 import { Tabs } from '../../components/ui/Tabs';
 import { Modal } from '../../components/ui/Modal';
 import { ModalFooter } from '../../components/ui/ModalFooter';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { FormField, Input, Select } from '../../components/forms/FormField';
 import { useERP } from '../../context/ERPContext';
 import { useToast } from '../../context/ToastContext';
@@ -18,14 +20,24 @@ import {
   Truck,
   CheckCircle,
   Building,
+  Trash2,
 } from 'lucide-react';
 
 export const InventoryPage = () => {
-  const { inventoryItems = [], stockMovements = [], recordStockMovement, addInventoryItem, getLowStockItems } = useERP();
+  const navigate = useNavigate();
+  const { inventoryItems = [], stockMovements = [], recordStockMovement, addInventoryItem, deleteInventoryItem, getLowStockItems } = useERP();
   const { showToast } = useToast();
 
   const [activeTab, setActiveTab] = useState('catalog');
   const [suppliersList, setSuppliersList] = useState(mockSuppliers);
+  const [deleteItemId, setDeleteItemId] = useState(null);
+
+  const handleConfirmDelete = () => {
+    if (!deleteItemId) return;
+    deleteInventoryItem(deleteItemId);
+    setDeleteItemId(null);
+    showToast('SKU Removed', 'Item removed from inventory catalog.', 'success');
+  };
 
   // Modals state
   const [isMovementModalOpen, setIsMovementModalOpen] = useState(false);
@@ -216,9 +228,8 @@ export const InventoryPage = () => {
       sortable: true,
       render: item => (
         <div className="flex items-center gap-2">
-          <span className={`font-mono text-xs font-bold ${
-            item.currentStock <= item.minimumStock ? 'text-rose-600 dark:text-rose-400' : 'text-primary dark:text-white'
-          }`}>
+          <span className={`font-mono text-xs font-bold ${item.currentStock <= item.minimumStock ? 'text-rose-600 dark:text-rose-400' : 'text-primary dark:text-white'
+            }`}>
             {item.currentStock} {item.unitOfMeasure}
           </span>
           {item.currentStock <= item.minimumStock && (
@@ -247,7 +258,7 @@ export const InventoryPage = () => {
       render: item => (
         <div className="flex items-center gap-1.5">
           <button
-            onClick={() => handleOpenMovementModal(item, 'receipt')}
+            onClick={() => navigate(`/hotel-admin/inventory/movement?itemId=${item.id}&type=receipt`)}
             className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 transition-all text-xs flex items-center gap-1"
             title="Receive Stock"
           >
@@ -255,12 +266,19 @@ export const InventoryPage = () => {
             Receive
           </button>
           <button
-            onClick={() => handleOpenMovementModal(item, 'issue')}
+            onClick={() => navigate(`/hotel-admin/inventory/movement?itemId=${item.id}&type=issue`)}
             className="p-1.5 rounded-lg bg-rose-500/15 text-rose-600 dark:text-rose-400 hover:bg-rose-500/25 transition-all text-xs flex items-center gap-1"
             title="Issue Stock to Dept"
           >
             <ArrowUpRight className="w-3.5 h-3.5" />
             Issue
+          </button>
+          <button
+            onClick={() => setDeleteItemId(item.id)}
+            className="p-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-all text-xs"
+            title="Delete Item"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       ),
@@ -279,11 +297,10 @@ export const InventoryPage = () => {
       key: 'type',
       header: 'Type',
       render: m => (
-        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg ${
-          m.type === 'receipt'
-            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-            : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
-        }`}>
+        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg ${m.type === 'receipt'
+          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+          : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
+          }`}>
           {m.type}
         </span>
       ),
@@ -302,9 +319,8 @@ export const InventoryPage = () => {
       key: 'quantity',
       header: 'Quantity Transacted',
       render: m => (
-        <span className={`font-mono text-xs font-bold ${
-          m.type === 'receipt' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
-        }`}>
+        <span className={`font-mono text-xs font-bold ${m.type === 'receipt' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+          }`}>
           {m.type === 'receipt' ? '+' : '-'}{m.quantity}
         </span>
       ),
@@ -366,29 +382,29 @@ export const InventoryPage = () => {
         description="Lazfort ERP — Real-time luxury provisions, F&B ingredients, Egyptian linens, amenity reserves, and automated stock movements."
         badge="Module F: Inventory & Procurement"
         actions={
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0 whitespace-nowrap">
             <button
-              onClick={() => setIsAddSupplierModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl btn-secondary-3d text-xs font-semibold text-charcoal dark:text-gray-200 cursor-pointer"
+              onClick={() => navigate('/hotel-admin/inventory/suppliers/add')}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl btn-secondary-3d text-xs font-semibold text-charcoal dark:text-gray-200 cursor-pointer whitespace-nowrap shrink-0"
             >
-              <Building className="w-4 h-4 text-accent" />
-              Add Supplier
+              <Building className="w-4 h-4 text-accent shrink-0" />
+              <span className="whitespace-nowrap">Add Supplier</span>
             </button>
 
             <button
-              onClick={() => setIsAddItemModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl btn-secondary-3d text-xs font-semibold text-charcoal dark:text-gray-200 cursor-pointer"
+              onClick={() => navigate('/hotel-admin/inventory/add')}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl btn-secondary-3d text-xs font-semibold text-charcoal dark:text-gray-200 cursor-pointer whitespace-nowrap shrink-0"
             >
-              <Boxes className="w-4 h-4 text-accent" />
-              Add Item
+              <Boxes className="w-4 h-4 text-accent shrink-0" />
+              <span className="whitespace-nowrap">Add Item</span>
             </button>
 
             <button
-              onClick={() => handleOpenMovementModal(undefined, 'receipt')}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl gold-gradient-bg text-primary-950 text-xs font-bold uppercase tracking-wider btn-3d shadow-md shadow-accent/20 cursor-pointer"
+              onClick={() => navigate('/hotel-admin/inventory/movement?type=receipt')}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl gold-gradient-bg text-primary-950 text-xs font-bold uppercase tracking-wider btn-3d shadow-md shadow-accent/20 cursor-pointer whitespace-nowrap shrink-0"
             >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
-              Record Stock Receipt
+              <Plus className="w-4 h-4 stroke-[2.5] shrink-0" />
+              <span className="whitespace-nowrap">Record Stock Receipt</span>
             </button>
           </div>
         }
@@ -488,285 +504,18 @@ export const InventoryPage = () => {
         />
       )}
 
-      {/* Stock Movement Modal */}
-      <Modal
-        isOpen={isMovementModalOpen}
-        onClose={() => {
-          if (!isSubmitting) setIsMovementModalOpen(false);
-        }}
-        title="Record Stock Movement & Goods Ledger"
-        description="Post inventory receipt from supplier or issue to operating department"
-        maxWidth="lg"
-        isSubmitting={isSubmitting}
-      >
-        <form onSubmit={handleMovementSubmit} className="space-y-4">
-          <FormField label="Target Item" required>
-            <Select
-              value={selectedItemId}
-              onChange={e => setSelectedItemId(e.target.value)}
-              options={inventoryItems.map(item => ({
-                value: item.id,
-                label: `${item.sku} — ${item.name} (${item.currentStock} ${item.unitOfMeasure} available)`,
-              }))}
-            />
-          </FormField>
-
-          <div className="grid grid-cols-2 gap-4">
-            <FormField label="Transaction Type" required>
-              <Select
-                value={movementType}
-                onChange={e => setMovementType(e.target.value)}
-                options={[
-                  { value: 'receipt', label: 'Receipt (+ Inbound Delivery)' },
-                  { value: 'issue', label: 'Issue (- Outbound to Dept)' },
-                  { value: 'adjustment', label: 'Audit Adjustment' },
-                ]}
-              />
-            </FormField>
-
-            <FormField label="Quantity" required>
-              <Input
-                type="number"
-                min={1}
-                required
-                value={movementQty}
-                onChange={e => setMovementQty(Number(e.target.value))}
-              />
-            </FormField>
-          </div>
-
-          <FormField label="Reason & Operational Reference" required>
-            <Input
-              type="text"
-              required
-              value={movementReason}
-              onChange={e => setMovementReason(e.target.value)}
-              placeholder="e.g. Inbound PO delivery / VIP Gala Provision"
-            />
-          </FormField>
-
-          <ModalFooter
-            onCancel={() => setIsMovementModalOpen(false)}
-            cancelText="Cancel"
-            confirmText="Record Movement"
-            confirmVariant="gold"
-            isSubmitting={isSubmitting}
-          />
-        </form>
-      </Modal>
-
-      {/* Add Item Modal */}
-      <Modal
-        isOpen={isAddItemModalOpen}
-        onClose={() => {
-          if (!isSubmitting) setIsAddItemModalOpen(false);
-        }}
-        title="Add Inventory Item"
-        description="Catalog a new product SKU into central hotel stores."
-        maxWidth="lg"
-        isSubmitting={isSubmitting}
-      >
-        <form onSubmit={handleAddItemSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField label="SKU Code" required hint="e.g. AMN-BULG-01">
-              <Input
-                required
-                placeholder="SKU-XXX-01"
-                value={newItemSku}
-                onChange={e => setNewItemSku(e.target.value)}
-              />
-            </FormField>
-
-            <FormField label="Item Name" required>
-              <Input
-                required
-                placeholder="e.g. Bulgari White Tea Body Milk 75ml"
-                value={newItemName}
-                onChange={e => setNewItemName(e.target.value)}
-              />
-            </FormField>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField label="Category" required>
-              <Select
-                value={newItemCategory}
-                onChange={e => setNewItemCategory(e.target.value)}
-              >
-                <option value="Guest Amenities">Guest Amenities</option>
-                <option value="Food & Beverage">Food & Beverage</option>
-                <option value="Housekeeping & Linen">Housekeeping & Linen</option>
-                <option value="Engineering & Maintenance">Engineering & Maintenance</option>
-                <option value="Fine Wine & Spirits">Fine Wine & Spirits</option>
-                <option value="Office & Stationery">Office & Stationery</option>
-              </Select>
-            </FormField>
-
-            <FormField label="Department" required>
-              <Input
-                required
-                value={newItemDept}
-                onChange={e => setNewItemDept(e.target.value)}
-              />
-            </FormField>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <FormField label="Current Stock" required>
-              <Input
-                type="number"
-                min="0"
-                value={newItemCurrentStock}
-                onChange={e => setNewItemCurrentStock(Number(e.target.value))}
-              />
-            </FormField>
-
-            <FormField label="Min Par Level" required>
-              <Input
-                type="number"
-                min="1"
-                value={newItemMinStock}
-                onChange={e => setNewItemMinStock(Number(e.target.value))}
-              />
-            </FormField>
-
-            <FormField label="Unit Cost ($)" required>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={newItemUnitCost}
-                onChange={e => setNewItemUnitCost(Number(e.target.value))}
-              />
-            </FormField>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField label="Unit of Measure" required>
-              <Select
-                value={newItemUom}
-                onChange={e => setNewItemUom(e.target.value)}
-              >
-                <option value="Units">Units</option>
-                <option value="Boxes">Boxes</option>
-                <option value="Bottles">Bottles</option>
-                <option value="Kg">Kg</option>
-                <option value="Liters">Liters</option>
-                <option value="Sets">Sets</option>
-              </Select>
-            </FormField>
-
-            <FormField label="Primary Supplier">
-              <Select
-                value={newItemSupplier}
-                onChange={e => setNewItemSupplier(e.target.value)}
-              >
-                {suppliersList.map(s => (
-                  <option key={s.id} value={s.name}>{s.name}</option>
-                ))}
-              </Select>
-            </FormField>
-          </div>
-
-          <FormField label="Storage Depot / Location">
-            <Input
-              value={newItemLocation}
-              onChange={e => setNewItemLocation(e.target.value)}
-            />
-          </FormField>
-
-          <ModalFooter
-            onCancel={() => setIsAddItemModalOpen(false)}
-            cancelText="Cancel"
-            confirmText="Catalog Inventory Item"
-            confirmVariant="gold"
-            isSubmitting={isSubmitting}
-          />
-        </form>
-      </Modal>
-
-      {/* Add Supplier Modal */}
-      <Modal
-        isOpen={isAddSupplierModalOpen}
-        onClose={() => {
-          if (!isSubmitting) setIsAddSupplierModalOpen(false);
-        }}
-        title="Onboard Approved Purveyor / Supplier"
-        description="Register a verified vendor into the luxury supply chain."
-        maxWidth="lg"
-        isSubmitting={isSubmitting}
-      >
-        <form onSubmit={handleAddSupplierSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField label="Vendor Name" required>
-              <Input
-                required
-                placeholder="e.g. Domaine de la Romanée-Conti"
-                value={newSupName}
-                onChange={e => setNewSupName(e.target.value)}
-              />
-            </FormField>
-
-            <FormField label="Vendor Code" hint="Leave blank to auto-generate">
-              <Input
-                placeholder="SUP-DRC-FR"
-                value={newSupCode}
-                onChange={e => setNewSupCode(e.target.value)}
-              />
-            </FormField>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField label="Contact Person">
-              <Input
-                placeholder="e.g. Bertrand de Villaine"
-                value={newSupContact}
-                onChange={e => setNewSupContact(e.target.value)}
-              />
-            </FormField>
-
-            <FormField label="Official Email">
-              <Input
-                type="email"
-                placeholder="orders@romanee-conti.fr"
-                value={newSupEmail}
-                onChange={e => setNewSupEmail(e.target.value)}
-              />
-            </FormField>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField label="Lead Time (Days)">
-              <Input
-                type="number"
-                min="1"
-                value={newSupLeadTime}
-                onChange={e => setNewSupLeadTime(Number(e.target.value))}
-              />
-            </FormField>
-
-            <FormField label="Commercial Payment Terms">
-              <Select
-                value={newSupTerms}
-                onChange={e => setNewSupTerms(e.target.value)}
-              >
-                <option value="Net 30">Net 30</option>
-                <option value="Net 15">Net 15</option>
-                <option value="Immediate">Immediate</option>
-                <option value="Net 60">Net 60</option>
-              </Select>
-            </FormField>
-          </div>
-
-          <ModalFooter
-            onCancel={() => setIsAddSupplierModalOpen(false)}
-            cancelText="Cancel"
-            confirmText="Approve Supplier"
-            confirmVariant="gold"
-            isSubmitting={isSubmitting}
-          />
-        </form>
-      </Modal>
+      {/* Delete Item Confirmation Dialog */}
+      {deleteItemId && (
+        <ConfirmDialog
+          isOpen={true}
+          onClose={() => setDeleteItemId(null)}
+          onConfirm={handleConfirmDelete}
+          title="Remove Item from Inventory?"
+          message="Are you sure you want to remove this SKU item from the inventory catalog? Historical movement audits will remain recorded."
+          confirmText="Confirm Delete"
+          variant="danger"
+        />
+      )}
     </div>
   );
 };

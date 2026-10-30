@@ -19,7 +19,7 @@ export const DashboardLayout = () => {
   return (
     <div className="min-h-screen flex bg-ivory dark:bg-primary-900 transition-colors">
       {/* Desktop / Tablet STICKY Collapsible Sidebar */}
-      <div className="hidden lg:block sticky top-0 h-screen flex-shrink-0 z-40">
+      <div className="hidden lg:block sticky top-0 h-screen flex-shrink-0 z-50">
         <Sidebar
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}

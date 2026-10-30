@@ -1,8 +1,8 @@
 import React from 'react';
 import { StatusBadge } from '../ui/StatusBadge';
-import { MapPin, Star, Building2, TrendingUp, ArrowUpRight } from 'lucide-react';
+import { MapPin, Star, Building2, TrendingUp, ArrowUpRight, Edit } from 'lucide-react';
 
-export const HotelCard = ({ hotel, onSelect }) => {
+export const HotelCard = ({ hotel, onSelect, onEdit }) => {
   return (
     <div className="card-luxury-3d overflow-hidden group flex flex-col">
       {/* Top golden shimmer border */}
@@ -67,15 +67,28 @@ export const HotelCard = ({ hotel, onSelect }) => {
               ${(hotel.revenueThisMonth / 1000).toFixed(0)}k / month
             </span>
           </div>
-          {onSelect && (
-            <button
-              onClick={() => onSelect(hotel)}
-              className="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl gold-gradient-bg text-primary-900 btn-3d flex items-center gap-1.5"
-            >
-              <span>Manage</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {onEdit && (
+              <button
+                type="button"
+                onClick={() => onEdit(hotel)}
+                className="p-2 rounded-xl border border-border/80 dark:border-white/15 text-charcoal-muted dark:text-gray-300 hover:text-accent hover:border-accent transition-all bg-ivory/60 dark:bg-white/[0.04]"
+                title="Edit Property"
+              >
+                <Edit className="w-3.5 h-3.5" />
+              </button>
+            )}
+            {onSelect && (
+              <button
+                type="button"
+                onClick={() => onSelect(hotel)}
+                className="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl gold-gradient-bg text-primary-900 btn-3d flex items-center gap-1.5"
+              >
+                <span>Manage</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

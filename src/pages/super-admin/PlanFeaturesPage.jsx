@@ -12,7 +12,7 @@ import { Plus } from 'lucide-react';
 export const PlanFeaturesPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { planFeatures = mockPlanFeatures, updatePlanFeature } = useERP();
+  const { planFeatures = mockPlanFeatures, updatePlanFeature, deletePlanFeature } = useERP();
   const features = planFeatures;
 
   // Search & Filter
@@ -24,6 +24,14 @@ export const PlanFeaturesPage = () => {
   const pageSize = 8;
 
   const [featureToToggle, setFeatureToToggle] = useState(null);
+  const [deleteFeatureId, setDeleteFeatureId] = useState(null);
+
+  const handleConfirmDelete = () => {
+    if (!deleteFeatureId) return;
+    deletePlanFeature(deleteFeatureId);
+    setDeleteFeatureId(null);
+    showToast('Feature Removed', 'Subscription feature removed from matrix.', 'success');
+  };
 
   const allCategories = [
     'Hotel Management',
@@ -183,6 +191,7 @@ export const PlanFeaturesPage = () => {
         onViewDetails={feat => navigate(`/super-admin/subscriptions/features/details/${feat.id}`)}
         onEdit={feat => navigate(`/super-admin/subscriptions/features/edit/${feat.id}`)}
         onToggleStatus={feat => setFeatureToToggle(feat)}
+        onDelete={feat => setDeleteFeatureId(feat.id)}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
@@ -198,6 +207,19 @@ export const PlanFeaturesPage = () => {
           message={`Are you sure you want to ${featureToToggle.status === 'enabled' ? 'disable' : 'enable'} the ${featureToToggle.name} capability?`}
           confirmText={featureToToggle.status === 'enabled' ? 'Disable Feature' : 'Enable Feature'}
           confirmVariant={featureToToggle.status === 'enabled' ? 'danger' : 'gold'}
+        />
+      )}
+
+      {/* Delete Feature Confirmation Dialog */}
+      {deleteFeatureId && (
+        <ConfirmDialog
+          isOpen={true}
+          onClose={() => setDeleteFeatureId(null)}
+          onConfirm={handleConfirmDelete}
+          title="Delete Subscription Feature?"
+          message="Are you sure you want to permanently delete this feature entitlement? It will be removed from all subscription tier matrices."
+          confirmText="Confirm Delete"
+          variant="danger"
         />
       )}
     </div>

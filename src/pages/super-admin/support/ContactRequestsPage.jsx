@@ -25,7 +25,21 @@ import {
 
 export const ContactRequestsPage = () => {
   const { showToast } = useToast();
-  const [requests, setRequests] = useState(initialContactRequests || []);
+  const [requests, setRequests] = useState(() => {
+    try {
+      const stored = localStorage.getItem('lazfort_contact_requests');
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return initialContactRequests || [];
+  });
+
+  const persistRequests = (list) => {
+    setRequests(list);
+    try {
+      localStorage.setItem('lazfort_contact_requests', JSON.stringify(list));
+    } catch {}
+  };
+
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -57,9 +71,8 @@ export const ContactRequestsPage = () => {
   }, [requests, searchQuery, typeFilter, statusFilter]);
 
   const handleUpdateStatus = (id, newStatus) => {
-    setRequests(prev =>
-      prev.map(r => (r.id === id ? { ...r, status: newStatus } : r))
-    );
+    const updated = requests.map(r => (r.id === id ? { ...r, status: newStatus } : r));
+    persistRequests(updated);
     showToast('Inquiry Updated', `Status changed to ${newStatus}.`, 'success');
   };
 
@@ -67,17 +80,16 @@ export const ContactRequestsPage = () => {
     e.preventDefault();
     if (!notesTarget) return;
 
-    setRequests(prev =>
-      prev.map(r =>
-        r.id === notesTarget.id
-          ? {
-              ...r,
-              status: 'in_progress',
-              followUpNotes: followUpNoteInput,
-            }
-          : r
-      )
+    const updated = requests.map(r =>
+      r.id === notesTarget.id
+        ? {
+            ...r,
+            status: 'in_progress',
+            followUpNotes: followUpNoteInput,
+          }
+        : r
     );
+    persistRequests(updated);
 
     showToast('Follow-up Logged', 'Sales consultation notes saved to lead file.', 'info');
     setNotesTarget(null);

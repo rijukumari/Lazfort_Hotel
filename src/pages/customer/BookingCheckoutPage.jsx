@@ -131,9 +131,8 @@ export const BookingCheckoutPage = () => {
         paidAmount,
         paymentStatus,
         paymentMethod,
-        specialRequests: `${guestData.specialRequests} ${
-          guestData.wantsAirportPickup ? '[Helipad/Airport Chauffeur Requested]' : ''
-        } [Arrival: ${guestData.estimatedArrival}]`,
+        specialRequests: `${guestData.specialRequests} ${guestData.wantsAirportPickup ? '[Helipad/Airport Chauffeur Requested]' : ''
+          } [Arrival: ${guestData.estimatedArrival}]`,
       });
 
       setIsSubmitting(false);
@@ -215,11 +214,10 @@ export const BookingCheckoutPage = () => {
               <button
                 type="submit"
                 disabled={isSubmitting || !isSuiteFree}
-                className={`w-full py-4 rounded-2xl text-xs font-bold uppercase tracking-widest btn-3d shadow-gold transition-all flex items-center justify-center gap-2 ${
-                  isSuiteFree && !isSubmitting
-                    ? 'gold-gradient-bg text-primary-900 hover:scale-[1.01] active:scale-[0.99]'
-                    : 'bg-gray-300 dark:bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-400 dark:border-gray-700'
-                }`}
+                className={`w-full py-4 rounded-2xl text-xs font-bold uppercase tracking-widest btn-3d shadow-gold transition-all flex items-center justify-center gap-2 ${isSuiteFree && !isSubmitting
+                  ? 'gold-gradient-bg text-primary-900 hover:scale-[1.01] active:scale-[0.99]'
+                  : 'bg-gray-300 dark:bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-400 dark:border-gray-700'
+                  }`}
               >
                 {isSubmitting ? (
                   <>
@@ -257,4 +255,5 @@ export const BookingCheckoutPage = () => {
 };
 
 export default BookingCheckoutPage;
+
 

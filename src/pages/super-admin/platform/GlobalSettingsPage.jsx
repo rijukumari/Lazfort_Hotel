@@ -24,43 +24,116 @@ import {
 export const GlobalSettingsPage = () => {
   const { showToast } = useToast();
 
-  // Settings State
-  const [platformName, setPlatformName] = useState('Lazfort ERP Grand Luxe');
-  const [tagline, setTagline] = useState('Sovereign Hotel & Resort Management Suite');
-  const [supportEmail, setSupportEmail] = useState('concierge@lazfort-erp.com');
-  const [supportPhone, setSupportPhone] = useState('+377 98 00 10 00');
-  const [hqAddress, setHqAddress] = useState('14 Boulevard des Moulins, 98000 Monaco');
-  
-  const [currency, setCurrency] = useState('USD ($)');
-  const [timezone, setTimezone] = useState('Europe/Monaco (UTC+1)');
-  const [dateFormat, setDateFormat] = useState('YYYY-MM-DD');
-  const [defaultLanguage, setDefaultLanguage] = useState('en-US');
+  const DEFAULT_SETTINGS = {
+    platformName: 'Lazfort ERP Grand Luxe',
+    tagline: 'Sovereign Hotel & Resort Management Suite',
+    supportEmail: 'concierge@lazfort-erp.com',
+    supportPhone: '+377 98 00 10 00',
+    hqAddress: '14 Boulevard des Moulins, 98000 Monaco',
+    currency: 'USD ($)',
+    timezone: 'Europe/Monaco (UTC+1)',
+    dateFormat: 'YYYY-MM-DD',
+    defaultLanguage: 'en-US',
+    emailNotifyOnboard: true,
+    smsUrgentDisputes: true,
+    dailyDigest: true,
+    twoFactorMandatory: true,
+    sessionTimeout: '30',
+    passwordMinLength: '12',
+  };
 
-  const [emailNotifyOnboard, setEmailNotifyOnboard] = useState(true);
-  const [smsUrgentDisputes, setSmsUrgentDisputes] = useState(true);
-  const [dailyDigest, setDailyDigest] = useState(true);
-  const [twoFactorMandatory, setTwoFactorMandatory] = useState(true);
-  const [sessionTimeout, setSessionTimeout] = useState('30');
-  const [passwordMinLength, setPasswordMinLength] = useState('12');
+  const getSavedSettings = () => {
+    try {
+      const stored = localStorage.getItem('lazfort_platform_global_settings');
+      if (stored) return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
+    } catch (e) {
+      console.warn('Failed to load global platform settings', e);
+    }
+    return DEFAULT_SETTINGS;
+  };
+
+  const [initialLoadedSettings, setInitialLoadedSettings] = useState(getSavedSettings);
+
+  // Settings State
+  const [platformName, setPlatformName] = useState(initialLoadedSettings.platformName);
+  const [tagline, setTagline] = useState(initialLoadedSettings.tagline);
+  const [supportEmail, setSupportEmail] = useState(initialLoadedSettings.supportEmail);
+  const [supportPhone, setSupportPhone] = useState(initialLoadedSettings.supportPhone);
+  const [hqAddress, setHqAddress] = useState(initialLoadedSettings.hqAddress);
+
+  const [currency, setCurrency] = useState(initialLoadedSettings.currency);
+  const [timezone, setTimezone] = useState(initialLoadedSettings.timezone);
+  const [dateFormat, setDateFormat] = useState(initialLoadedSettings.dateFormat);
+  const [defaultLanguage, setDefaultLanguage] = useState(initialLoadedSettings.defaultLanguage);
+
+  const [emailNotifyOnboard, setEmailNotifyOnboard] = useState(initialLoadedSettings.emailNotifyOnboard);
+  const [smsUrgentDisputes, setSmsUrgentDisputes] = useState(initialLoadedSettings.smsUrgentDisputes);
+  const [dailyDigest, setDailyDigest] = useState(initialLoadedSettings.dailyDigest);
+  const [twoFactorMandatory, setTwoFactorMandatory] = useState(initialLoadedSettings.twoFactorMandatory);
+  const [sessionTimeout, setSessionTimeout] = useState(initialLoadedSettings.sessionTimeout);
+  const [passwordMinLength, setPasswordMinLength] = useState(initialLoadedSettings.passwordMinLength);
 
   const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setConfirmSaveOpen(false);
-    showToast('Platform Settings Saved', 'Global enterprise preferences updated across all hotel instances (Demo State).', 'success');
+    if (!platformName.trim() || !supportEmail.trim()) {
+      showToast('Validation Error', 'Platform name and concierge email cannot be empty.', 'error');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await new Promise(r => setTimeout(r, 400));
+      const payload = {
+        platformName: platformName.trim(),
+        tagline: tagline.trim(),
+        supportEmail: supportEmail.trim(),
+        supportPhone: supportPhone.trim(),
+        hqAddress: hqAddress.trim(),
+        currency,
+        timezone,
+        dateFormat,
+        defaultLanguage,
+        emailNotifyOnboard,
+        smsUrgentDisputes,
+        dailyDigest,
+        twoFactorMandatory,
+        sessionTimeout,
+        passwordMinLength,
+        lastUpdated: new Date().toISOString(),
+      };
+      localStorage.setItem('lazfort_platform_global_settings', JSON.stringify(payload));
+      setInitialLoadedSettings(payload);
+      showToast('Platform Settings Saved', 'Global enterprise preferences committed and saved into database.', 'success');
+    } catch {
+      showToast('Save Failed', 'Could not persist configuration changes.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleReset = () => {
-    setPlatformName('Lazfort ERP Grand Luxe');
-    setTagline('Sovereign Hotel & Resort Management Suite');
-    setSupportEmail('concierge@lazfort-erp.com');
-    setSupportPhone('+377 98 00 10 00');
-    setCurrency('USD ($)');
-    setTimezone('Europe/Monaco (UTC+1)');
-    setSessionTimeout('30');
+    const saved = getSavedSettings();
+    setPlatformName(saved.platformName);
+    setTagline(saved.tagline);
+    setSupportEmail(saved.supportEmail);
+    setSupportPhone(saved.supportPhone);
+    setHqAddress(saved.hqAddress);
+    setCurrency(saved.currency);
+    setTimezone(saved.timezone);
+    setDateFormat(saved.dateFormat);
+    setDefaultLanguage(saved.defaultLanguage);
+    setEmailNotifyOnboard(saved.emailNotifyOnboard);
+    setSmsUrgentDisputes(saved.smsUrgentDisputes);
+    setDailyDigest(saved.dailyDigest);
+    setTwoFactorMandatory(saved.twoFactorMandatory);
+    setSessionTimeout(saved.sessionTimeout);
+    setPasswordMinLength(saved.passwordMinLength);
     setConfirmResetOpen(false);
-    showToast('Settings Reset', 'Configuration restored to sovereign factory defaults.', 'info');
+    showToast('Settings Restored', 'Configuration restored to last committed database state.', 'info');
   };
 
   return (
@@ -73,24 +146,6 @@ export const GlobalSettingsPage = () => {
           { label: 'Platform Management', path: '/super-admin/platform' },
           { label: 'Global Settings' },
         ]}
-        actions={
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setConfirmResetOpen(true)}
-              className="btn-luxury-outline inline-flex items-center gap-2 text-xs"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              Reset Defaults
-            </button>
-            <button
-              onClick={() => setConfirmSaveOpen(true)}
-              className="btn-luxury-primary inline-flex items-center gap-2 text-xs"
-            >
-              <Save className="w-3.5 h-3.5" />
-              Save Configuration
-            </button>
-          </div>
-        }
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -354,6 +409,26 @@ export const GlobalSettingsPage = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Persistent Bottom Action Bar */}
+      <div className="card-luxury p-4 flex items-center justify-end gap-3">
+        <button
+          type="button"
+          onClick={() => setConfirmResetOpen(true)}
+          className="px-5 py-2.5 text-xs font-semibold rounded-2xl border border-border dark:border-white/15 text-charcoal dark:text-gray-200 hover:bg-ivory dark:hover:bg-primary-800/50 inline-flex items-center gap-2"
+        >
+          <RotateCcw className="w-4 h-4 text-accent" />
+          <span>Reset Defaults</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setConfirmSaveOpen(true)}
+          className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider rounded-2xl gold-gradient-bg text-primary-950 btn-3d shadow-md shadow-accent/20 inline-flex items-center gap-2"
+        >
+          <Save className="w-4 h-4" />
+          <span>Save Configuration</span>
+        </button>
       </div>
 
       {/* Confirmation Dialogs */}

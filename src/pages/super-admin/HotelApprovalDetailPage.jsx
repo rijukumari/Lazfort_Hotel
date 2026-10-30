@@ -277,20 +277,18 @@ export const HotelApprovalDetailPage = () => {
               ].map((doc, idx) => (
                 <div
                   key={idx}
-                  className={`p-4 rounded-2xl border transition-all ${
-                    doc.ok
-                      ? 'border-emerald-500/30 bg-emerald-500/[0.03]'
-                      : 'border-amber-500/30 bg-amber-500/[0.03]'
-                  }`}
+                  className={`p-4 rounded-2xl border transition-all ${doc.ok
+                    ? 'border-emerald-500/30 bg-emerald-500/[0.03]'
+                    : 'border-amber-500/30 bg-amber-500/[0.03]'
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-xs text-primary dark:text-white">{doc.title}</span>
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase ${
-                        doc.ok
-                          ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
-                          : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
-                      }`}
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase ${doc.ok
+                        ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                        : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+                        }`}
                     >
                       {doc.ok ? 'Verified' : 'Pending Audit'}
                     </span>

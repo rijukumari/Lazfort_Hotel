@@ -1,25 +1,24 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader, Button, StatusBadge, ConfirmDialog, EmptyState } from '../../components/ui';
-import { mockSubscriptionPlans } from '../../data/mockSubscriptions';
-import { useERP } from '../../context/ERPContext';
 import { PlanCard } from '../../components/subscription/PlanCard';
 import { SearchFilter } from '../../components/subscription/SearchFilter';
 import { SubscriptionNavTabs } from '../../components/subscription/SubscriptionNavTabs';
 import { useToast } from '../../context/ToastContext';
+import { useERP } from '../../context/ERPContext';
 import {
   Plus,
   LayoutGrid,
   List,
   Sparkles,
   Layers,
+  Trash2,
 } from 'lucide-react';
 
 export const SubscriptionPlansPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { subscriptionPlans = mockSubscriptionPlans, updateSubscriptionPlan } = useERP();
-  const plans = subscriptionPlans;
+  const { subscriptionPlans = [], updateSubscriptionPlan, deleteSubscriptionPlan } = useERP();
   const [billingCycle, setBillingCycle] = useState('Monthly');
   const [viewMode, setViewMode] = useState('grid');
 
@@ -28,10 +27,11 @@ export const SubscriptionPlansPage = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('default');
   const [planToToggle, setPlanToToggle] = useState(null);
+  const [deletePlanId, setDeletePlanId] = useState(null);
 
   // Filtered & Sorted Plans
   const filteredPlans = useMemo(() => {
-    return plans
+    return subscriptionPlans
       .filter(plan => {
         const matchesSearch =
           plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -53,20 +53,25 @@ export const SubscriptionPlansPage = () => {
         }
         return 0;
       });
-  }, [plans, searchTerm, statusFilter, sortBy]);
+  }, [subscriptionPlans, searchTerm, statusFilter, sortBy]);
 
   const handleConfirmToggleStatus = () => {
     if (!planToToggle) return;
     const nextStatus = planToToggle.status === 'active' ? 'inactive' : 'active';
-    if (updateSubscriptionPlan) {
-      updateSubscriptionPlan(planToToggle.id, { status: nextStatus });
-    }
+    updateSubscriptionPlan(planToToggle.id, { status: nextStatus });
     showToast(
       'Plan Status Updated',
       `Plan "${planToToggle.name}" has been marked as ${nextStatus}.`,
       'info'
     );
     setPlanToToggle(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deletePlanId) return;
+    deleteSubscriptionPlan(deletePlanId);
+    setDeletePlanId(null);
+    showToast('Plan Removed', 'Subscription tier removed successfully.', 'success');
   };
 
   return (
@@ -81,22 +86,20 @@ export const SubscriptionPlansPage = () => {
             <div className="flex items-center bg-white/90 dark:bg-primary-900/90 border border-border/80 dark:border-accent/25 rounded-2xl p-1 shadow-sm">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-xl transition-all duration-200 ${
-                  viewMode === 'grid'
-                    ? 'gold-gradient-bg text-primary-900 font-bold shadow-sm'
-                    : 'text-charcoal-muted hover:text-accent'
-                }`}
+                className={`p-2 rounded-xl transition-all duration-200 ${viewMode === 'grid'
+                  ? 'gold-gradient-bg text-primary-900 font-bold shadow-sm'
+                  : 'text-charcoal-muted hover:text-accent'
+                  }`}
                 title="Cards View"
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode('table')}
-                className={`p-2 rounded-xl transition-all duration-200 ${
-                  viewMode === 'table'
-                    ? 'gold-gradient-bg text-primary-900 font-bold shadow-sm'
-                    : 'text-charcoal-muted hover:text-accent'
-                }`}
+                className={`p-2 rounded-xl transition-all duration-200 ${viewMode === 'table'
+                  ? 'gold-gradient-bg text-primary-900 font-bold shadow-sm'
+                  : 'text-charcoal-muted hover:text-accent'
+                  }`}
                 title="Table View"
               >
                 <List className="w-4 h-4" />
@@ -124,27 +127,25 @@ export const SubscriptionPlansPage = () => {
             <span className="text-xs font-semibold uppercase tracking-wider text-charcoal-muted">
               Display Pricing Cycle:
             </span>
-            <div className="flex items-center bg-ivory/60 dark:bg-primary-900/40 border border-border/80 dark:border-white/10 rounded-xl p-1">
+            <div className="flex items-center bg-ivory/60 dark:bg-primary-900/40 border border-border/80 dark:border-white/10 rounded-xl p-1 whitespace-nowrap shrink-0">
               <button
                 onClick={() => setBillingCycle('Monthly')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                  billingCycle === 'Monthly'
-                    ? 'gold-gradient-bg text-primary-950 font-bold shadow-sm'
-                    : 'text-charcoal-muted hover:text-accent'
-                }`}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0 ${billingCycle === 'Monthly'
+                  ? 'gold-gradient-bg text-primary-950 font-bold shadow-sm'
+                  : 'text-charcoal-muted hover:text-accent'
+                  }`}
               >
                 Monthly
               </button>
               <button
                 onClick={() => setBillingCycle('Annually')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                  billingCycle === 'Annually'
-                    ? 'gold-gradient-bg text-primary-950 font-bold shadow-sm'
-                    : 'text-charcoal-muted hover:text-accent'
-                }`}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${billingCycle === 'Annually'
+                  ? 'gold-gradient-bg text-primary-950 font-bold shadow-sm'
+                  : 'text-charcoal-muted hover:text-accent'
+                  }`}
               >
                 <span>Annually</span>
-                <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-500 text-white font-mono font-bold">
+                <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-500 text-white font-mono font-bold whitespace-nowrap">
                   SAVE 15%
                 </span>
               </button>
@@ -274,6 +275,13 @@ export const SubscriptionPlansPage = () => {
                         >
                           Edit
                         </button>
+                        <button
+                          onClick={() => setDeletePlanId(plan.id)}
+                          className="p-1 text-xs rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 cursor-pointer"
+                          title="Delete Plan"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -284,7 +292,7 @@ export const SubscriptionPlansPage = () => {
         </div>
       )}
 
-      {/* Confirmation Dialog */}
+      {/* Confirmation Dialogs */}
       {planToToggle && (
         <ConfirmDialog
           isOpen={!!planToToggle}
@@ -294,6 +302,18 @@ export const SubscriptionPlansPage = () => {
           message={`Are you sure you want to ${planToToggle.status === 'active' ? 'deactivate' : 'reactivate'} the ${planToToggle.name} plan?`}
           confirmText={planToToggle.status === 'active' ? 'Deactivate Plan' : 'Activate Plan'}
           confirmVariant={planToToggle.status === 'active' ? 'danger' : 'gold'}
+        />
+      )}
+
+      {deletePlanId && (
+        <ConfirmDialog
+          isOpen={true}
+          onClose={() => setDeletePlanId(null)}
+          onConfirm={handleConfirmDelete}
+          title="Delete Commercial Subscription Tier?"
+          message="Are you sure you want to permanently delete this subscription plan? Existing hotels subscribed to this plan will maintain current billing terms until renewal."
+          confirmText="Confirm Delete"
+          variant="danger"
         />
       )}
     </div>

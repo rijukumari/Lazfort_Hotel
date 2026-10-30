@@ -78,25 +78,6 @@ export const AddRoomPage = () => {
           title="Add New Luxury Suite"
           description="Introduce a new royal chamber, penthouse or ocean villa into the active hotel inventory."
           badge="Inventory Provisioning"
-          actions={
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                onClick={() => navigate('/hotel-admin/rooms')}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="gold"
-                icon={Sparkles}
-                type="submit"
-                form="add-suite-form"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Creating Suite...' : 'Create Suite Record'}
-              </Button>
-            </div>
-          }
         />
       </div>
 
@@ -210,6 +191,7 @@ export const AddRoomPage = () => {
             </Button>
             <Button
               variant="gold"
+              icon={Sparkles}
               type="submit"
               disabled={isSubmitting}
             >

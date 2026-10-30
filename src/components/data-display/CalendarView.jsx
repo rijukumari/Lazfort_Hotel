@@ -1,22 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useERP } from '../../context/ERPContext';
-import { useToast } from '../../context/ToastContext';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sparkles, CheckCircle, LogOut } from 'lucide-react';
-import { StatusBadge } from '../ui/StatusBadge';
-import { Modal } from '../ui/Modal';
-import { BookingModal } from '../forms/BookingModal';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sparkles } from 'lucide-react';
 
 export const CalendarView = () => {
-  const { rooms, bookings, checkInGuest, checkOutGuest, folios } = useERP();
-  const { showToast } = useToast();
+  const navigate = useNavigate();
+  const { rooms, bookings } = useERP();
 
   const months = ['September 2026', 'October 2026', 'November 2026'];
   const [monthIndex, setMonthIndex] = useState(1); // Default to October 2026
   const selectedMonth = months[monthIndex];
-
-  const [selectedBookingId, setSelectedBookingId] = useState(null);
-  const [isNewBookingOpen, setIsNewBookingOpen] = useState(false);
-  const [prefilledRoomId, setPrefilledRoomId] = useState(undefined);
 
   // Generate 7 days for the demo calendar view based on selected month
   const daysByMonth = {
@@ -50,8 +43,6 @@ export const CalendarView = () => {
   };
 
   const days = daysByMonth[selectedMonth] || daysByMonth['October 2026'];
-  const activeBookingData = bookings.find(b => b.id === selectedBookingId);
-  const activeFolio = activeBookingData ? folios.find(f => f.bookingId === activeBookingData.id) : null;
 
   const handlePrevMonth = () => {
     setMonthIndex(prev => (prev > 0 ? prev - 1 : months.length - 1));
@@ -61,29 +52,8 @@ export const CalendarView = () => {
     setMonthIndex(prev => (prev < months.length - 1 ? prev + 1 : 0));
   };
 
-  const handleCheckIn = (bookingId) => {
-    const res = checkInGuest(bookingId);
-    if (res.success) {
-      showToast('Guest Checked In', res.message, 'success');
-      setSelectedBookingId(null);
-    } else {
-      showToast('Check-In Failed', res.message, 'error');
-    }
-  };
-
-  const handleCheckOut = (bookingId) => {
-    const res = checkOutGuest(bookingId);
-    if (res.success) {
-      showToast('Guest Checked Out', res.message, 'success');
-      setSelectedBookingId(null);
-    } else {
-      showToast('Check-Out Failed', res.message, 'error');
-    }
-  };
-
   const handleQuickBookRoom = (roomId) => {
-    setPrefilledRoomId(roomId);
-    setIsNewBookingOpen(true);
+    navigate(`/hotel-admin/bookings/new?roomId=${roomId}`);
   };
 
   return (
@@ -207,9 +177,9 @@ export const CalendarView = () => {
                         {isOccupiedDay ? (
                           <button
                             type="button"
-                            onClick={() => setSelectedBookingId(booking.id)}
+                            onClick={() => navigate(`/hotel-admin/bookings/folio/${booking.id}`)}
                             className="w-full p-2.5 rounded-xl bg-gradient-to-r from-accent/25 to-accent/15 hover:from-accent/35 hover:to-accent/25 border border-accent/40 text-accent-dark dark:text-accent-light text-left cursor-pointer transition-all duration-200 shadow-sm hover:shadow-gold hover:scale-[1.02] group"
-                            title={`Reserved by ${booking.guestName}. Click to open details.`}
+                            title={`Reserved by ${booking.guestName}. Click to open folio details.`}
                           >
                             <p className="font-semibold truncate text-[11px] text-primary dark:text-white leading-tight">
                               {booking.guestName}
@@ -244,122 +214,6 @@ export const CalendarView = () => {
           </tbody>
         </table>
       </div>
-
-      {/* Reservation Details & Management Modal */}
-      {activeBookingData && (
-        <Modal
-          isOpen={!!activeBookingData}
-          onClose={() => setSelectedBookingId(null)}
-          title="Reservation & Folio Detail"
-          subtitle={`Folio #${activeBookingData.bookingCode} — ${activeBookingData.guestName}`}
-          maxWidth="max-w-xl"
-        >
-          <div className="space-y-5">
-            <div className="p-4 rounded-2xl bg-ivory dark:bg-white/[0.04] border border-border dark:border-white/10 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-serif font-bold text-lg text-primary dark:text-white">
-                    {activeBookingData.guestName}
-                  </h4>
-                  <p className="text-xs text-charcoal-muted dark:text-gray-400 font-mono">
-                    ID: {activeBookingData.id} • Suite Type: {activeBookingData.roomType}
-                  </p>
-                </div>
-                <StatusBadge status={activeBookingData.status} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-border/60 dark:border-white/10">
-                <div>
-                  <span className="text-charcoal-muted dark:text-gray-400">Stay Period:</span>
-                  <p className="font-medium text-primary dark:text-white mt-0.5">
-                    {activeBookingData.checkIn} → {activeBookingData.checkOut}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-charcoal-muted dark:text-gray-400">Total Folio Charge:</span>
-                  <p className="font-mono font-bold text-accent text-sm mt-0.5">
-                    ${activeBookingData.totalAmount.toLocaleString()} USD
-                  </p>
-                </div>
-                <div>
-                  <span className="text-charcoal-muted dark:text-gray-400">Payment Status:</span>
-                  <p className="font-medium text-emerald-600 dark:text-emerald-400 capitalize mt-0.5">
-                    {activeBookingData.paymentStatus}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-charcoal-muted dark:text-gray-400">Guest Count:</span>
-                  <p className="font-medium text-primary dark:text-white mt-0.5">
-                    {activeBookingData.guestCount ?? (activeBookingData.adults + (activeBookingData.children || 0))} VIPs
-                  </p>
-                </div>
-              </div>
-
-              {activeBookingData.specialRequests && (
-                <div className="p-2.5 rounded-xl bg-accent/10 border border-accent/20 text-xs">
-                  <span className="font-semibold text-accent block">Special Requests:</span>
-                  <p className="text-charcoal dark:text-gray-300 mt-0.5">
-                    {activeBookingData.specialRequests}
-                  </p>
-                </div>
-              )}
-
-              {activeFolio && (
-                <div className="pt-2 border-t border-border/60 dark:border-white/10 text-xs flex justify-between">
-                  <span className="text-charcoal-muted dark:text-gray-400">Live Folio Balance:</span>
-                  <span className="font-mono font-bold text-primary dark:text-white">
-                    ${(activeFolio.balanceDue ?? activeFolio.balance ?? 0).toLocaleString()} USD (Paid: ${activeFolio.totalPaid.toLocaleString()})
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setSelectedBookingId(null)}
-                className="px-4 py-2.5 rounded-2xl border border-border dark:border-white/20 text-xs font-semibold hover:bg-ivory dark:hover:bg-primary-800 transition-colors"
-              >
-                Close Window
-              </button>
-
-              {activeBookingData.status === 'confirmed' && (
-                <button
-                  type="button"
-                  onClick={() => handleCheckIn(activeBookingData.id)}
-                  className="px-5 py-2.5 rounded-2xl gold-gradient-bg text-primary-900 font-bold text-xs flex items-center gap-2 btn-3d"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  Execute Check-In
-                </button>
-              )}
-
-              {activeBookingData.status === 'checked_in' && (
-                <button
-                  type="button"
-                  onClick={() => handleCheckOut(activeBookingData.id)}
-                  className="px-5 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-2 shadow-sm transition-all"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Settle & Check-Out
-                </button>
-              )}
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {/* Booking Modal for Quick Booking */}
-      <BookingModal
-        isOpen={isNewBookingOpen}
-        onClose={() => {
-          setIsNewBookingOpen(false);
-          setPrefilledRoomId(undefined);
-        }}
-        initialRoomId={prefilledRoomId}
-        initialData={prefilledRoomId ? { roomId: prefilledRoomId } : undefined}
-      />
     </div>
   );
 };

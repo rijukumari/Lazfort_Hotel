@@ -96,23 +96,6 @@ export const AddGuestPage = () => {
             Create an official VIP guest profile, configure bespoke concierge preferences, and allocate loyalty tier.
           </p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/hotel-admin/guests')}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="gold"
-            icon={Save}
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Enrolling...' : 'Enroll Guest'}
-          </Button>
-        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
@@ -20,10 +21,10 @@ import {
 } from 'lucide-react';
 
 export const PaymentTransactionsPage = () => {
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const [transactions, setTransactions] = useState(initialPaymentTransactions || []);
   const [methodFilter, setMethodFilter] = useState('all');
-  const [selectedTx, setSelectedTx] = useState(null);
 
   // Computed KPI Metrics
   const totalVolume = useMemo(
@@ -137,7 +138,7 @@ export const PaymentTransactionsPage = () => {
       header: 'Action',
       render: (tx) => (
         <button
-          onClick={() => setSelectedTx(tx)}
+          onClick={() => navigate(`/super-admin/billing/transactions/${tx.id}`)}
           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-border dark:border-white/10 text-[11px] font-medium text-charcoal dark:text-gray-300 hover:bg-ivory dark:hover:bg-white/5 hover:text-accent transition-colors"
         >
           <Eye className="w-3 h-3" />
@@ -157,17 +158,17 @@ export const PaymentTransactionsPage = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={handleExportCSV}
-              className="btn-luxury-outline inline-flex items-center gap-2 text-xs"
+              className="px-4 py-2 text-xs font-semibold rounded-2xl border border-border dark:border-white/15 text-charcoal dark:text-gray-200 hover:bg-ivory dark:hover:bg-primary-800/50 inline-flex items-center gap-2"
             >
-              <Download className="w-3.5 h-3.5" />
-              Export CSV
+              <Download className="w-4 h-4 text-accent" />
+              <span>Export CSV</span>
             </button>
             <button
               onClick={() => showToast('Data Synchronized', 'Realtime settlement ledger synchronized with payment gateways.', 'info')}
-              className="btn-luxury-primary inline-flex items-center gap-2 text-xs"
+              className="px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-2xl gold-gradient-bg text-primary-950 btn-3d shadow-md shadow-accent/20 inline-flex items-center gap-2"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Sync Gateways
+              <RefreshCw className="w-4 h-4" />
+              <span>Sync Gateways</span>
             </button>
           </div>
         }
@@ -232,99 +233,6 @@ export const PaymentTransactionsPage = () => {
           </div>
         }
       />
-
-      {/* Transaction Details Modal */}
-      {selectedTx && (
-        <Modal
-          isOpen={true}
-          onClose={() => setSelectedTx(null)}
-          title="Transaction Settlement Voucher"
-          size="lg"
-        >
-          <div className="space-y-6">
-            <div className="p-4 rounded-2xl bg-ivory dark:bg-primary-900/60 border border-border dark:border-white/10 flex items-center justify-between">
-              <div>
-                <span className="text-[10px] uppercase font-mono tracking-wider text-accent font-bold">
-                  Sovereign Clearance Voucher
-                </span>
-                <h3 className="text-lg font-serif font-bold text-primary dark:text-white mt-0.5">
-                  {selectedTx.transactionId}
-                </h3>
-                <p className="text-xs text-charcoal-muted mt-0.5 font-mono">{selectedTx.reference}</p>
-              </div>
-              <div className="text-right">
-                <span className="text-2xl font-serif font-bold text-accent">
-                  ${selectedTx.amount?.toLocaleString()}
-                </span>
-                <span className="text-[11px] block font-mono text-charcoal-muted">{selectedTx.currency} Gross</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div className="p-3.5 rounded-xl bg-ivory/60 dark:bg-white/5 border border-border/70 dark:border-white/5 space-y-1">
-                <span className="text-[11px] text-charcoal-muted block">Client Beneficiary</span>
-                <span className="font-semibold text-primary dark:text-white block text-sm">
-                  {selectedTx.clientName}
-                </span>
-                <span className="text-[11px] text-charcoal-muted flex items-center gap-1">
-                  <Building2 className="w-3 h-3 text-accent" />
-                  {selectedTx.hotelName}
-                </span>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-ivory/60 dark:bg-white/5 border border-border/70 dark:border-white/5 space-y-1">
-                <span className="text-[11px] text-charcoal-muted block">Payment Method & SLA</span>
-                <span className="font-semibold text-primary dark:text-white block text-sm flex items-center gap-1.5">
-                  <CreditCard className="w-3.5 h-3.5 text-accent" />
-                  {selectedTx.paymentMethod}
-                </span>
-                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono">
-                  Gateway Clear: 256-Bit SSL Enclave
-                </span>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-ivory/60 dark:bg-white/5 border border-border/70 dark:border-white/5 space-y-1">
-                <span className="text-[11px] text-charcoal-muted block">Timestamp</span>
-                <span className="font-mono text-charcoal dark:text-gray-200 block">
-                  {selectedTx.date} UTC
-                </span>
-                <span className="text-[10px] text-charcoal-muted">Cleared in 340ms</span>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-ivory/60 dark:bg-white/5 border border-border/70 dark:border-white/5 space-y-1">
-                <span className="text-[11px] text-charcoal-muted block">Current Status</span>
-                <div className="pt-0.5">
-                  <StatusBadge status={selectedTx.status} />
-                </div>
-                <span className="text-[10px] text-charcoal-muted block">Demo Ledger Record</span>
-              </div>
-            </div>
-
-            <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-[11px] text-amber-700 dark:text-amber-300">
-              Note: This is an audited ledger record from the Lazfort ERP Central Billing Switch. Funds have been distributed into the destination property account in compliance with local hospitality tax regulations.
-            </div>
-
-            <div className="flex justify-end gap-3 pt-2">
-              <button
-                onClick={() => setSelectedTx(null)}
-                className="btn-luxury-outline text-xs"
-              >
-                Close Voucher
-              </button>
-              <button
-                onClick={() => {
-                  showToast('Voucher Downloaded', `PDF Voucher for ${selectedTx.transactionId} generated.`, 'success');
-                  setSelectedTx(null);
-                }}
-                className="btn-luxury-primary text-xs inline-flex items-center gap-1.5"
-              >
-                <Download className="w-3.5 h-3.5" />
-                Download PDF Voucher
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
     </div>
   );
 };

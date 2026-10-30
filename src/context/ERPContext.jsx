@@ -114,6 +114,10 @@ export const ERPProvider = ({ children }) => {
   }, [cleaningTasks]);
 
   useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY}_coa`, JSON.stringify(chartOfAccounts));
+  }, [chartOfAccounts]);
+
+  useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY}_journal`, JSON.stringify(journalEntries));
   }, [journalEntries]);
 
@@ -354,6 +358,31 @@ export const ERPProvider = ({ children }) => {
       success: true,
       message: `Reservation ${booking.bookingCode} successfully cancelled. Room has been released.`,
     };
+  };
+
+  const approveBooking = (bookingId) => {
+    const booking = bookings.find(b => b.id === bookingId);
+    if (!booking) return { success: false, message: 'Booking not found.' };
+    setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'confirmed' } : b));
+    setRooms(prev => prev.map(r => r.id === booking.roomId && r.status === 'available' ? { ...r, status: 'reserved' } : r));
+    logAudit('APPROVE', 'Reservations', booking.bookingCode, `Approved pending reservation for ${booking.guestName}`);
+    return { success: true, message: `Reservation ${booking.bookingCode} confirmed successfully.` };
+  };
+
+  const updateBooking = (bookingId, updatedData) => {
+    setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, ...updatedData } : b));
+    logAudit('UPDATE', 'Reservations', bookingId, `Updated reservation details`);
+    return { success: true, message: 'Reservation details updated successfully.' };
+  };
+
+  const deleteBooking = (bookingId) => {
+    const booking = bookings.find(b => b.id === bookingId);
+    setBookings(prev => prev.filter(b => b.id !== bookingId));
+    if (booking) {
+      setRooms(prev => prev.map(r => r.id === booking.roomId && r.status === 'reserved' ? { ...r, status: 'available' } : r));
+      logAudit('DELETE', 'Reservations', booking.bookingCode, `Permanently deleted booking record.`);
+    }
+    return { success: true, message: 'Reservation record deleted.' };
   };
 
   const checkRoomAvailability = (roomId, checkIn, checkOut, excludeBookingId) => {
@@ -923,6 +952,95 @@ export const ERPProvider = ({ children }) => {
     return { success: true };
   };
 
+  const deleteHotel = (hotelId) => {
+    setHotels(prev => prev.filter(h => h.id !== hotelId));
+    logAudit('DELETE', 'Platform Setting', hotelId, `Removed hotel property ${hotelId}`);
+    return { success: true };
+  };
+
+  const deleteRoom = (roomId) => {
+    setRooms(prev => prev.filter(r => r.id !== roomId));
+    logAudit('DELETE', 'Room Management', roomId, `Removed suite ${roomId}`);
+    return { success: true };
+  };
+
+  const deleteStaff = (staffId) => {
+    setStaff(prev => prev.filter(s => s.id !== staffId));
+    logAudit('DELETE', 'HR', staffId, `Removed staff profile ${staffId}`);
+    return { success: true };
+  };
+
+  const deleteGuest = (guestId) => {
+    setGuests(prev => prev.filter(g => g.id !== guestId));
+    logAudit('DELETE', 'Front Desk', guestId, `Removed guest dossier ${guestId}`);
+    return { success: true };
+  };
+
+  const deleteInventoryItem = (itemId) => {
+    setInventoryItems(prev => prev.filter(i => i.id !== itemId));
+    logAudit('DELETE', 'Inventory', itemId, `Removed inventory SKU ${itemId}`);
+    return { success: true };
+  };
+
+  const deleteMaintenanceTicket = (ticketId) => {
+    setMaintenanceTickets(prev => prev.filter(t => t.id !== ticketId));
+    logAudit('DELETE', 'Maintenance', ticketId, `Removed maintenance ticket ${ticketId}`);
+    return { success: true };
+  };
+
+  const updateRestaurantOrderStatus = (orderId, status) => {
+    setRestaurantOrders(prev =>
+      prev.map(o => (o.id === orderId ? { ...o, status } : o))
+    );
+    logAudit('UPDATE', 'Restaurant', orderId, `Order ${orderId} status updated to: ${status}`);
+    return { success: true };
+  };
+
+  const deleteRestaurantOrder = (orderId) => {
+    setRestaurantOrders(prev => prev.filter(o => o.id !== orderId));
+    logAudit('DELETE', 'Restaurant', orderId, `Removed restaurant order ${orderId}`);
+    return { success: true };
+  };
+
+  const deleteSubscriptionPlan = (planId) => {
+    setSubscriptionPlans(prev => prev.filter(p => p.id !== planId));
+    logAudit('DELETE', 'Platform Management', planId, `Removed subscription tier ${planId}`);
+    return { success: true };
+  };
+
+  const deletePlanFeature = (featureId) => {
+    setPlanFeatures(prev => prev.filter(f => f.id !== featureId));
+    logAudit('DELETE', 'Platform Management', featureId, `Removed plan feature ${featureId}`);
+    return { success: true };
+  };
+
+  const addChartOfAccount = (data) => {
+    const newAccount = {
+      ...data,
+      id: data.id || `acc-${Date.now()}`,
+      isActive: data.status === 'active',
+      isReconciled: true,
+      subLedger: data.subLedger || 'General',
+    };
+    setChartOfAccounts(prev => [newAccount, ...prev]);
+    logAudit('CREATE', 'Finance', newAccount.id, `Created GL Account ${newAccount.code} (${newAccount.name}).`);
+    return { success: true, account: newAccount };
+  };
+
+  const updateChartOfAccount = (accountId, data) => {
+    setChartOfAccounts(prev =>
+      prev.map(a => (a.id === accountId || a.code === accountId ? { ...a, ...data } : a))
+    );
+    logAudit('UPDATE', 'Finance', accountId, `Updated GL Account ${data?.code || accountId}.`);
+    return { success: true };
+  };
+
+  const deleteChartOfAccount = (accountId) => {
+    setChartOfAccounts(prev => prev.filter(a => a.id !== accountId && a.code !== accountId));
+    logAudit('DELETE', 'Finance', accountId, `Removed GL Account ${accountId}.`);
+    return { success: true };
+  };
+
   // =========================================================================
   // WORKFLOW 7: MAINTENANCE & ROOM BLOCKING
   // =========================================================================
@@ -1154,30 +1272,43 @@ export const ERPProvider = ({ children }) => {
         addHotel,
         updateHotelStatus,
         updateHotel,
+        deleteHotel,
         rooms,
         updateRoom,
+        deleteRoom,
         bookings,
         guests,
         updateGuest,
+        deleteGuest,
         staff,
         addStaff,
         updateStaff,
+        deleteStaff,
         subscriptionPlans,
         addSubscriptionPlan,
         updateSubscriptionPlan,
+        deleteSubscriptionPlan,
         planFeatures,
         addPlanFeature,
         updatePlanFeature,
+        deletePlanFeature,
         updateInventoryItem,
+        deleteInventoryItem,
         cleaningTasks,
         folios,
         invoices,
         restaurantOrders,
+        updateRestaurantOrderStatus,
+        deleteRestaurantOrder,
         inventoryItems,
         stockMovements,
         maintenanceTickets,
+        deleteMaintenanceTicket,
         fixedAssets,
         chartOfAccounts,
+        addChartOfAccount,
+        updateChartOfAccount,
+        deleteChartOfAccount,
         journalEntries,
         payrollRuns,
         auditLogs,
@@ -1189,6 +1320,9 @@ export const ERPProvider = ({ children }) => {
         updateGuestVipTier,
         createReservation,
         cancelBooking,
+        approveBooking,
+        updateBooking,
+        deleteBooking,
         checkRoomAvailability,
         getAvailableRooms,
         checkInGuest,

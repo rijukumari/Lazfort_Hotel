@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader, StatCard, Button } from '../../components/ui';
 import { SimpleAreaChart } from '../../components/data-display/SimpleChart';
 import { monthlyRevenueData, roomCategoryDistribution } from '../../data/mockAnalytics';
 import { DataTable } from '../../components/data-display/DataTable';
 import { StatusBadge } from '../../components/ui/StatusBadge';
-import { BookingModal } from '../../components/forms/BookingModal';
-import { InvoiceModal } from '../../components/data-display/InvoiceModal';
 import { CalendarCheck, Plus, Sparkles, Key, FileText, BedDouble, TrendingUp, Award } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { useERP } from '../../context/ERPContext';
 
 export const HotelAdminDashboard = () => {
+  const navigate = useNavigate();
   const {
     rooms,
     bookings,
@@ -19,8 +19,6 @@ export const HotelAdminDashboard = () => {
     getPendingCleaningCount,
     getActiveMaintenanceCount,
   } = useERP();
-  const [isNewBookingModalOpen, setIsNewBookingModalOpen] = useState(false);
-  const [selectedInvoiceBooking, setSelectedInvoiceBooking] = useState(null);
   const { showToast } = useToast();
 
   const bookingColumns = [
@@ -83,9 +81,9 @@ export const HotelAdminDashboard = () => {
       header: 'Actions',
       render: item => (
         <button
-          onClick={() => setSelectedInvoiceBooking(item)}
+          onClick={() => navigate(`/hotel-admin/bookings/folio/${item.id}`)}
           className="p-1.5 rounded-lg hover:bg-ivory dark:hover:bg-primary-800 text-charcoal-muted hover:text-accent transition-colors"
-          title="View Guest Folio Invoice"
+          title="View Guest Folio on Dedicated Page"
         >
           <FileText className="w-4 h-4" />
         </button>
@@ -100,7 +98,7 @@ export const HotelAdminDashboard = () => {
         description="Lazfort Grand Palace & Royal Spa — Live occupancy, guest folios, and hospitality telemetry."
         badge="Monte-Carlo Palace"
         actions={
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0 whitespace-nowrap">
             <Button
               variant="outline"
               icon={Key}
@@ -113,7 +111,7 @@ export const HotelAdminDashboard = () => {
             <Button
               variant="gold"
               icon={Plus}
-              onClick={() => setIsNewBookingModalOpen(true)}
+              onClick={() => navigate('/hotel-admin/bookings/new')}
             >
               New VIP Booking
             </Button>
@@ -228,8 +226,8 @@ export const HotelAdminDashboard = () => {
             </h3>
           </div>
           <button
-            onClick={() => setIsNewBookingModalOpen(true)}
-            className="text-xs text-accent font-semibold hover:underline"
+            onClick={() => navigate('/hotel-admin/bookings/new')}
+            className="text-xs text-accent font-semibold hover:underline cursor-pointer"
           >
             + Create Walk-in Reservation
           </button>
@@ -245,19 +243,6 @@ export const HotelAdminDashboard = () => {
           pageSize={5}
         />
       </div>
-
-      {/* Booking Modal */}
-      <BookingModal
-        isOpen={isNewBookingModalOpen}
-        onClose={() => setIsNewBookingModalOpen(false)}
-      />
-
-      {/* Invoice Modal Preview */}
-      <InvoiceModal
-        isOpen={selectedInvoiceBooking !== null}
-        onClose={() => setSelectedInvoiceBooking(null)}
-        booking={selectedInvoiceBooking}
-      />
     </div>
   );
 };

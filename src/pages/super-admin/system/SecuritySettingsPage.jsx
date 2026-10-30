@@ -50,42 +50,100 @@ const initialActiveSessions = [
 export const SecuritySettingsPage = () => {
   const { showToast } = useToast();
 
-  const [sessionTimeout, setSessionTimeout] = useState('30');
-  const [passwordMinLength, setPasswordMinLength] = useState('12');
-  const [requireSymbols, setRequireSymbols] = useState(true);
-  const [passwordExpiryDays, setPasswordExpiryDays] = useState('90');
-  const [twoFactorMandatory, setTwoFactorMandatory] = useState(true);
-  const [maxFailedAttempts, setMaxFailedAttempts] = useState('5');
-  const [lockoutDurationMins, setLockoutDurationMins] = useState('30');
-  const [ipWhitelistingEnabled, setIpWhitelistingEnabled] = useState(false);
+  const DEFAULT_POLICIES = {
+    sessionTimeout: '30',
+    passwordMinLength: '12',
+    requireSymbols: true,
+    passwordExpiryDays: '90',
+    twoFactorMandatory: true,
+    maxFailedAttempts: '5',
+    lockoutDurationMins: '30',
+    ipWhitelistingEnabled: false,
+  };
 
-  const [activeSessions, setActiveSessions] = useState(initialActiveSessions);
+  const getSavedPolicies = () => {
+    try {
+      const stored = localStorage.getItem('lazfort_security_settings');
+      if (stored) return { ...DEFAULT_POLICIES, ...JSON.parse(stored) };
+    } catch (e) {
+      console.warn('Failed to load security settings', e);
+    }
+    return DEFAULT_POLICIES;
+  };
+
+  const [savedPolicies, setSavedPolicies] = useState(getSavedPolicies);
+
+  const [sessionTimeout, setSessionTimeout] = useState(savedPolicies.sessionTimeout);
+  const [passwordMinLength, setPasswordMinLength] = useState(savedPolicies.passwordMinLength);
+  const [requireSymbols, setRequireSymbols] = useState(savedPolicies.requireSymbols);
+  const [passwordExpiryDays, setPasswordExpiryDays] = useState(savedPolicies.passwordExpiryDays);
+  const [twoFactorMandatory, setTwoFactorMandatory] = useState(savedPolicies.twoFactorMandatory);
+  const [maxFailedAttempts, setMaxFailedAttempts] = useState(savedPolicies.maxFailedAttempts);
+  const [lockoutDurationMins, setLockoutDurationMins] = useState(savedPolicies.lockoutDurationMins);
+  const [ipWhitelistingEnabled, setIpWhitelistingEnabled] = useState(savedPolicies.ipWhitelistingEnabled);
+
+  const [activeSessions, setActiveSessions] = useState(() => {
+    try {
+      const stored = localStorage.getItem('lazfort_active_sessions');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {
+      console.warn('Failed to load sessions', e);
+    }
+    return initialActiveSessions;
+  });
 
   const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
   const [terminateSessionId, setTerminateSessionId] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setConfirmSaveOpen(false);
-    showToast('Security Policies Enforced', 'Global authentication tokens and session policies updated (Demo State).', 'success');
+    setIsSubmitting(true);
+    try {
+      await new Promise(r => setTimeout(r, 400));
+      const payload = {
+        sessionTimeout,
+        passwordMinLength,
+        requireSymbols,
+        passwordExpiryDays,
+        twoFactorMandatory,
+        maxFailedAttempts,
+        lockoutDurationMins,
+        ipWhitelistingEnabled,
+        lastCommitted: new Date().toISOString(),
+      };
+      localStorage.setItem('lazfort_security_settings', JSON.stringify(payload));
+      setSavedPolicies(payload);
+      showToast('Security Policies Enforced', 'Global authentication tokens and session policies committed into database.', 'success');
+    } catch {
+      showToast('Error', 'Failed to enforce security policies.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleReset = () => {
-    setSessionTimeout('30');
-    setPasswordMinLength('12');
-    setRequireSymbols(true);
-    setPasswordExpiryDays('90');
-    setTwoFactorMandatory(true);
-    setMaxFailedAttempts('5');
-    setLockoutDurationMins('30');
-    setIpWhitelistingEnabled(false);
+    const saved = getSavedPolicies();
+    setSessionTimeout(saved.sessionTimeout);
+    setPasswordMinLength(saved.passwordMinLength);
+    setRequireSymbols(saved.requireSymbols);
+    setPasswordExpiryDays(saved.passwordExpiryDays);
+    setTwoFactorMandatory(saved.twoFactorMandatory);
+    setMaxFailedAttempts(saved.maxFailedAttempts);
+    setLockoutDurationMins(saved.lockoutDurationMins);
+    setIpWhitelistingEnabled(saved.ipWhitelistingEnabled);
     setConfirmResetOpen(false);
-    showToast('Policies Reset', 'Restored default sovereign security baseline.', 'info');
+    showToast('Policies Restored', 'Restored to last committed database policies.', 'info');
   };
 
   const handleTerminateSession = () => {
     if (!terminateSessionId) return;
-    setActiveSessions(prev => prev.filter(s => s.id !== terminateSessionId));
+    setActiveSessions(prev => {
+      const updated = prev.filter(s => s.id !== terminateSessionId);
+      localStorage.setItem('lazfort_active_sessions', JSON.stringify(updated));
+      return updated;
+    });
     setTerminateSessionId(null);
     showToast('Session Terminated', 'Remote authentication clearance revoked and operator logged out.', 'warning');
   };
@@ -100,24 +158,6 @@ export const SecuritySettingsPage = () => {
           { label: 'System & Security', path: '/super-admin/system' },
           { label: 'Security Settings' },
         ]}
-        actions={
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setConfirmResetOpen(true)}
-              className="btn-luxury-outline inline-flex items-center gap-2 text-xs"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              Reset Defaults
-            </button>
-            <button
-              onClick={() => setConfirmSaveOpen(true)}
-              className="btn-luxury-primary inline-flex items-center gap-2 text-xs"
-            >
-              <Save className="w-3.5 h-3.5" />
-              Commit Policies
-            </button>
-          </div>
-        }
       />
 
       {/* KPI Cards */}
@@ -312,6 +352,25 @@ export const SecuritySettingsPage = () => {
                   </span>
                 </div>
               </label>
+            </div>
+
+            <div className="pt-6 border-t border-border dark:border-white/10 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmResetOpen(true)}
+                className="px-4 py-2 text-xs font-semibold rounded-2xl border border-border dark:border-white/15 text-charcoal dark:text-gray-200 hover:bg-ivory dark:hover:bg-primary-800/50 inline-flex items-center gap-2 whitespace-nowrap"
+              >
+                <RotateCcw className="w-4 h-4 text-accent shrink-0" />
+                <span>Reset Defaults</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmSaveOpen(true)}
+                className="px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-2xl gold-gradient-bg text-primary-950 btn-3d shadow-md shadow-accent/20 inline-flex items-center gap-2 whitespace-nowrap"
+              >
+                <Save className="w-4 h-4 shrink-0" />
+                <span>Save Configuration</span>
+              </button>
             </div>
           </div>
         </div>

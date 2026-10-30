@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
@@ -23,18 +24,26 @@ import {
 } from 'lucide-react';
 
 export const SupportTicketsPage = () => {
+  const navigate = useNavigate();
   const { showToast } = useToast();
-  const [tickets, setTickets] = useState(initialSupportTickets || []);
+  const [tickets, setTickets] = useState(() => {
+    try {
+      const stored = localStorage.getItem('lazfort_support_tickets');
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return initialSupportTickets || [];
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const [selectedTicket, setSelectedTicket] = useState(null);
-  const [replyTicket, setReplyTicket] = useState(null);
-  const [replyMessage, setReplyMessage] = useState('');
-  const [assignTicket, setAssignTicket] = useState(null);
-  const [newAgent, setNewAgent] = useState('Alexander Cross (Senior Fintech Engineer)');
+  const persistTickets = (list) => {
+    setTickets(list);
+    try {
+      localStorage.setItem('lazfort_support_tickets', JSON.stringify(list));
+    } catch {}
+  };
 
   // Metrics
   const openCount = useMemo(() => tickets.filter(t => t.status === 'open').length, [tickets]);
@@ -70,10 +79,10 @@ export const SupportTicketsPage = () => {
       prev.map(t =>
         t.id === replyTicket.id
           ? {
-              ...t,
-              status: 'in_progress',
-              repliesCount: t.repliesCount + 1,
-            }
+            ...t,
+            status: 'in_progress',
+            repliesCount: t.repliesCount + 1,
+          }
           : t
       )
     );
@@ -91,9 +100,9 @@ export const SupportTicketsPage = () => {
       prev.map(t =>
         t.id === assignTicket.id
           ? {
-              ...t,
-              assignedAgent: newAgent,
-            }
+            ...t,
+            assignedAgent: newAgent,
+          }
           : t
       )
     );
@@ -166,23 +175,23 @@ export const SupportTicketsPage = () => {
       render: (t) => (
         <div className="flex items-center gap-1.5">
           <button
-            onClick={() => setSelectedTicket(t)}
+            onClick={() => navigate(`/super-admin/support/tickets/${t.id}`)}
             className="p-1.5 rounded-lg border border-border dark:border-white/10 hover:bg-ivory dark:hover:bg-white/5 text-charcoal-muted hover:text-accent transition-colors"
-            title="Inspect Ticket Dossier"
+            title="Inspect Ticket Dossier on Dedicated Page"
           >
             <Eye className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => setReplyTicket(t)}
+            onClick={() => navigate(`/super-admin/support/tickets/${t.id}`)}
             className="p-1.5 rounded-lg border border-accent/30 bg-accent/10 hover:bg-accent/20 text-accent transition-colors"
-            title="Transmit Executive Reply"
+            title="Transmit Executive Reply on Dedicated Page"
           >
             <MessageSquare className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => setAssignTicket(t)}
+            onClick={() => navigate(`/super-admin/support/tickets/${t.id}`)}
             className="p-1.5 rounded-lg border border-border dark:border-white/10 hover:bg-ivory dark:hover:bg-white/5 text-charcoal-muted hover:text-accent transition-colors"
-            title="Reassign Specialist"
+            title="Reassign Specialist on Dedicated Page"
           >
             <UserCheck className="w-3.5 h-3.5" />
           </button>
@@ -274,136 +283,6 @@ export const SupportTicketsPage = () => {
           emptyMessage="No support tickets match current criteria."
         />
       </div>
-
-      {/* View Ticket Modal */}
-      {selectedTicket && (
-        <Modal
-          isOpen={true}
-          onClose={() => setSelectedTicket(null)}
-          title={`Support Dossier: ${selectedTicket.ticketId}`}
-          maxWidth="md"
-        >
-          <div className="space-y-4 text-xs">
-            <div className="p-4 rounded-2xl bg-ivory dark:bg-primary-900/60 border border-border/80">
-              <span className="font-mono text-[10px] text-accent font-bold uppercase">{selectedTicket.category} • {selectedTicket.priority} Priority</span>
-              <h4 className="font-serif font-bold text-base text-primary dark:text-white mt-1">
-                {selectedTicket.subject}
-              </h4>
-              <p className="text-charcoal-muted mt-2 leading-relaxed">{selectedTicket.description}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-xl bg-white/40 dark:bg-white/5 border border-border/60">
-                <span className="text-[10px] uppercase font-mono text-charcoal-muted block">Client Beneficiary</span>
-                <span className="font-semibold text-primary dark:text-white">{selectedTicket.clientName}</span>
-                <span className="text-[10px] text-charcoal-muted block">{selectedTicket.hotelName}</span>
-              </div>
-              <div className="p-3 rounded-xl bg-white/40 dark:bg-white/5 border border-border/60">
-                <span className="text-[10px] uppercase font-mono text-charcoal-muted block">Assigned Engineer</span>
-                <span className="font-semibold text-primary dark:text-white">{selectedTicket.assignedAgent}</span>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                type="button"
-                onClick={() => setSelectedTicket(null)}
-                className="px-4 py-2 rounded-xl gold-gradient-bg text-primary-950 font-bold text-xs btn-3d shadow-gold"
-              >
-                Close Dossier
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {/* Reply Modal */}
-      {replyTicket && (
-        <Modal
-          isOpen={true}
-          onClose={() => setReplyTicket(null)}
-          title={`Transmit Executive Reply: ${replyTicket.ticketId}`}
-          maxWidth="md"
-        >
-          <form onSubmit={handleSendReply} className="space-y-4 text-xs">
-            <div className="p-3 rounded-xl bg-ivory dark:bg-primary-900/40 border border-border/60">
-              <span className="font-semibold text-primary dark:text-white block">{replyTicket.subject}</span>
-              <span className="text-[11px] text-charcoal-muted">To: {replyTicket.clientName} ({replyTicket.hotelName})</span>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold uppercase mb-1">Executive Response Narrative</label>
-              <textarea
-                rows={4}
-                required
-                value={replyMessage}
-                onChange={e => setReplyMessage(e.target.value)}
-                placeholder="Type response to client..."
-                className="input-luxury w-full text-xs"
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2 border-t border-border/80 dark:border-white/10">
-              <button
-                type="button"
-                onClick={() => setReplyTicket(null)}
-                className="px-4 py-2 rounded-xl btn-secondary-3d font-semibold text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-5 py-2.5 rounded-xl gold-gradient-bg text-primary-950 font-bold text-xs uppercase tracking-wider btn-3d shadow-gold flex items-center gap-1.5"
-              >
-                <Send className="w-3.5 h-3.5" />
-                <span>Transmit Response</span>
-              </button>
-            </div>
-          </form>
-        </Modal>
-      )}
-
-      {/* Reassign Modal */}
-      {assignTicket && (
-        <Modal
-          isOpen={true}
-          onClose={() => setAssignTicket(null)}
-          title={`Reassign Specialist: ${assignTicket.ticketId}`}
-          maxWidth="md"
-        >
-          <form onSubmit={handleAssignAgent} className="space-y-4 text-xs">
-            <div>
-              <label className="block text-[11px] font-semibold uppercase mb-1">Select Tier-2 Specialist Engineer</label>
-              <select
-                value={newAgent}
-                onChange={e => setNewAgent(e.target.value)}
-                className="input-luxury w-full text-xs py-2"
-              >
-                <option value="Alexander Cross (Senior Fintech Engineer)">Alexander Cross (Senior Fintech Engineer)</option>
-                <option value="Vivienne Moreau (Head of Protocol)">Vivienne Moreau (Head of Protocol)</option>
-                <option value="Marcus Sterling (Lead Infrastructure Architect)">Marcus Sterling (Lead Infrastructure Architect)</option>
-                <option value="Elena Rostova (Compliance & Auditing Lead)">Elena Rostova (Compliance & Auditing Lead)</option>
-              </select>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setAssignTicket(null)}
-                className="px-4 py-2 rounded-xl btn-secondary-3d font-semibold text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-5 py-2.5 rounded-xl gold-gradient-bg text-primary-950 font-bold text-xs uppercase tracking-wider btn-3d shadow-gold"
-              >
-                Update Assignment
-              </button>
-            </div>
-          </form>
-        </Modal>
-      )}
     </div>
   );
 };

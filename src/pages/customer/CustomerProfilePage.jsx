@@ -110,11 +110,10 @@ export const CustomerProfilePage = () => {
               <p className="text-xs text-charcoal-muted dark:text-gray-400 mt-0.5">{email}</p>
               <div className="flex items-center gap-2 mt-2">
                 <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider ${
-                    isVip
-                      ? 'bg-accent/20 text-accent border border-accent/40'
-                      : 'bg-primary-900/10 dark:bg-white/10 text-charcoal-muted dark:text-gray-300 border border-charcoal/20'
-                  }`}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider ${isVip
+                    ? 'bg-accent/20 text-accent border border-accent/40'
+                    : 'bg-primary-900/10 dark:bg-white/10 text-charcoal-muted dark:text-gray-300 border border-charcoal/20'
+                    }`}
                 >
                   {isVip ? <Crown className="w-3.5 h-3.5" /> : <ShieldCheck className="w-3.5 h-3.5" />}
                   <span>{isVip ? `${tier} Tier Member` : 'Standard Member'}</span>

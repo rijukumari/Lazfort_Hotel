@@ -197,7 +197,7 @@ export const BillingInvoicesPage = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={handleExportCSV}
-              className="btn-luxury-outline inline-flex items-center gap-2 text-xs"
+              className="px-4 py-2 text-xs font-semibold rounded-2xl border border-border dark:border-white/15 text-charcoal dark:text-gray-200 hover:bg-ivory dark:hover:bg-primary-800/50 inline-flex items-center gap-2"
             >
               <Download className="w-4 h-4 text-accent" />
               <span>Export Ledger CSV</span>

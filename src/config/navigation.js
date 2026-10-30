@@ -153,10 +153,10 @@ export const NAVIGATION_CONFIG = {
           path: '/hotel-admin/dashboard',
           iconName: 'LayoutDashboard',
           children: [
-            { id: 'ha-dash-ov', label: 'Overview', path: '/hotel-admin/dashboard' },
-            { id: 'ha-dash-today', label: "Today's Summary", path: '/hotel-admin/dashboard/today' },
-            { id: 'ha-dash-occ', label: 'Occupancy Analytics', path: '/hotel-admin/dashboard/occupancy' },
-            { id: 'ha-dash-rev', label: 'Revenue Analytics', path: '/hotel-admin/dashboard/revenue' },
+            { id: 'ha-dash-ov', label: 'Overview', path: '/hotel-admin/dashboard/overview' },
+            { id: 'ha-dash-today', label: "Today's Summary", path: '/hotel-admin/dashboard/today-summary' },
+            { id: 'ha-dash-occ', label: 'Occupancy Analytics', path: '/hotel-admin/dashboard/occupancy-analytics' },
+            { id: 'ha-dash-rev', label: 'Revenue Analytics', path: '/hotel-admin/dashboard/revenue-analytics' },
             { id: 'ha-dash-rec', label: 'Recent Bookings', path: '/hotel-admin/dashboard/recent-bookings' }
           ]
         },

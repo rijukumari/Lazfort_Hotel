@@ -78,25 +78,6 @@ export const EditRoomPage = () => {
           title={`Edit Suite: ${room.roomNumber}`}
           description={`Update commercial pricing, suite nomenclature, or specifications for ${room.name}.`}
           badge={`Suite ${room.roomNumber}`}
-          actions={
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                onClick={() => navigate('/hotel-admin/rooms')}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="gold"
-                icon={Sparkles}
-                type="submit"
-                form="edit-suite-form"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Saving Changes...' : 'Save Changes'}
-              </Button>
-            </div>
-          }
         />
       </div>
 
@@ -162,13 +143,8 @@ export const EditRoomPage = () => {
 
           <div className="flex items-center justify-end gap-3 pt-6 border-t border-border dark:border-white/10 mt-6">
             <Button
-              variant="outline"
-              onClick={() => navigate('/hotel-admin/rooms')}
-            >
-              Cancel
-            </Button>
-            <Button
               variant="gold"
+              icon={Sparkles}
               type="submit"
               disabled={isSubmitting}
             >

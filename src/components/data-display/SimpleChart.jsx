@@ -193,9 +193,8 @@ export const SimpleBarChart = ({ data = [], height = 200, valueSuffix = '%' }) =
           >
             {/* Value indicator tooltip */}
             <div
-              className={`text-[10px] font-mono text-accent font-semibold mb-1 transition-opacity duration-200 ${
-                isHovered ? 'opacity-100' : 'opacity-0'
-              }`}
+              className={`text-[10px] font-mono text-accent font-semibold mb-1 transition-opacity duration-200 ${isHovered ? 'opacity-100' : 'opacity-0'
+                }`}
             >
               {item.value}
               {valueSuffix}
@@ -204,9 +203,8 @@ export const SimpleBarChart = ({ data = [], height = 200, valueSuffix = '%' }) =
             {/* Bar */}
             <div className="w-full max-w-[28px] bg-ivory dark:bg-primary-800 rounded-t-lg overflow-hidden flex flex-col justify-end p-0.5">
               <div
-                className={`w-full rounded-t-md transition-all duration-500 ${
-                  isHovered ? 'bg-accent' : 'bg-accent/80 hover:bg-accent'
-                }`}
+                className={`w-full rounded-t-md transition-all duration-500 ${isHovered ? 'bg-accent' : 'bg-accent/80 hover:bg-accent'
+                  }`}
                 style={{ height: `${heightPct}%` }}
               />
             </div>
@@ -223,4 +221,5 @@ export const SimpleBarChart = ({ data = [], height = 200, valueSuffix = '%' }) =
 };
 
 export default SimpleAreaChart;
+
 

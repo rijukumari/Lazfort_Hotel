@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
@@ -26,6 +27,7 @@ import {
 } from 'lucide-react';
 
 export const AllUsersPage = () => {
+  const navigate = useNavigate();
   const { users, addUser, updateUser, suspendUser, reactivateUser, deleteUser } = useSuperAdminUsers();
   const { showToast } = useToast();
 
@@ -92,7 +94,7 @@ export const AllUsersPage = () => {
     setFormName('');
     setFormEmail('');
     setFormPhone('');
-    showToast('User Created (Demo)', `New user "${formName}" has been provisioned.`, 'success');
+    showToast('User Created', `New user "${formName}" has been provisioned.`, 'success');
   };
 
   const handleUpdateUser = (e) => {
@@ -107,7 +109,7 @@ export const AllUsersPage = () => {
     });
 
     setEditingUser(null);
-    showToast('User Updated (Demo)', 'Account permissions and profile details modified.', 'success');
+    showToast('User Updated', 'Account permissions and profile details modified.', 'success');
   };
 
   const handleConfirmSuspend = () => {
@@ -122,7 +124,7 @@ export const AllUsersPage = () => {
     if (!deletingUserId) return;
     deleteUser(deletingUserId);
     setDeletingUserId(null);
-    showToast('User Removed', 'User profile and permissions unlinked from database (Demo).', 'info');
+    showToast('User Removed', 'User profile and permissions unlinked from database.', 'info');
   };
 
   const columns = [
@@ -187,16 +189,16 @@ export const AllUsersPage = () => {
       render: (u) => (
         <div className="flex items-center gap-1.5">
           <button
-            onClick={() => setViewingUser(u)}
+            onClick={() => navigate(`/super-admin/users/details/${u.id}`)}
             className="p-1.5 rounded-lg border border-border dark:border-white/10 hover:bg-ivory dark:hover:bg-white/5 text-charcoal-muted hover:text-accent transition-colors"
-            title="View Details"
+            title="View Identity Dossier on Dedicated Page"
           >
             <Eye className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => setEditingUser(u)}
+            onClick={() => navigate(`/super-admin/users/edit/${u.id}`)}
             className="p-1.5 rounded-lg border border-border dark:border-white/10 hover:bg-ivory dark:hover:bg-white/5 text-charcoal-muted hover:text-accent transition-colors"
-            title="Edit User"
+            title="Edit User Profile on Dedicated Page"
           >
             <Edit className="w-3.5 h-3.5" />
           </button>
@@ -239,11 +241,11 @@ export const AllUsersPage = () => {
         description="Global system identities, role-based access control (RBAC), and property clearance management"
         actions={
           <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl gold-gradient-bg text-primary-950 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold"
+            onClick={() => navigate('/super-admin/users/add')}
+            className="px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-2xl gold-gradient-bg text-primary-950 btn-3d shadow-md shadow-accent/20 inline-flex items-center gap-2 whitespace-nowrap shrink-0"
           >
-            <Plus className="w-4 h-4" />
-            <span>Provision New User</span>
+            <Plus className="w-4 h-4 shrink-0" />
+            <span className="whitespace-nowrap">Provision New User</span>
           </button>
         }
       />
@@ -325,254 +327,6 @@ export const AllUsersPage = () => {
           emptyMessage="No user profiles found matching current filters."
         />
       </div>
-
-      {/* Provision New User Modal */}
-      <Modal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        title="Provision New Enterprise User"
-        maxWidth="md"
-      >
-        <form onSubmit={handleCreateUser} className="space-y-4 text-xs">
-          <div>
-            <label className="block text-[11px] font-semibold text-charcoal dark:text-gray-200 uppercase tracking-wider mb-1">
-              Full Legal Name *
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Baroness Camille Beaumont"
-              value={formName}
-              onChange={e => setFormName(e.target.value)}
-              className="input-luxury w-full text-xs"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-semibold text-charcoal dark:text-gray-200 uppercase tracking-wider mb-1">
-              Institutional Email Address *
-            </label>
-            <input
-              type="email"
-              required
-              placeholder="camille@lazfort-palace.mc"
-              value={formEmail}
-              onChange={e => setFormEmail(e.target.value)}
-              className="input-luxury w-full text-xs"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-semibold text-charcoal dark:text-gray-200 uppercase tracking-wider mb-1">
-              Direct Contact Number
-            </label>
-            <input
-              type="text"
-              placeholder="+377 98 00 12 00"
-              value={formPhone}
-              onChange={e => setFormPhone(e.target.value)}
-              className="input-luxury w-full text-xs"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-semibold text-charcoal dark:text-gray-200 uppercase tracking-wider mb-1">
-                Access Role Tier
-              </label>
-              <select
-                value={formRole}
-                onChange={e => setFormRole(e.target.value)}
-                className="input-luxury w-full text-xs py-2"
-              >
-                <option value="Hotel Admin (GM)">Hotel Admin (GM)</option>
-                <option value="Receptionist">Receptionist</option>
-                <option value="Housekeeping Lead">Housekeeping Lead</option>
-                <option value="Staff Specialist">Staff Specialist</option>
-                <option value="Super Admin">Super Admin</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold text-charcoal dark:text-gray-200 uppercase tracking-wider mb-1">
-                Property Node
-              </label>
-              <select
-                value={formHotel}
-                onChange={e => setFormHotel(e.target.value)}
-                className="input-luxury w-full text-xs py-2"
-              >
-                <option value="Lazfort Grand Palace Monaco">Lazfort Grand Palace Monaco</option>
-                <option value="The Royal Horizon Zurich">The Royal Horizon Zurich</option>
-                <option value="Palazzo Di Bellagio Como">Palazzo Di Bellagio Como</option>
-                <option value="Sovereign Marina Resort Cannes">Sovereign Marina Resort Cannes</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2 pt-3 border-t border-border/80 dark:border-white/10">
-            <button
-              type="button"
-              onClick={() => setIsAddModalOpen(false)}
-              className="px-4 py-2 rounded-xl btn-secondary-3d font-semibold text-xs"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-5 py-2.5 rounded-xl gold-gradient-bg text-primary-950 font-bold text-xs uppercase tracking-wider btn-3d shadow-gold"
-            >
-              Provision Account
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Edit User Modal */}
-      {editingUser && (
-        <Modal
-          isOpen={true}
-          onClose={() => setEditingUser(null)}
-          title={`Edit User Credentials: ${editingUser.name}`}
-          maxWidth="md"
-        >
-          <form onSubmit={handleUpdateUser} className="space-y-4 text-xs">
-            <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1">
-                Full Name
-              </label>
-              <input
-                type="text"
-                value={editingUser.name}
-                onChange={e => setEditingUser({ ...editingUser, name: e.target.value })}
-                className="input-luxury w-full text-xs"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1">
-                Direct Contact Phone
-              </label>
-              <input
-                type="text"
-                value={editingUser.phone}
-                onChange={e => setEditingUser({ ...editingUser, phone: e.target.value })}
-                className="input-luxury w-full text-xs"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1">
-                  Assigned Role
-                </label>
-                <select
-                  value={editingUser.role}
-                  onChange={e => setEditingUser({ ...editingUser, role: e.target.value })}
-                  className="input-luxury w-full text-xs py-2"
-                >
-                  <option value="Hotel Admin (GM)">Hotel Admin (GM)</option>
-                  <option value="Receptionist">Receptionist</option>
-                  <option value="Housekeeping Lead">Housekeeping Lead</option>
-                  <option value="Staff Specialist">Staff Specialist</option>
-                  <option value="Super Admin">Super Admin</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1">
-                  Property Node
-                </label>
-                <select
-                  value={editingUser.hotel}
-                  onChange={e => setEditingUser({ ...editingUser, hotel: e.target.value })}
-                  className="input-luxury w-full text-xs py-2"
-                >
-                  <option value="Lazfort Grand Palace Monaco">Lazfort Grand Palace Monaco</option>
-                  <option value="The Royal Horizon Zurich">The Royal Horizon Zurich</option>
-                  <option value="Palazzo Di Bellagio Como">Palazzo Di Bellagio Como</option>
-                  <option value="Sovereign Marina Resort Cannes">Sovereign Marina Resort Cannes</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-3 border-t border-border/80 dark:border-white/10">
-              <button
-                type="button"
-                onClick={() => setEditingUser(null)}
-                className="px-4 py-2 rounded-xl btn-secondary-3d font-semibold text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-5 py-2.5 rounded-xl gold-gradient-bg text-primary-950 font-bold text-xs uppercase tracking-wider btn-3d shadow-gold"
-              >
-                Save Changes
-              </button>
-            </div>
-          </form>
-        </Modal>
-      )}
-
-      {/* View User Modal */}
-      {viewingUser && (
-        <Modal
-          isOpen={true}
-          onClose={() => setViewingUser(null)}
-          title="User Profile Dossier"
-          maxWidth="md"
-        >
-          <div className="space-y-4 text-xs">
-            <div className="flex items-center gap-4 p-4 rounded-2xl bg-ivory dark:bg-primary-900/60 border border-border/80">
-              <img
-                src={viewingUser.avatar}
-                alt={viewingUser.name}
-                className="w-14 h-14 rounded-full object-cover border-2 border-accent"
-              />
-              <div>
-                <h4 className="font-serif font-bold text-base text-primary dark:text-white">
-                  {viewingUser.name}
-                </h4>
-                <p className="text-charcoal-muted font-mono">{viewingUser.email}</p>
-                <div className="mt-1 flex items-center gap-2">
-                  <StatusBadge status={viewingUser.status} size="sm" />
-                  <span className="text-accent font-semibold">{viewingUser.role}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-xl bg-white/40 dark:bg-white/5 border border-border/60">
-                <span className="text-[10px] uppercase font-mono text-charcoal-muted block">Direct Phone</span>
-                <span className="font-semibold text-primary dark:text-white">{viewingUser.phone}</span>
-              </div>
-              <div className="p-3 rounded-xl bg-white/40 dark:bg-white/5 border border-border/60">
-                <span className="text-[10px] uppercase font-mono text-charcoal-muted block">Property Node</span>
-                <span className="font-semibold text-primary dark:text-white truncate block">{viewingUser.hotel}</span>
-              </div>
-              <div className="p-3 rounded-xl bg-white/40 dark:bg-white/5 border border-border/60">
-                <span className="text-[10px] uppercase font-mono text-charcoal-muted block">Registered Date</span>
-                <span className="font-mono text-primary dark:text-white">{viewingUser.registeredDate}</span>
-              </div>
-              <div className="p-3 rounded-xl bg-white/40 dark:bg-white/5 border border-border/60">
-                <span className="text-[10px] uppercase font-mono text-charcoal-muted block">Last Active Session</span>
-                <span className="font-mono text-primary dark:text-white">{viewingUser.lastLogin}</span>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                type="button"
-                onClick={() => setViewingUser(null)}
-                className="px-4 py-2 rounded-xl gold-gradient-bg text-primary-950 font-bold text-xs btn-3d shadow-gold"
-              >
-                Close Dossier
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
 
       {/* Suspend Confirmation Dialog */}
       {suspendingUser && (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useERP } from '../../context/ERPContext';
 import { useToast } from '../../context/ToastContext';
 import { FormField, Input, Select, Button, Card } from '../../components/ui';
@@ -13,13 +13,17 @@ import {
 
 export const NewBookingPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { rooms, createReservation } = useERP();
   const { showToast } = useToast();
+
+  const queryRoomId = searchParams.get('roomId');
+  const initialRoomId = (queryRoomId && rooms.find(r => r.id === queryRoomId)) ? queryRoomId : (rooms[0]?.id || '');
 
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [guestPhone, setGuestPhone] = useState('+377 98 00 12 34');
-  const [selectedRoomId, setSelectedRoomId] = useState(rooms[0]?.id || '');
+  const [selectedRoomId, setSelectedRoomId] = useState(initialRoomId);
   const [checkIn, setCheckIn] = useState(new Date().toISOString().split('T')[0]);
   const [nights, setNights] = useState(3);
   const [adults, setAdults] = useState(2);
@@ -100,23 +104,6 @@ export const NewBookingPage = () => {
           <p className="text-xs text-charcoal-muted">
             Provision guest stay dates, allocate luxury inventory, and establish folio escrow billing.
           </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/hotel-admin/bookings')}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="gold"
-            icon={Save}
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Confirming...' : 'Confirm Reservation'}
-          </Button>
         </div>
       </div>
 

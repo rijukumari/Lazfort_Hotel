@@ -3,10 +3,8 @@ import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
 import { Tabs } from '../../../components/ui/Tabs';
-import { Modal } from '../../../components/ui/Modal';
-import { ModalFooter } from '../../../components/ui/ModalFooter';
-import { FormField, Input, Select, Textarea } from '../../../components/forms/FormField';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
+import { Button } from '../../../components/ui/Button';
 import { useERP } from '../../../context/ERPContext';
 import { useToast } from '../../../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
@@ -48,166 +46,11 @@ export const PlatformRevenuePage = () => {
   // Local state for Chart of Accounts to allow Add/Edit
   const [coaList, setCoaList] = useState(chartOfAccounts || []);
 
-  // Modals state
-  const [selectedFolio, setSelectedFolio] = useState(null);
-  const [isAddChargeModalOpen, setIsAddChargeModalOpen] = useState(false);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [selectedAccount, setSelectedAccount] = useState(null);
-  const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
-  const [editingAccount, setEditingAccount] = useState(null);
-
-  const [selectedJournal, setSelectedJournal] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Charge Form
-  const [chargeCategory, setChargeCategory] = useState('restaurant');
-  const [chargeDescription, setChargeDescription] = useState('');
-  const [chargeAmount, setChargeAmount] = useState(150);
-
-  // Payment Form
-  const [paymentAmount, setPaymentAmount] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState('Credit Card');
-
-  // Account Form
-  const [accCode, setAccCode] = useState('');
-  const [accName, setAccName] = useState('');
-  const [accType, setAccType] = useState('Asset');
-  const [accCategory, setAccCategory] = useState('Operating Accounts');
-  const [accBalance, setAccBalance] = useState(50000);
-  const [accStatus, setAccStatus] = useState('active');
-
   const totalReceivables = (folios || []).reduce((sum, f) => sum + (f.balanceDue || 0), 0);
   const totalCollected = (folios || []).reduce((sum, f) => sum + (f.totalPaid || 0), 0);
   const totalGlBalance = (coaList || []).reduce((sum, a) => sum + (a.balance || 0), 0);
   const monthlyRev = getMonthlyRevenue ? getMonthlyRevenue() : 450000;
   const todayRev = getTodayRevenue ? getTodayRevenue() : 18500;
-
-  // Handlers
-  const handleOpenAddCharge = (folio) => {
-    setSelectedFolio(folio);
-    setChargeDescription('');
-    setChargeAmount(150);
-    setIsAddChargeModalOpen(true);
-  };
-
-  const handleOpenPayment = (folio) => {
-    setSelectedFolio(folio);
-    setPaymentAmount(folio.balanceDue);
-    setIsPaymentModalOpen(true);
-  };
-
-  const handleExecuteAddCharge = async (e) => {
-    e.preventDefault();
-    if (!selectedFolio || chargeAmount <= 0) return;
-    setIsSubmitting(true);
-    try {
-      if (postFolioCharge) {
-        postFolioCharge(selectedFolio.id, {
-          date: new Date().toISOString().split('T')[0],
-          category: chargeCategory,
-          description: chargeDescription || `${chargeCategory.toUpperCase()} Service Charge`,
-          quantity: 1,
-          unitPrice: Number(chargeAmount),
-          taxAmount: Number(chargeAmount) * 0.1,
-          totalAmount: Number(chargeAmount) * 1.1,
-          postedBy: 'Platform Admin',
-        });
-      }
-      showToast('Charge Posted', `$${chargeAmount} posted to Folio #${selectedFolio.bookingCode}`, 'success');
-      setIsAddChargeModalOpen(false);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleExecutePayment = async (e) => {
-    e.preventDefault();
-    if (!selectedFolio || paymentAmount <= 0) return;
-    setIsSubmitting(true);
-    try {
-      if (settleFolioPayment) {
-        settleFolioPayment(selectedFolio.id, {
-          date: new Date().toISOString().split('T')[0],
-          amount: Number(paymentAmount),
-          method: paymentMethod,
-          reference: `PAY-${Date.now().toString().slice(-6)}`,
-          receivedBy: 'Platform Super Admin',
-        });
-      }
-      showToast('Payment Settled', `$${paymentAmount} settled for Folio #${selectedFolio.bookingCode}`, 'success');
-      setIsPaymentModalOpen(false);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleOpenAccountModal = (account = null) => {
-    if (account) {
-      setEditingAccount(account);
-      setAccCode(account.code);
-      setAccName(account.name);
-      setAccType(account.type);
-      setAccCategory(account.category || 'Operating Accounts');
-      setAccBalance(account.balance);
-      setAccStatus(account.status || 'active');
-    } else {
-      setEditingAccount(null);
-      setAccCode(`10${Math.floor(100 + Math.random() * 900)}`);
-      setAccName('');
-      setAccType('Asset');
-      setAccCategory('Operating Accounts');
-      setAccBalance(25000);
-      setAccStatus('active');
-    }
-    setIsAddAccountModalOpen(true);
-  };
-
-  const handleSaveAccount = (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      if (editingAccount) {
-        setCoaList(prev =>
-          prev.map(a =>
-            a.id === editingAccount.id
-              ? {
-                  ...a,
-                  code: accCode.trim(),
-                  name: accName.trim(),
-                  type: accType,
-                  category: accCategory,
-                  balance: Number(accBalance),
-                  status: accStatus,
-                  isActive: accStatus === 'active',
-                }
-              : a
-          )
-        );
-        showToast('GL Account Updated', `Account ${accCode} updated successfully.`, 'success');
-      } else {
-        const newAcc = {
-          id: `acc-${Date.now()}`,
-          code: accCode.trim(),
-          name: accName.trim(),
-          type: accType,
-          category: accCategory,
-          balance: Number(accBalance),
-          currency: 'USD',
-          isActive: accStatus === 'active',
-          status: accStatus,
-          isReconciled: true,
-          subLedger: 'General',
-        };
-        setCoaList(prev => [newAcc, ...prev]);
-        showToast('Account Created (Demo)', `GL Account ${newAcc.code} registered into general ledger.`, 'success');
-      }
-      setIsAddAccountModalOpen(false);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleExportInvoicesCSV = () => {
     const csvContent =
@@ -289,25 +132,25 @@ export const PlatformRevenuePage = () => {
       key: 'id',
       header: 'Actions',
       render: f => (
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2 whitespace-nowrap">
           <button
-            onClick={() => setSelectedFolio(f)}
-            className="p-1.5 rounded-lg border border-border dark:border-border-dark text-charcoal hover:text-accent dark:text-gray-200"
-            title="View Folio Statement"
+            onClick={() => navigate(`/super-admin/billing/folios/statement/${f.id}`)}
+            className="w-8 h-8 rounded-xl border border-border dark:border-white/10 text-charcoal hover:text-accent dark:text-gray-200 hover:bg-ivory dark:hover:bg-primary-900/50 flex items-center justify-center transition-all shrink-0"
+            title="View Folio Statement on Dedicated Page"
           >
-            <Eye className="w-3.5 h-3.5" />
+            <Eye className="w-4 h-4" />
           </button>
           <button
-            onClick={() => handleOpenAddCharge(f)}
-            className="px-2 py-1 rounded-lg bg-accent/15 text-accent font-bold text-[11px] hover:bg-accent/25"
+            onClick={() => navigate(`/super-admin/billing/folios/charge/${f.id}`)}
+            className="h-8 px-3 rounded-xl bg-accent/15 text-accent border border-accent/30 font-bold text-xs hover:bg-accent/25 transition-all flex items-center justify-center whitespace-nowrap shrink-0"
             title="Post Incidental Charge"
           >
             + Charge
           </button>
           {f.balanceDue > 0 && (
             <button
-              onClick={() => handleOpenPayment(f)}
-              className="px-2 py-1 rounded-lg gold-gradient-bg text-primary-950 font-bold text-[11px]"
+              onClick={() => navigate(`/super-admin/billing/folios/pay/${f.id}`)}
+              className="h-8 px-3 rounded-xl gold-gradient-bg text-primary-950 font-bold text-xs btn-3d shadow-sm flex items-center justify-center whitespace-nowrap shrink-0"
               title="Settle Outstanding Balance"
             >
               Pay
@@ -375,9 +218,9 @@ export const PlatformRevenuePage = () => {
       header: 'Actions',
       render: i => (
         <button
-          onClick={() => setSelectedInvoice(i)}
+          onClick={() => navigate(`/super-admin/billing/invoices/${i.id || i.invoiceNumber}`)}
           className="p-1.5 rounded-lg border border-border dark:border-border-dark text-charcoal hover:text-accent dark:text-gray-200"
-          title="View Invoice Dossier"
+          title="View Invoice Dossier on Dedicated Page"
         >
           <Eye className="w-3.5 h-3.5" />
         </button>
@@ -432,16 +275,16 @@ export const PlatformRevenuePage = () => {
       render: a => (
         <div className="flex items-center gap-1.5">
           <button
-            onClick={() => setSelectedAccount(a)}
+            onClick={() => navigate(`/super-admin/billing/accounts/edit/${a.id}`)}
             className="p-1.5 rounded-lg border border-border dark:border-border-dark text-charcoal hover:text-accent dark:text-gray-200"
-            title="Inspect Account Ledger"
+            title="Inspect Account Ledger on Dedicated Page"
           >
             <Eye className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => handleOpenAccountModal(a)}
+            onClick={() => navigate(`/super-admin/billing/accounts/edit/${a.id}`)}
             className="p-1.5 rounded-lg border border-border dark:border-border-dark text-charcoal hover:text-accent dark:text-gray-200"
-            title="Edit GL Configuration"
+            title="Edit GL Configuration on Dedicated Page"
           >
             <Edit className="w-3.5 h-3.5" />
           </button>
@@ -515,21 +358,21 @@ export const PlatformRevenuePage = () => {
         description="Comprehensive sovereign billing ledger, resident folios, institutional accounts, and balanced journal entries."
         badge="Enterprise Accounting"
         actions={
-          <div className="flex items-center gap-2">
-            <button
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              icon={Download}
               onClick={handleExportInvoicesCSV}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl btn-secondary-3d text-xs font-semibold text-charcoal dark:text-gray-200 hover:text-accent"
             >
-              <Download className="w-4 h-4 text-accent" />
-              <span>Export CSV</span>
-            </button>
-            <button
-              onClick={() => handleOpenAccountModal()}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl gold-gradient-bg text-primary-950 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold"
+              Export CSV
+            </Button>
+            <Button
+              variant="gold"
+              icon={Plus}
+              onClick={() => navigate('/super-admin/billing/accounts/add')}
             >
-              <Plus className="w-4 h-4" />
-              <span>Add GL Account</span>
-            </button>
+              Add GL Account
+            </Button>
           </div>
         }
       />
@@ -651,303 +494,6 @@ export const PlatformRevenuePage = () => {
           </div>
         )}
       </div>
-
-      {/* Post Folio Charge Modal */}
-      <Modal
-        isOpen={isAddChargeModalOpen}
-        onClose={() => setIsAddChargeModalOpen(false)}
-        title="Post Charge to Guest Folio"
-        subtitle={`Suite ${selectedFolio?.roomNumber} • ${selectedFolio?.guestName} (${selectedFolio?.bookingCode})`}
-        maxWidth="md"
-      >
-        <form onSubmit={handleExecuteAddCharge} className="space-y-4 text-xs">
-          <FormField label="Charge Department Category" required>
-            <Select
-              value={chargeCategory}
-              onChange={e => setChargeCategory(e.target.value)}
-            >
-              <option value="restaurant">Haute Gastronomy Restaurant</option>
-              <option value="room_service">24/7 In-Suite Dining</option>
-              <option value="spa">Thalasso Spa & Wellness</option>
-              <option value="laundry">Dry Cleaning & Valet</option>
-              <option value="transport">Helicopter / Chauffeur Service</option>
-              <option value="minibar">Presidential Minibar</option>
-              <option value="miscellaneous">Concierge Incidentals</option>
-            </Select>
-          </FormField>
-
-          <FormField label="Description / Bill Narrative" required>
-            <Input
-              type="text"
-              placeholder="e.g., Grand Cru Chateau Latour 2012 or Caviar Tasting"
-              value={chargeDescription}
-              onChange={e => setChargeDescription(e.target.value)}
-              required
-            />
-          </FormField>
-
-          <FormField label="Charge Amount ($ USD)" required>
-            <Input
-              type="number"
-              min="1"
-              value={chargeAmount}
-              onChange={e => setChargeAmount(Number(e.target.value))}
-              required
-            />
-          </FormField>
-
-          <div className="p-3 rounded-xl bg-ivory dark:bg-primary-950/60 border border-border/80 dark:border-white/10 text-charcoal-muted dark:text-gray-400">
-            <span>Applicable Monaco VAT 10%: </span>
-            <strong className="text-primary dark:text-white font-mono">${(chargeAmount * 0.1).toFixed(2)}</strong>
-            <span className="block mt-1">Total added to balance: <strong className="text-accent font-serif">${(chargeAmount * 1.1).toFixed(2)}</strong></span>
-          </div>
-
-          <ModalFooter
-            onCancel={() => setIsAddChargeModalOpen(false)}
-            confirmText="Post Charge to Folio"
-            confirmVariant="primary"
-            isLoading={isSubmitting}
-          />
-        </form>
-      </Modal>
-
-      {/* Settle Payment Modal */}
-      <Modal
-        isOpen={isPaymentModalOpen}
-        onClose={() => setIsPaymentModalOpen(false)}
-        title="Settle Folio Outstanding Balance"
-        subtitle={`Total Due: $${selectedFolio?.balanceDue?.toLocaleString()} for ${selectedFolio?.guestName}`}
-        maxWidth="md"
-      >
-        <form onSubmit={handleExecutePayment} className="space-y-4 text-xs">
-          <FormField label="Payment Tender Method" required>
-            <Select
-              value={paymentMethod}
-              onChange={e => setPaymentMethod(e.target.value)}
-            >
-              <option value="Credit Card">Encrypted Credit Card (Stripe Terminal)</option>
-              <option value="Wire Transfer">SWIFT Direct Bank Transfer</option>
-              <option value="Cash">Front Desk Cash Settlement</option>
-              <option value="Crypto">Sovereign Crypto Vault</option>
-            </Select>
-          </FormField>
-
-          <FormField label="Settlement Amount ($ USD)" required>
-            <Input
-              type="number"
-              min="1"
-              max={selectedFolio?.balanceDue || 999999}
-              value={paymentAmount}
-              onChange={e => setPaymentAmount(Number(e.target.value))}
-              required
-            />
-          </FormField>
-
-          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
-            <span>Remaining balance after settlement: </span>
-            <strong className="font-serif">${Math.max(0, (selectedFolio?.balanceDue || 0) - paymentAmount).toLocaleString()}</strong>
-          </div>
-
-          <ModalFooter
-            onCancel={() => setIsPaymentModalOpen(false)}
-            confirmText="Process Payment"
-            confirmVariant="primary"
-            isLoading={isSubmitting}
-          />
-        </form>
-      </Modal>
-
-      {/* Add / Edit GL Account Modal */}
-      <Modal
-        isOpen={isAddAccountModalOpen}
-        onClose={() => setIsAddAccountModalOpen(false)}
-        title={editingAccount ? `Edit GL Account ${editingAccount.code}` : 'Register New General Ledger Account'}
-        subtitle="Chart of Accounts configuration according to standard Monaco luxury hospitality ledger."
-        maxWidth="md"
-      >
-        <form onSubmit={handleSaveAccount} className="space-y-4 text-xs">
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="Account Code" required>
-              <Input
-                type="text"
-                value={accCode}
-                onChange={e => setAccCode(e.target.value)}
-                required
-              />
-            </FormField>
-
-            <FormField label="Classification" required>
-              <Select
-                value={accType}
-                onChange={e => setAccType(e.target.value)}
-              >
-                <option value="Asset">Asset (Debit Normal)</option>
-                <option value="Liability">Liability (Credit Normal)</option>
-                <option value="Equity">Equity</option>
-                <option value="Revenue">Revenue (Credit Normal)</option>
-                <option value="Expense">Expense (Debit Normal)</option>
-              </Select>
-            </FormField>
-          </div>
-
-          <FormField label="Account Description" required>
-            <Input
-              type="text"
-              placeholder="e.g. Monaco Central Treasury Account"
-              value={accName}
-              onChange={e => setAccName(e.target.value)}
-              required
-            />
-          </FormField>
-
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="Initial Balance ($ USD)" required>
-              <Input
-                type="number"
-                value={accBalance}
-                onChange={e => setAccBalance(Number(e.target.value))}
-                required
-              />
-            </FormField>
-
-            <FormField label="Account Status" required>
-              <Select
-                value={accStatus}
-                onChange={e => setAccStatus(e.target.value)}
-              >
-                <option value="active">Active Operational</option>
-                <option value="inactive">Suspended / Inactive</option>
-              </Select>
-            </FormField>
-          </div>
-
-          <ModalFooter
-            onCancel={() => setIsAddAccountModalOpen(false)}
-            confirmText={editingAccount ? 'Save Changes' : 'Register Account'}
-            confirmVariant="primary"
-            isLoading={isSubmitting}
-          />
-        </form>
-      </Modal>
-
-      {/* Folio View Statement Modal */}
-      <Modal
-        isOpen={selectedFolio !== null}
-        onClose={() => setSelectedFolio(null)}
-        title={`Official Guest Folio Statement — ${selectedFolio?.bookingCode}`}
-        subtitle={`Resident: ${selectedFolio?.guestName} • Suite ${selectedFolio?.roomNumber}`}
-        maxWidth="lg"
-      >
-        {selectedFolio && (
-          <div className="space-y-6 text-xs">
-            <div className="p-4 rounded-2xl bg-ivory dark:bg-primary-950/60 border border-border/80 dark:border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div>
-                <span className="text-[10px] uppercase font-mono text-charcoal-muted block">Status</span>
-                <StatusBadge status={selectedFolio.status} size="sm" />
-              </div>
-              <div>
-                <span className="text-[10px] uppercase font-mono text-charcoal-muted block">Gross Charges</span>
-                <span className="font-serif font-bold text-primary dark:text-white">${selectedFolio.grandTotal?.toLocaleString()}</span>
-              </div>
-              <div>
-                <span className="text-[10px] uppercase font-mono text-charcoal-muted block">Amount Settled</span>
-                <span className="font-serif font-bold text-emerald-600 dark:text-emerald-400">${selectedFolio.totalPaid?.toLocaleString()}</span>
-              </div>
-              <div>
-                <span className="text-[10px] uppercase font-mono text-charcoal-muted block">Balance Outstanding</span>
-                <span className="font-serif font-bold text-rose-600 dark:text-rose-400">${selectedFolio.balanceDue?.toLocaleString()}</span>
-              </div>
-            </div>
-
-            <div>
-              <h5 className="font-serif font-bold text-sm text-primary dark:text-white mb-2">Itemized Ledger Postings</h5>
-              <div className="rounded-2xl border border-border/80 dark:border-white/10 overflow-hidden">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-ivory/80 dark:bg-primary-900/40 text-[10px] font-mono uppercase text-charcoal-muted">
-                    <tr>
-                      <th className="py-2.5 px-3">Date</th>
-                      <th className="py-2.5 px-3">Department</th>
-                      <th className="py-2.5 px-3">Description</th>
-                      <th className="py-2.5 px-3 text-right">Tax (10%)</th>
-                      <th className="py-2.5 px-3 text-right">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/60 dark:divide-white/5">
-                    {selectedFolio.charges?.map((c, i) => (
-                      <tr key={i} className="hover:bg-white/40 dark:hover:bg-primary-900/20">
-                        <td className="py-2.5 px-3 font-mono">{c.date}</td>
-                        <td className="py-2.5 px-3 capitalize font-semibold text-accent">{c.category}</td>
-                        <td className="py-2.5 px-3 text-primary dark:text-gray-200">{c.description}</td>
-                        <td className="py-2.5 px-3 text-right font-mono text-charcoal-muted">${c.taxAmount?.toFixed(2)}</td>
-                        <td className="py-2.5 px-3 text-right font-serif font-bold text-primary dark:text-white">${c.totalAmount?.toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2 border-t border-border/80 dark:border-white/10">
-              <button
-                type="button"
-                onClick={() => setSelectedFolio(null)}
-                className="px-4 py-2 rounded-xl btn-secondary-3d font-semibold text-xs"
-              >
-                Close Statement
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
-
-      {/* Invoice Detail Modal */}
-      <Modal
-        isOpen={selectedInvoice !== null}
-        onClose={() => setSelectedInvoice(null)}
-        title={`Institutional Invoice #${selectedInvoice?.invoiceNumber}`}
-        subtitle={`Issued to: ${selectedInvoice?.guestName} • Due: ${selectedInvoice?.dueDate}`}
-        maxWidth="md"
-      >
-        {selectedInvoice && (
-          <div className="space-y-4 text-xs">
-            <div className="p-4 rounded-2xl bg-ivory dark:bg-primary-950/60 border border-border/80 dark:border-white/10 space-y-2">
-              <div className="flex justify-between">
-                <span className="text-charcoal-muted">Invoice Date:</span>
-                <span className="font-mono">{selectedInvoice.issueDate || selectedInvoice.issuedDate}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-charcoal-muted">Subtotal:</span>
-                <span className="font-serif">${selectedInvoice.subtotal?.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-charcoal-muted">Monaco VAT (10%):</span>
-                <span className="font-serif">${selectedInvoice.taxAmount?.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between font-bold text-sm border-t border-border/60 dark:border-white/10 pt-2">
-                <span>Grand Total:</span>
-                <span className="font-serif text-accent">${selectedInvoice.totalAmount?.toLocaleString()}</span>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                onClick={() => {
-                  window.print();
-                }}
-                className="px-4 py-2 rounded-xl btn-secondary-3d text-xs font-semibold"
-              >
-                Print Invoice
-              </button>
-              <button
-                onClick={() => setSelectedInvoice(null)}
-                className="px-4 py-2 rounded-xl gold-gradient-bg text-primary-900 font-bold text-xs btn-3d"
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
     </div>
   );
 };

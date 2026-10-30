@@ -169,24 +169,6 @@ export const EditHotelPage = () => {
             </span>
           </div>
         </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            onClick={() => navigate(`/super-admin/hotels/details?id=${hotel.id}`)}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="gold"
-            icon={Save}
-            loading={isSubmitting}
-            onClick={handleSave}
-          >
-            Save Configuration
-          </Button>
-        </div>
       </div>
 
       <form onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

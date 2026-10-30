@@ -36,6 +36,45 @@ export const Sidebar = ({
   const isItemActive = (item) => {
     if (location.pathname === item.path) return true;
     if (item.children?.some(c => location.pathname === c.path)) return true;
+    if (item.path === '/hotel-admin/dashboard' && (location.pathname.startsWith('/hotel-admin/dashboard') || location.pathname.startsWith('/admin/dashboard'))) return true;
+    if (item.path === '/hotel-admin/rooms' && (location.pathname.startsWith('/hotel-admin/rooms') || location.pathname.startsWith('/admin/room-management') || location.pathname.startsWith('/admin/rooms'))) return true;
+    if (item.path === '/hotel-admin/guests' && (location.pathname.startsWith('/hotel-admin/guests') || location.pathname.startsWith('/admin/guests'))) return true;
+    if (item.path === '/hotel-admin/bookings' && (location.pathname.startsWith('/hotel-admin/bookings') || location.pathname.startsWith('/admin/bookings'))) return true;
+    if (item.path === '/hotel-admin/payments' && (location.pathname.startsWith('/hotel-admin/payments') || location.pathname.startsWith('/admin/payments'))) return true;
+    if (item.path === '/hotel-admin/marketing' && (location.pathname.startsWith('/hotel-admin/marketing') || location.pathname.startsWith('/admin/marketing'))) return true;
+    if (item.path === '/hotel-admin/reviews' && (location.pathname.startsWith('/hotel-admin/reviews') || location.pathname.startsWith('/admin/reviews'))) return true;
+    if (item.path === '/hotel-admin/reports' && (location.pathname.startsWith('/hotel-admin/reports') || location.pathname.startsWith('/admin/reports'))) return true;
+    if (item.path === '/hotel-admin/settings' && (location.pathname.startsWith('/hotel-admin/settings') || location.pathname.startsWith('/admin/settings'))) return true;
+    return false;
+  };
+
+  const isChildActive = (child) => {
+    if (location.pathname === child.path) return true;
+    // Handle cross-prefix aliases for dashboard, room-management, bookings, guests, payments and reports
+    const subRoute = child.path.split('/').pop();
+    if (subRoute && subRoute !== 'rooms' && subRoute !== 'bookings' && subRoute !== 'guests' && subRoute !== 'dashboard') {
+      if (location.pathname.endsWith(`/${subRoute}`)) return true;
+      if (subRoute === 'today-summary' && (location.pathname.endsWith('/today') || location.pathname.endsWith('/today-summary'))) return true;
+      if (subRoute === 'occupancy-analytics' && (location.pathname.endsWith('/occupancy') || location.pathname.endsWith('/occupancy-analytics'))) return true;
+      if (subRoute === 'revenue-analytics' && (location.pathname.endsWith('/revenue') || location.pathname.endsWith('/revenue-analytics'))) return true;
+      if (subRoute === 'overview' && (location.pathname === '/hotel-admin/dashboard' || location.pathname === '/admin/dashboard' || location.pathname.endsWith('/overview'))) return true;
+      if (subRoute === 'schedule' && (location.pathname.endsWith('/schedule') || location.pathname.endsWith('/shift-scheduling'))) return true;
+      if (subRoute === 'leave' && (location.pathname.endsWith('/leave') || location.pathname.endsWith('/leave-requests'))) return true;
+      if (
+        location.pathname.includes(`/room-management/${subRoute}`) ||
+        location.pathname.includes(`/rooms/${subRoute}`) ||
+        location.pathname.includes(`/bookings/${subRoute}`) ||
+        location.pathname.includes(`/guests/${subRoute}`) ||
+        location.pathname.includes(`/dashboard/${subRoute}`) ||
+        location.pathname.includes(`/payments/${subRoute}`) ||
+        location.pathname.includes(`/marketing/${subRoute}`) ||
+        location.pathname.includes(`/reports/${subRoute}`) ||
+        location.pathname.includes(`/settings/${subRoute}`) ||
+        location.pathname.includes(`/staff/${subRoute}`)
+      ) {
+        return true;
+      }
+    }
     return false;
   };
 
@@ -178,13 +217,13 @@ export const Sidebar = ({
                   {!isCollapsed && hasChildren && isOpen && (
                     <div className="pl-9 pr-1 py-1 space-y-0.5 border-l border-white/10 ml-6 my-1">
                       {item.children?.map(child => {
-                        const isChildActive = location.pathname === child.path;
+                        const childActive = isChildActive(child);
                         return (
                           <button
                             key={child.id}
                             onClick={() => handleNavigate(child.path)}
                             className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-all duration-150 text-left ${
-                              isChildActive
+                              childActive
                                 ? 'text-accent font-semibold bg-accent/15 border-l-2 border-accent'
                                 : 'text-gray-400 hover:text-white hover:bg-white/[0.05] hover:translate-x-1'
                             }`}

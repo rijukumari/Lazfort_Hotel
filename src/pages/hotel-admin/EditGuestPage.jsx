@@ -17,8 +17,11 @@ export const EditGuestPage = () => {
   const { guests, updateGuest } = useERP();
   const { showToast } = useToast();
 
-  const guest = guests.find(g => g.id === effectiveId) || guests[0];
+  const guest = (guests || []).find(g => g.id === effectiveId || (g.idNumber && g.idNumber.toLowerCase() === effectiveId?.toLowerCase()));
 
+  const [editName, setEditName] = useState(guest?.name || '');
+  const [editEmail, setEditEmail] = useState(guest?.email || '');
+  const [editNationality, setEditNationality] = useState(guest?.nationality || 'Monaco');
   const [editTier, setEditTier] = useState(guest?.vipTier || 'Diamond');
   const [editPhone, setEditPhone] = useState(guest?.phone || '');
   const [editPreferences, setEditPreferences] = useState(
@@ -28,6 +31,9 @@ export const EditGuestPage = () => {
 
   useEffect(() => {
     if (guest) {
+      setEditName(guest.name || '');
+      setEditEmail(guest.email || '');
+      setEditNationality(guest.nationality || 'Monaco');
       setEditTier(guest.vipTier || 'Diamond');
       setEditPhone(guest.phone || '');
       setEditPreferences(guest.preferences ? guest.preferences.join(', ') : '');
@@ -47,18 +53,26 @@ export const EditGuestPage = () => {
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+    if (!editName.trim() || !editEmail.trim()) {
+      showToast('Validation Error', 'Guest name and email cannot be empty.', 'error');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await new Promise(r => setTimeout(r, 400));
       const parsedPrefs = editPreferences.split(',').map(s => s.trim()).filter(Boolean);
       updateGuest(guest.id, {
+        name: editName.trim(),
+        email: editEmail.trim(),
+        nationality: editNationality.trim(),
         vipTier: editTier,
-        phone: editPhone,
+        phone: editPhone.trim(),
         preferences: parsedPrefs,
       });
 
-      showToast('Guest Profile Updated', `${guest.name}'s dossier has been updated.`, 'success');
-      navigate('/hotel-admin/guests');
+      showToast('Guest Profile Updated', `${editName}'s dossier has been successfully saved.`, 'success');
+      navigate(`/hotel-admin/guests/${guest.id}`);
     } catch {
       showToast('Error', 'Failed to update guest profile.', 'error');
     } finally {
@@ -90,34 +104,48 @@ export const EditGuestPage = () => {
             Update tier privileges, contact coordinates, and bespoke concierge preferences.
           </p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/hotel-admin/guests')}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="gold"
-            icon={Save}
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Updating...' : 'Save Profile'}
-          </Button>
-        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <div className="lg:col-span-8 space-y-6">
           <Card variant="luxury" className="p-6 sm:p-8 space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <FormField label="Guest Full Name" required>
+                <Input
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  placeholder="e.g. Sir Alexander Kensington"
+                  required
+                />
+              </FormField>
+
+              <FormField label="Official Contact Email" required>
+                <Input
+                  type="email"
+                  value={editEmail}
+                  onChange={e => setEditEmail(e.target.value)}
+                  placeholder="guest@sovereign.mc"
+                  required
+                />
+              </FormField>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+              <FormField label="Nationality / Origin" required>
+                <Input
+                  value={editNationality}
+                  onChange={e => setEditNationality(e.target.value)}
+                  placeholder="e.g. British"
+                  required
+                />
+              </FormField>
+
               <FormField label="Assigned Sovereign VIP Tier" required>
                 <Select value={editTier} onChange={e => setEditTier(e.target.value)}>
                   <option value="Diamond">Diamond Tier (Exclusive Sovereign Suite)</option>
                   <option value="Platinum">Platinum Tier (Penthouse & Heli Access)</option>
                   <option value="Gold">Gold Tier (Executive Butler Service)</option>
+                  <option value="Silver">Silver Tier (Priority Booking)</option>
                   <option value="Standard">Standard VIP Member</option>
                 </Select>
               </FormField>
@@ -168,15 +196,25 @@ export const EditGuestPage = () => {
               </div>
             </div>
 
-            <Button
-              variant="gold"
-              icon={Save}
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="w-full"
-            >
-              {isSubmitting ? 'Updating...' : 'Save Profile'}
-            </Button>
+            <div className="flex items-center gap-3 pt-2">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => navigate('/hotel-admin/guests')}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="gold"
+                icon={Save}
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="flex-1"
+              >
+                {isSubmitting ? 'Updating...' : 'Save Profile'}
+              </Button>
+            </div>
           </Card>
         </div>
       </form>

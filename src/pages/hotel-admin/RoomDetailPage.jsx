@@ -13,15 +13,28 @@ export const RoomDetailPage = () => {
   const navigate = useNavigate();
   const { rooms } = useERP();
 
-  const room = rooms.find(r => r.id === effectiveId) || rooms[0];
+  const reservedSubpaths = ['categories', 'amenities', 'images', 'pricing', 'availability', 'maintenance', 'transfer', 'add', 'add-category'];
+  const room = (effectiveId && !reservedSubpaths.includes(effectiveId))
+    ? rooms.find(r => r.id === effectiveId || r.roomNumber === effectiveId)
+    : null;
 
   if (!room) {
     return (
-      <div className="space-y-6">
-        <Link to="/hotel-admin/rooms" className="text-xs text-charcoal-muted hover:text-accent">
-          ← Back to Suites
-        </Link>
-        <p className="text-sm">Suite not found.</p>
+      <div className="space-y-6 max-w-xl mx-auto py-16 text-center animate-in fade-in duration-300">
+        <h2 className="font-serif text-2xl font-bold text-primary dark:text-white">
+          Suite Record Not Found
+        </h2>
+        <p className="text-xs text-charcoal-muted">
+          No suite record found matching <span className="font-mono text-accent">{effectiveId || 'unknown'}</span>.
+        </p>
+        <div className="pt-2">
+          <Button
+            variant="gold"
+            onClick={() => navigate('/hotel-admin/rooms')}
+          >
+            ← Return to Suites & Inventory
+          </Button>
+        </div>
       </div>
     );
   }

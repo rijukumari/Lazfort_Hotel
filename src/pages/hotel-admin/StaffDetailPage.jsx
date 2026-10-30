@@ -18,15 +18,28 @@ export const StaffDetailPage = () => {
   const navigate = useNavigate();
   const { staff = mockStaff } = useERP();
 
-  const member = staff.find(s => s.id === effectiveId) || staff[0];
+  const reservedSubpaths = ['departments', 'roles', 'shifts', 'attendance', 'add', 'schedule', 'shift-scheduling', 'leave', 'leave-requests'];
+  const member = (effectiveId && !reservedSubpaths.includes(effectiveId))
+    ? staff.find(s => s.id === effectiveId)
+    : null;
 
   if (!member) {
     return (
-      <div className="space-y-6">
-        <Link to="/hotel-admin/staff" className="text-xs text-charcoal-muted hover:text-accent">
-          ← Back to Staff Directory
-        </Link>
-        <p className="text-sm">Staff member not found.</p>
+      <div className="space-y-6 max-w-xl mx-auto py-16 text-center animate-in fade-in duration-300">
+        <h2 className="font-serif text-2xl font-bold text-primary dark:text-white">
+          Staff Record Not Found
+        </h2>
+        <p className="text-xs text-charcoal-muted">
+          No staff dossier found matching <span className="font-mono text-accent">{effectiveId || 'unknown'}</span>.
+        </p>
+        <div className="pt-2">
+          <Button
+            variant="gold"
+            onClick={() => navigate('/hotel-admin/staff')}
+          >
+            ← Return to Staff Directory
+          </Button>
+        </div>
       </div>
     );
   }

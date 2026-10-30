@@ -151,25 +151,6 @@ export const AddPlanFeaturePage = () => {
             Configure system module privileges, limits, and plan tier allocations.
           </p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => navigate('/super-admin/subscriptions/features')}
-            className="px-4 py-2.5 rounded-2xl border border-border dark:border-white/10 text-xs font-semibold text-charcoal dark:text-gray-300 hover:bg-ivory dark:hover:bg-primary-900/50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-2xl gold-gradient-bg text-primary-950 text-xs font-bold uppercase tracking-wider btn-3d shadow-md shadow-accent/20 cursor-pointer disabled:opacity-60"
-          >
-            <Save className="w-4 h-4 stroke-[2.5]" />
-            <span>{isSubmitting ? 'Saving...' : isEditMode ? 'Update Feature' : 'Register Feature'}</span>
-          </button>
-        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

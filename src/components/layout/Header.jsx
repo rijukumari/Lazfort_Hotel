@@ -10,7 +10,7 @@ export const Header = ({ onOpenMobileSidebar }) => {
 
   return (
     <>
-      <header className="sticky top-0 z-30 h-20 bg-white/75 dark:bg-[#0d131d]/85 backdrop-blur-xl border-b border-border/70 dark:border-border-dark/80 px-4 sm:px-8 flex items-center justify-between transition-all duration-300 shadow-sm">
+      <header className="sticky top-0 z-50 h-20 bg-white/75 dark:bg-[#0d131d]/85 backdrop-blur-xl border-b border-border/70 dark:border-border-dark/80 px-4 sm:px-8 flex items-center justify-between transition-all duration-300 shadow-sm">
         {/* Subtle top golden light reflection strip */}
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-accent/40 to-transparent pointer-events-none" />
 

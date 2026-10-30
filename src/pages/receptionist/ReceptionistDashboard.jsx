@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../components/ui/StatCard';
 import { DataTable } from '../../components/data-display/DataTable';
 import { StatusBadge } from '../../components/ui/StatusBadge';
-import { BookingModal } from '../../components/forms/BookingModal';
-import { InvoiceModal } from '../../components/data-display/InvoiceModal';
 import { LogOut, Plus, FileText, Key } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { useERP } from '../../context/ERPContext';
@@ -13,8 +11,6 @@ import { useERP } from '../../context/ERPContext';
 export const ReceptionistDashboard = () => {
   const navigate = useNavigate();
   const { bookings, rooms, checkInGuest, checkOutGuest } = useERP();
-  const [isWalkInOpen, setIsWalkInOpen] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
   const { showToast } = useToast();
 
   const handleFastCheckIn = (bkg) => {
@@ -93,9 +89,9 @@ export const ReceptionistDashboard = () => {
       render: item => (
         <div className="flex items-center gap-1.5">
           <button
-            onClick={() => setSelectedInvoice(item)}
+            onClick={() => navigate(`/hotel-admin/bookings/folio/${item.id}`)}
             className="p-2 rounded-xl btn-secondary-3d text-charcoal-muted hover:text-accent"
-            title="Folio Invoice"
+            title="Folio Statement on Dedicated Page"
           >
             <FileText className="w-4 h-4" />
           </button>
@@ -134,11 +130,11 @@ export const ReceptionistDashboard = () => {
         badge="Active Front Desk"
         actions={
           <button
-            onClick={() => navigate('/bookings/new')}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl gold-gradient-bg text-primary-900 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold"
+            onClick={() => navigate('/hotel-admin/bookings/new')}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl gold-gradient-bg text-primary-900 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold whitespace-nowrap shrink-0"
           >
-            <Plus className="w-4 h-4" />
-            New Walk-in Guest
+            <Plus className="w-4 h-4 shrink-0" />
+            <span className="whitespace-nowrap">New Walk-in Guest</span>
           </button>
         }
       />
@@ -186,17 +182,6 @@ export const ReceptionistDashboard = () => {
           pageSize={5}
         />
       </div>
-
-      <BookingModal
-        isOpen={isWalkInOpen}
-        onClose={() => setIsWalkInOpen(false)}
-      />
-
-      <InvoiceModal
-        isOpen={selectedInvoice !== null}
-        onClose={() => setSelectedInvoice(null)}
-        booking={selectedInvoice}
-      />
     </div>
   );
 };

@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { mockSubscriptionPlans } from '../../data/mockSubscriptions';
-import { useERP } from '../../context/ERPContext';
 import { useToast } from '../../context/ToastContext';
 import { Button, Input, Select, FormField } from '../../components/ui';
 import {
@@ -31,11 +30,8 @@ export const AddSubscriptionPlanPage = () => {
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { subscriptionPlans = mockSubscriptionPlans, addSubscriptionPlan, updateSubscriptionPlan } = useERP();
 
-  const existingPlan = id
-    ? subscriptionPlans.find(p => p.id === id) || mockSubscriptionPlans.find(p => p.id === id)
-    : null;
+  const existingPlan = id ? mockSubscriptionPlans.find(p => p.id === id) : null;
 
   const [formName, setFormName] = useState(existingPlan?.name || '');
   const [formTierCode, setFormTierCode] = useState(existingPlan?.tierCode || '');
@@ -66,26 +62,6 @@ export const AddSubscriptionPlanPage = () => {
   );
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (existingPlan) {
-      setFormName(existingPlan.name || '');
-      setFormTierCode(existingPlan.tierCode || '');
-      setFormDescription(existingPlan.description || '');
-      setFormMonthlyPrice(existingPlan.monthlyPrice || 2900);
-      setFormAnnualPrice(existingPlan.annualPrice || 29000);
-      setFormRoomLimitType(existingPlan.roomLimit === 'Unlimited' ? 'unlimited' : 'number');
-      setFormRoomLimitNum(existingPlan.roomLimit !== 'Unlimited' && existingPlan.roomLimit ? existingPlan.roomLimit : 100);
-      setFormUserLimitType(existingPlan.userLimit === 'Unlimited' ? 'unlimited' : 'number');
-      setFormUserLimitNum(existingPlan.userLimit !== 'Unlimited' && existingPlan.userLimit ? existingPlan.userLimit : 50);
-      setFormTrialDays(existingPlan.trialDays || 14);
-      setFormRecommendedFor(existingPlan.recommendedFor || '');
-      setFormStatus(existingPlan.status || 'active');
-      if (existingPlan.includedModules) {
-        setFormModules(existingPlan.includedModules);
-      }
-    }
-  }, [existingPlan]);
 
   const toggleModuleSelection = moduleName => {
     setFormModules(prev =>
@@ -118,31 +94,7 @@ export const AddSubscriptionPlanPage = () => {
 
     setIsSubmitting(true);
     try {
-      await new Promise(r => setTimeout(r, 400));
-      const planPayload = {
-        name: formName.trim(),
-        tierCode: formTierCode.trim(),
-        description: formDescription.trim(),
-        monthlyPrice: Number(formMonthlyPrice),
-        annualPrice: Number(formAnnualPrice),
-        roomLimit: formRoomLimitType === 'unlimited' ? 'Unlimited' : Number(formRoomLimitNum),
-        userLimit: formUserLimitType === 'unlimited' ? 'Unlimited' : Number(formUserLimitNum),
-        trialDays: Number(formTrialDays),
-        recommendedFor: formRecommendedFor.trim(),
-        status: formStatus,
-        includedModules: formModules,
-      };
-
-      if (isEditMode && existingPlan) {
-        if (updateSubscriptionPlan) {
-          updateSubscriptionPlan(existingPlan.id, planPayload);
-        }
-      } else {
-        if (addSubscriptionPlan) {
-          addSubscriptionPlan(planPayload);
-        }
-      }
-
+      await new Promise(r => setTimeout(r, 600));
       showToast(
         isEditMode ? 'Plan Updated' : 'Subscription Plan Created',
         `Plan ${formName} (${formTierCode}) has been persisted to the platform catalog.`,
@@ -179,23 +131,6 @@ export const AddSubscriptionPlanPage = () => {
           <p className="text-xs text-charcoal-muted">
             Define pricing models, property quotas, trial durations, and ERP functional entitlements.
           </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/super-admin/subscriptions/plans')}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="gold"
-            icon={Save}
-            loading={isSubmitting}
-            onClick={handleSubmit}
-          >
-            {isSubmitting ? 'Saving Plan...' : isEditMode ? 'Update Plan' : 'Publish Plan'}
-          </Button>
         </div>
       </div>
 
@@ -392,17 +327,15 @@ export const AddSubscriptionPlanPage = () => {
                     type="button"
                     key={mod}
                     onClick={() => toggleModuleSelection(mod)}
-                    className={`flex items-center justify-between p-3.5 rounded-2xl border text-xs text-left transition-all cursor-pointer ${
-                      isSelected
-                        ? 'border-accent bg-accent/10 text-primary dark:text-white font-semibold shadow-sm'
-                        : 'border-border/80 dark:border-white/10 text-charcoal-muted hover:border-accent/40'
-                    }`}
+                    className={`flex items-center justify-between p-3.5 rounded-2xl border text-xs text-left transition-all cursor-pointer ${isSelected
+                      ? 'border-accent bg-accent/10 text-primary dark:text-white font-semibold shadow-sm'
+                      : 'border-border/80 dark:border-white/10 text-charcoal-muted hover:border-accent/40'
+                      }`}
                   >
                     <span>{mod}</span>
                     <div
-                      className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
-                        isSelected ? 'gold-gradient-bg text-primary-950 font-bold' : 'border border-border'
-                      }`}
+                      className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${isSelected ? 'gold-gradient-bg text-primary-950 font-bold' : 'border border-border'
+                        }`}
                     >
                       {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                     </div>
@@ -421,11 +354,10 @@ export const AddSubscriptionPlanPage = () => {
                 Live Catalog Preview
               </span>
               <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase ${
-                  formStatus === 'active'
-                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/30'
-                    : 'bg-rose-500/10 text-rose-500 border border-rose-500/30'
-                }`}
+                className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase ${formStatus === 'active'
+                  ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/30'
+                  : 'bg-rose-500/10 text-rose-500 border border-rose-500/30'
+                  }`}
               >
                 {formStatus}
               </span>

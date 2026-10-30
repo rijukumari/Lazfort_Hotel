@@ -26,7 +26,20 @@ import {
 export const RefundRequestsPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [refunds, setRefunds] = useState(initialRefundRequests || []);
+  const [refunds, setRefunds] = useState(() => {
+    try {
+      const stored = localStorage.getItem('lazfort_refund_requests');
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return initialRefundRequests || [];
+  });
+
+  const persistRefunds = (list) => {
+    setRefunds(list);
+    try {
+      localStorage.setItem('lazfort_refund_requests', JSON.stringify(list));
+    } catch {}
+  };
 
   // Confirmation dialogs
   const [confirmApproveId, setConfirmApproveId] = useState(null);
@@ -42,39 +55,37 @@ export const RefundRequestsPage = () => {
   const rejectedCount = useMemo(() => refunds.filter(r => r.status === 'rejected').length, [refunds]);
 
   const handleApprove = (id) => {
-    setRefunds(prev =>
-      prev.map(r =>
-        r.id === id
-          ? {
-              ...r,
-              status: 'approved',
-              reviewedBy: 'Lord Alistair Sterling (Super Admin)',
-              reviewedDate: new Date().toISOString().split('T')[0],
-            }
-          : r
-      )
+    const updated = refunds.map(r =>
+      r.id === id
+        ? {
+          ...r,
+          status: 'approved',
+          reviewedBy: 'Lord Alistair Sterling (Super Admin)',
+          reviewedDate: new Date().toISOString().split('T')[0],
+        }
+        : r
     );
+    persistRefunds(updated);
     setConfirmApproveId(null);
-    showToast('Refund Approved (Demo)', `Refund request ${id} approved and disbursement ledger updated.`, 'success');
+    showToast('Refund Approved', `Refund request ${id} approved and disbursement ledger updated.`, 'success');
   };
 
   const handleReject = () => {
     if (!rejectItem) return;
-    setRefunds(prev =>
-      prev.map(r =>
-        r.id === rejectItem.id
-          ? {
-              ...r,
-              status: 'rejected',
-              reviewedBy: 'Lord Alistair Sterling (Super Admin)',
-              reviewedDate: new Date().toISOString().split('T')[0],
-            }
-          : r
-      )
+    const updated = refunds.map(r =>
+      r.id === rejectItem.id
+        ? {
+          ...r,
+          status: 'rejected',
+          reviewedBy: 'Lord Alistair Sterling (Super Admin)',
+          reviewedDate: new Date().toISOString().split('T')[0],
+        }
+        : r
     );
+    persistRefunds(updated);
     setRejectItem(null);
     setRejectionReasonInput('');
-    showToast('Refund Rejected (Demo)', 'Refund claim declined with audited note.', 'info');
+    showToast('Refund Rejected', 'Refund claim declined with audited note.', 'info');
   };
 
   const columns = [

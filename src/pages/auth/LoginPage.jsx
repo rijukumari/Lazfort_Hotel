@@ -111,11 +111,10 @@ export const LoginPage = () => {
                   type="button"
                   key={r.role}
                   onClick={() => handleRoleSelect(r.role)}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 border text-left cursor-pointer ${
-                    isSelected
-                      ? 'bg-gradient-to-r from-accent/25 to-accent/10 border-accent text-white shadow-gold scale-[1.02]'
-                      : 'bg-white/[0.03] border-white/10 text-gray-400 hover:text-white hover:bg-white/[0.06]'
-                  }`}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 border text-left cursor-pointer ${isSelected
+                    ? 'bg-gradient-to-r from-accent/25 to-accent/10 border-accent text-white shadow-gold scale-[1.02]'
+                    : 'bg-white/[0.03] border-white/10 text-gray-400 hover:text-white hover:bg-white/[0.06]'
+                    }`}
                 >
                   <span className={isSelected ? 'text-accent' : 'text-gray-400'}>
                     {roleIcons[r.role]}

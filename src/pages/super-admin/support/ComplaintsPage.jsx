@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
@@ -24,8 +25,27 @@ import {
 } from 'lucide-react';
 
 export const ComplaintsPage = () => {
+  const navigate = useNavigate();
   const { showToast } = useToast();
-  const [complaints, setComplaints] = useState(initialComplaints || []);
+  const [complaints, setComplaints] = useState(() => {
+    try {
+      const stored = localStorage.getItem('lazfort_complaints');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {
+      console.warn('Failed to load complaints', e);
+    }
+    return initialComplaints || [];
+  });
+
+  const persistComplaints = (list) => {
+    setComplaints(list);
+    try {
+      localStorage.setItem('lazfort_complaints', JSON.stringify(list));
+    } catch (e) {
+      console.warn('Failed to save complaints', e);
+    }
+  };
+
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -83,36 +103,34 @@ export const ComplaintsPage = () => {
     e.preventDefault();
     if (!resolveTarget) return;
 
-    setComplaints(prev =>
-      prev.map(c =>
-        c.id === resolveTarget.id
-          ? {
+    const updated = complaints.map(c =>
+      c.id === resolveTarget.id
+        ? {
             ...c,
             status: 'resolved',
             resolutionSummary: resolutionSummaryInput || 'Amicably resolved with guest satisfaction confirmation.',
           }
-          : c
-      )
+        : c
     );
+    persistComplaints(updated);
 
-    showToast('Complaint Resolved', `Case ${resolveTarget.complaintId} settled.`, 'success');
+    showToast('Complaint Resolved', `Case ${resolveTarget.complaintId} settled into database.`, 'success');
     setResolveTarget(null);
     setResolutionSummaryInput('');
   };
 
   const handleConfirmReject = () => {
     if (!rejectTargetId) return;
-    setComplaints(prev =>
-      prev.map(c =>
-        c.id === rejectTargetId
-          ? {
+    const updated = complaints.map(c =>
+      c.id === rejectTargetId
+        ? {
             ...c,
             status: 'dismissed',
           }
-          : c
-      )
+        : c
     );
-    showToast('Case Dismissed', 'Complaint dismissed after preliminary compliance check.', 'info');
+    persistComplaints(updated);
+    showToast('Case Dismissed', 'Complaint dismissed in database after compliance review.', 'info');
     setRejectTargetId(null);
   };
 
@@ -180,9 +198,9 @@ export const ComplaintsPage = () => {
       render: (c) => (
         <div className="flex items-center gap-1.5">
           <button
-            onClick={() => setSelectedComplaint(c)}
+            onClick={() => navigate(`/super-admin/support/complaints/details/${c.id}`)}
             className="p-1.5 rounded-lg border border-border dark:border-white/10 hover:bg-ivory dark:hover:bg-white/5 text-charcoal-muted hover:text-accent transition-colors"
-            title="Inspect Dossier"
+            title="Inspect Dossier on Dedicated Page"
           >
             <Eye className="w-3.5 h-3.5" />
           </button>
@@ -275,79 +293,6 @@ export const ComplaintsPage = () => {
           emptyMessage="No grievances matching filter criteria."
         />
       </div>
-
-      {/* View Modal */}
-      {selectedComplaint && (
-        <Modal
-          isOpen={true}
-          onClose={() => setSelectedComplaint(null)}
-          title={`Grievance Dossier: ${selectedComplaint.complaintId}`}
-          maxWidth="md"
-        >
-          <div className="space-y-4 text-xs">
-            <div className="p-4 rounded-2xl bg-ivory dark:bg-primary-900/60 border border-border/80">
-              <span className="font-mono text-[10px] text-accent font-bold uppercase">{selectedComplaint.category} • {selectedComplaint.priority}</span>
-              <h4 className="font-serif font-bold text-base text-primary dark:text-white mt-1">
-                {selectedComplaint.title}
-              </h4>
-              <p className="text-charcoal-muted mt-2 leading-relaxed">{selectedComplaint.description}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-xl bg-white/40 dark:bg-white/5 border border-border/60">
-                <span className="text-[10px] uppercase font-mono text-charcoal-muted block">Complainant</span>
-                <span className="font-semibold text-primary dark:text-white">{selectedComplaint.customerName}</span>
-                <span className="text-[10px] text-charcoal-muted block">{selectedComplaint.hotelName}</span>
-              </div>
-              <div className="p-3 rounded-xl bg-white/40 dark:bg-white/5 border border-border/60">
-                <span className="text-[10px] uppercase font-mono text-charcoal-muted block">Current Status</span>
-                <StatusBadge status={selectedComplaint.status} size="sm" />
-              </div>
-            </div>
-
-            {/* Notes Log */}
-            <div className="space-y-2">
-              <span className="font-bold text-primary dark:text-white uppercase tracking-wider text-[10px] block">
-                Investigation Audit Trail
-              </span>
-              <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                {selectedComplaint.notes?.map((n, i) => (
-                  <div key={i} className="p-2 rounded-xl bg-ivory/50 dark:bg-primary-900/30 border border-border/50 text-[11px]">
-                    {n}
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex gap-2 pt-1">
-                <input
-                  type="text"
-                  placeholder="Append confidential investigation note..."
-                  value={newNoteInput}
-                  onChange={e => setNewNoteInput(e.target.value)}
-                  className="input-luxury flex-1 text-xs"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleAddNote(selectedComplaint.id)}
-                  className="px-3 py-1.5 rounded-xl gold-gradient-bg text-primary-950 font-bold text-xs btn-3d"
-                >
-                  Post Note
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                type="button"
-                onClick={() => setSelectedComplaint(null)}
-                className="px-4 py-2 rounded-xl btn-secondary-3d font-semibold text-xs"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
 
       {/* Resolve Modal */}
       {resolveTarget && (

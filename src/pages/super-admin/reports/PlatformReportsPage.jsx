@@ -58,11 +58,10 @@ export const PlatformReportsPage = () => {
                 <button
                   key={range}
                   onClick={() => setDateRange(range)}
-                  className={`px-3 py-1 rounded-lg font-mono font-bold transition-colors ${
-                    dateRange === range
-                      ? 'bg-accent text-white shadow-sm'
-                      : 'text-charcoal-muted hover:text-charcoal dark:hover:text-white'
-                  }`}
+                  className={`px-3 py-1 rounded-lg font-mono font-bold transition-colors ${dateRange === range
+                    ? 'bg-accent text-white shadow-sm'
+                    : 'text-charcoal-muted hover:text-charcoal dark:hover:text-white'
+                    }`}
                 >
                   {range.toUpperCase()}
                 </button>

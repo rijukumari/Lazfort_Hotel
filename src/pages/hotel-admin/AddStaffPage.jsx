@@ -80,23 +80,6 @@ export const AddStaffPage = () => {
             Register luxury estate personnel, operational shifts, department clearances, and duty assignments.
           </p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/hotel-admin/staff')}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="gold"
-            icon={Save}
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Appointing...' : 'Appoint Staff'}
-          </Button>
-        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

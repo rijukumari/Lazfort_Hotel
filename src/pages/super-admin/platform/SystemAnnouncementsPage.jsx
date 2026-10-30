@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
-import { Modal } from '../../../components/ui/Modal';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { initialAnnouncements } from '../../../data/mockSuperAdminModules';
 import { useToast } from '../../../context/ToastContext';
@@ -24,26 +24,31 @@ import {
 } from 'lucide-react';
 
 export const SystemAnnouncementsPage = () => {
+  const navigate = useNavigate();
   const { showToast } = useToast();
-  const [announcements, setAnnouncements] = useState(initialAnnouncements || []);
+  const [announcements, setAnnouncements] = useState(() => {
+    try {
+      const stored = localStorage.getItem('lazfort_announcements');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {
+      console.warn('Failed to load announcements', e);
+    }
+    return initialAnnouncements || [];
+  });
+
+  const persistAnnouncements = (list) => {
+    setAnnouncements(list);
+    try {
+      localStorage.setItem('lazfort_announcements', JSON.stringify(list));
+    } catch (e) {
+      console.warn('Failed to save announcements', e);
+    }
+  };
+
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-
-  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
-  const [editingAnnouncement, setEditingAnnouncement] = useState(null);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-
-  // Form State
-  const [formTitle, setFormTitle] = useState('');
-  const [formMessage, setFormMessage] = useState('');
-  const [formType, setFormType] = useState('Information');
-  const [formAudience, setFormAudience] = useState('All Hotel Properties');
-  const [formStartDate, setFormStartDate] = useState(new Date().toISOString().split('T')[0]);
-  const [formEndDate, setFormEndDate] = useState(
-    new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
-  );
 
   // Metrics
   const publishedCount = useMemo(() => announcements.filter(a => a.status === 'Published').length, [announcements]);
@@ -65,46 +70,10 @@ export const SystemAnnouncementsPage = () => {
     });
   }, [announcements, searchQuery, typeFilter, statusFilter]);
 
-  const handleCreateAnnouncement = (e) => {
-    e.preventDefault();
-    if (!formTitle || !formMessage) {
-      showToast('Validation Error', 'Title and message are required.', 'error');
-      return;
-    }
-
-    const newAnn = {
-      id: `ann-${Date.now().toString().slice(-4)}`,
-      title: formTitle,
-      message: formMessage,
-      type: formType,
-      audience: formAudience,
-      startDate: formStartDate,
-      endDate: formEndDate,
-      status: 'Published',
-      createdDate: new Date().toISOString().split('T')[0],
-    };
-
-    setAnnouncements(prev => [newAnn, ...prev]);
-    setIsCreateModalOpen(false);
-    setFormTitle('');
-    setFormMessage('');
-    showToast('Announcement Broadcasted', 'The announcement has been dispatched to connected consoles.', 'success');
-  };
-
-  const handleUpdateAnnouncement = (e) => {
-    e.preventDefault();
-    if (!editingAnnouncement) return;
-
-    setAnnouncements(prev =>
-      prev.map(a => (a.id === editingAnnouncement.id ? editingAnnouncement : a))
-    );
-    setEditingAnnouncement(null);
-    showToast('Announcement Updated', 'Notice text and broadcasting window updated.', 'success');
-  };
-
   const handleDeleteAnnouncement = () => {
     if (!deleteId) return;
-    setAnnouncements(prev => prev.filter(a => a.id !== deleteId));
+    const updated = announcements.filter(a => a.id !== deleteId);
+    persistAnnouncements(updated);
     setDeleteId(null);
     showToast('Announcement Deleted', 'Broadcast notice removed from tenant feeds.', 'info');
   };
@@ -161,11 +130,10 @@ export const SystemAnnouncementsPage = () => {
       key: 'status',
       header: 'Status',
       render: (a) => (
-        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-          a.status === 'Published'
-            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-            : 'bg-charcoal/10 dark:bg-white/10 text-charcoal-muted'
-        }`}>
+        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${a.status === 'Published'
+          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+          : 'bg-charcoal/10 dark:bg-white/10 text-charcoal-muted'
+          }`}>
           {a.status}
         </span>
       ),
@@ -176,16 +144,16 @@ export const SystemAnnouncementsPage = () => {
       render: (a) => (
         <div className="flex items-center gap-1.5">
           <button
-            onClick={() => setSelectedAnnouncement(a)}
+            onClick={() => navigate(`/super-admin/platform/announcements/details/${a.id}`)}
             className="p-1.5 rounded-lg border border-border dark:border-white/10 hover:bg-ivory dark:hover:bg-white/5 text-charcoal-muted hover:text-accent transition-colors"
-            title="View Details"
+            title="View Bulletin Dossier on Dedicated Page"
           >
             <Eye className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => setEditingAnnouncement(a)}
+            onClick={() => navigate(`/super-admin/platform/announcements/edit/${a.id}`)}
             className="p-1.5 rounded-lg border border-border dark:border-white/10 hover:bg-ivory dark:hover:bg-white/5 text-charcoal-muted hover:text-accent transition-colors"
-            title="Edit Notice"
+            title="Edit Bulletin Directive on Dedicated Page"
           >
             <Edit className="w-3.5 h-3.5" />
           </button>
@@ -208,7 +176,7 @@ export const SystemAnnouncementsPage = () => {
         description="Deliver real-time maintenance notices, compliance directives, and operational announcements to hotel managers"
         actions={
           <button
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => navigate('/super-admin/platform/announcements/add')}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl gold-gradient-bg text-primary-950 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold"
           >
             <Plus className="w-4 h-4" />
@@ -285,148 +253,6 @@ export const SystemAnnouncementsPage = () => {
           emptyMessage="No announcements found matching current filters."
         />
       </div>
-
-      {/* Create Modal */}
-      <Modal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        title="Broadcast System Bulletin"
-        maxWidth="md"
-      >
-        <form onSubmit={handleCreateAnnouncement} className="space-y-4 text-xs">
-          <div>
-            <label className="block text-[11px] font-semibold uppercase mb-1">Bulletin Headline *</label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Monaco Grand Prix Security & Traffic Clearance Protocol"
-              value={formTitle}
-              onChange={e => setFormTitle(e.target.value)}
-              className="input-luxury w-full text-xs"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-semibold uppercase mb-1">Bulletin Classification</label>
-              <select
-                value={formType}
-                onChange={e => setFormType(e.target.value)}
-                className="input-luxury w-full text-xs py-2"
-              >
-                <option value="Information">Information (Standard)</option>
-                <option value="Maintenance">Scheduled Maintenance</option>
-                <option value="Urgent">Urgent Directive</option>
-                <option value="Warning">Compliance Warning</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold uppercase mb-1">Target Audience</label>
-              <select
-                value={formAudience}
-                onChange={e => setFormAudience(e.target.value)}
-                className="input-luxury w-full text-xs py-2"
-              >
-                <option value="All Hotel Properties">All Hotel Properties</option>
-                <option value="General Managers & Front Desk">GMs & Front Desk Only</option>
-                <option value="Finance & Accounting">Finance Teams Only</option>
-                <option value="All Staff Members">All Staff Members</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-semibold uppercase mb-1">Start Date</label>
-              <input
-                type="date"
-                value={formStartDate}
-                onChange={e => setFormStartDate(e.target.value)}
-                className="input-luxury w-full text-xs"
-              />
-            </div>
-            <div>
-              <label className="block text-[11px] font-semibold uppercase mb-1">End Date</label>
-              <input
-                type="date"
-                value={formEndDate}
-                onChange={e => setFormEndDate(e.target.value)}
-                className="input-luxury w-full text-xs"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-semibold uppercase mb-1">Full Announcement Narrative *</label>
-            <textarea
-              rows={4}
-              required
-              placeholder="Type the complete bulletin text to display on property consoles..."
-              value={formMessage}
-              onChange={e => setFormMessage(e.target.value)}
-              className="input-luxury w-full text-xs"
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 pt-3 border-t border-border/80 dark:border-white/10">
-            <button
-              type="button"
-              onClick={() => setIsCreateModalOpen(false)}
-              className="px-4 py-2 rounded-xl btn-secondary-3d font-semibold text-xs"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-5 py-2.5 rounded-xl gold-gradient-bg text-primary-950 font-bold text-xs uppercase tracking-wider btn-3d shadow-gold"
-            >
-              Dispatch Broadcast
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* View Modal */}
-      {selectedAnnouncement && (
-        <Modal
-          isOpen={true}
-          onClose={() => setSelectedAnnouncement(null)}
-          title="System Bulletin Dossier"
-          maxWidth="md"
-        >
-          <div className="space-y-4 text-xs">
-            <div className="p-4 rounded-2xl bg-ivory dark:bg-primary-900/60 border border-border/80">
-              <span className="font-mono text-[10px] text-accent font-bold uppercase">{selectedAnnouncement.type} Notice</span>
-              <h4 className="font-serif font-bold text-base text-primary dark:text-white mt-1">
-                {selectedAnnouncement.title}
-              </h4>
-              <p className="text-charcoal-muted mt-2 leading-relaxed">{selectedAnnouncement.message}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-xl bg-white/40 dark:bg-white/5 border border-border/60">
-                <span className="text-[10px] uppercase font-mono text-charcoal-muted block">Target Audience</span>
-                <span className="font-semibold text-primary dark:text-white">{selectedAnnouncement.audience}</span>
-              </div>
-              <div className="p-3 rounded-xl bg-white/40 dark:bg-white/5 border border-border/60">
-                <span className="text-[10px] uppercase font-mono text-charcoal-muted block">Broadcast Schedule</span>
-                <span className="font-mono text-primary dark:text-white">{selectedAnnouncement.startDate} to {selectedAnnouncement.endDate}</span>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                type="button"
-                onClick={() => setSelectedAnnouncement(null)}
-                className="px-4 py-2 rounded-xl gold-gradient-bg text-primary-950 font-bold text-xs btn-3d shadow-gold"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
 
       {/* Delete Confirmation */}
       {deleteId && (
