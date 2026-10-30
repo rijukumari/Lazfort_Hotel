@@ -1,0 +1,85 @@
+export const mockGuests = [
+  {
+    id: 'gst-001',
+    name: 'Sir Alexander Kensington',
+    email: 'a.kensington@capitalgroup.co.uk',
+    phone: '+44 20 7946 0912',
+    nationality: 'British',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+    vipTier: 'Diamond',
+    totalStays: 14,
+    totalSpent: 168000,
+    lastStay: '2026-10-25',
+    status: 'active',
+    idNumber: 'GB-992144810',
+    loyaltyPoints: 34500,
+    preferences: ['Penthouse Floor', 'Extra Dry Champagne', 'Private Chauffeur', 'Non-smoking']
+  },
+  {
+    id: 'gst-002',
+    name: 'Dr. Vivienne Moreau',
+    email: 'vivienne.moreau@sorbonne.fr',
+    phone: '+33 6 12 34 56 78',
+    nationality: 'French',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    vipTier: 'Platinum',
+    totalStays: 8,
+    totalSpent: 89400,
+    lastStay: '2026-10-27',
+    status: 'active',
+    idNumber: 'FR-448192019',
+    loyaltyPoints: 19800,
+    preferences: ['Quiet Wing', 'Organic Breakfast', 'Spa Daily Booking']
+  },
+  {
+    id: 'gst-003',
+    name: 'Baron Mateo Rossi',
+    email: 'mateo.rossi@rossifinearts.it',
+    phone: '+39 02 8899 1122',
+    nationality: 'Italian',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
+    vipTier: 'Platinum',
+    totalStays: 6,
+    totalSpent: 62000,
+    lastStay: '2026-08-14',
+    status: 'active',
+    idNumber: 'IT-551982736',
+    loyaltyPoints: 14200,
+    preferences: ['Tuscan Red Wine', 'Late Checkout', 'Yacht Charter']
+  },
+  {
+    id: 'gst-004',
+    name: 'Evelyn St. Claire',
+    email: 'evelyn@stclairemedia.com',
+    phone: '+1 212 555 0199',
+    nationality: 'American',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80',
+    vipTier: 'Gold',
+    totalStays: 4,
+    totalSpent: 38500,
+    lastStay: '2026-05-20',
+    status: 'active',
+    idNumber: 'US-882910471',
+    loyaltyPoints: 8900,
+    preferences: ['Morning Espresso at 07:00', 'Gym Access', 'High Floor']
+  },
+  {
+    id: 'gst-005',
+    name: 'Countess Beatrix Von Linden',
+    email: 'beatrix@lindenestate.de',
+    phone: '+49 89 2444 3322',
+    nationality: 'German',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
+    vipTier: 'Diamond',
+    totalStays: 19,
+    totalSpent: 215000,
+    lastStay: '2026-10-20',
+    status: 'active',
+    idNumber: 'DE-102948572',
+    loyaltyPoints: 52000,
+    preferences: ['Private Butler', 'Garden View', 'Heritage Rooms Only']
+  }
+];
+
+export default mockGuests;
+
