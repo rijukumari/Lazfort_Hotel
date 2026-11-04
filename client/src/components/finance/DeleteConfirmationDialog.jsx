@@ -12,8 +12,8 @@ export const DeleteConfirmationDialog = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md bg-white dark:bg-primary-900 border border-rose-500/40 rounded-3xl shadow-2xl p-6 text-center space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-md bg-white dark:bg-[#101722] border border-border/80 dark:border-rose-500/40 rounded-3xl shadow-2xl p-6 text-center space-y-4 max-h-[88vh] overflow-y-auto no-scrollbar">
         <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-500 flex items-center justify-center shadow-lg shadow-rose-500/10">
           <AlertTriangle className="w-7 h-7" />
         </div>

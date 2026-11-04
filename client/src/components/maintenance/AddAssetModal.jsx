@@ -193,7 +193,7 @@ export const AddAssetModal = ({
                 placeholder="e.g. Carrier Centrifugal Chiller 450T"
                 className={`w-full px-3.5 py-2.5 rounded-xl border ${
                   errors.name ? 'border-rose-500' : 'border-border dark:border-white/10'
-                } bg-white dark:bg-primary-950/50 text-primary dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent`}
+                } bg-ivory/50 dark:bg-primary-950/60 text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent`}
               />
               {errors.name && <p className="text-[10px] text-rose-500 mt-1">{errors.name}</p>}
             </div>
@@ -207,7 +207,7 @@ export const AddAssetModal = ({
                 value={formData.serialNumber}
                 onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
                 placeholder="e.g. SN-CHILLER-091"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/50 text-primary dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent font-mono"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/60 text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent font-mono"
               />
             </div>
           </div>
@@ -221,7 +221,7 @@ export const AddAssetModal = ({
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/80 text-primary dark:text-white text-xs focus:outline-none focus:border-accent"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/60 text-primary dark:text-white text-xs focus:outline-none focus:border-accent"
               >
                 {ASSET_CATEGORIES.map((cat) => (
                   <option key={cat} value={cat} className="bg-white dark:bg-primary-900 text-primary dark:text-white">
@@ -238,7 +238,7 @@ export const AddAssetModal = ({
               <select
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/80 text-primary dark:text-white text-xs focus:outline-none focus:border-accent"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/60 text-primary dark:text-white text-xs focus:outline-none focus:border-accent"
               >
                 {LOCATIONS.map((loc) => (
                   <option key={loc} value={loc} className="bg-white dark:bg-primary-900 text-primary dark:text-white">
@@ -263,7 +263,7 @@ export const AddAssetModal = ({
                 placeholder="45000"
                 className={`w-full px-3.5 py-2.5 rounded-xl border ${
                   errors.purchaseCost ? 'border-rose-500' : 'border-border dark:border-white/10'
-                } bg-white dark:bg-primary-950/50 text-primary dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent font-mono`}
+                } bg-ivory/50 dark:bg-primary-950/60 text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent font-mono`}
               />
               {errors.purchaseCost && <p className="text-[10px] text-rose-500 mt-1">{errors.purchaseCost}</p>}
             </div>
@@ -278,7 +278,7 @@ export const AddAssetModal = ({
                 value={formData.salvageValue}
                 onChange={(e) => setFormData({ ...formData, salvageValue: e.target.value })}
                 placeholder="5000"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/50 text-primary dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent font-mono"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/60 text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent font-mono"
               />
             </div>
 
@@ -293,7 +293,7 @@ export const AddAssetModal = ({
                 placeholder="10"
                 className={`w-full px-3.5 py-2.5 rounded-xl border ${
                   errors.usefulLifeYears ? 'border-rose-500' : 'border-border dark:border-white/10'
-                } bg-white dark:bg-primary-950/50 text-primary dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent font-mono`}
+                } bg-ivory/50 dark:bg-primary-950/60 text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent font-mono`}
               />
               {errors.usefulLifeYears && <p className="text-[10px] text-rose-500 mt-1">{errors.usefulLifeYears}</p>}
             </div>
@@ -308,7 +308,7 @@ export const AddAssetModal = ({
               <select
                 value={formData.depreciationMethod}
                 onChange={(e) => setFormData({ ...formData, depreciationMethod: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/80 text-primary dark:text-white text-xs focus:outline-none focus:border-accent"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/60 text-primary dark:text-white text-xs focus:outline-none focus:border-accent"
               >
                 {DEPRECIATION_METHODS.map((m) => (
                   <option key={m} value={m} className="bg-white dark:bg-primary-900 text-primary dark:text-white">
@@ -326,7 +326,7 @@ export const AddAssetModal = ({
                 type="date"
                 value={formData.purchaseDate}
                 onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/50 text-primary dark:text-white text-xs focus:outline-none focus:border-accent"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/60 text-primary dark:text-white text-xs focus:outline-none focus:border-accent"
               />
             </div>
           </div>
@@ -342,7 +342,7 @@ export const AddAssetModal = ({
                 value={formData.supplier}
                 onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
                 placeholder="e.g. Carrier HVAC International Monaco"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/50 text-primary dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/60 text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent"
               />
             </div>
 
@@ -354,7 +354,7 @@ export const AddAssetModal = ({
                 type="date"
                 value={formData.warrantyExpiry}
                 onChange={(e) => setFormData({ ...formData, warrantyExpiry: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/50 text-primary dark:text-white text-xs focus:outline-none focus:border-accent"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/60 text-primary dark:text-white text-xs focus:outline-none focus:border-accent"
               />
             </div>
           </div>

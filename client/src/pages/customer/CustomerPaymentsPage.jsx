@@ -151,13 +151,13 @@ export const CustomerPaymentsPage = () => {
         <div className="flex items-center gap-2 p-1 bg-white/70 dark:bg-primary-900/40 rounded-2xl border border-border dark:border-white/10 w-full sm:w-auto">
           {['all', 'paid', 'pending'].map(tab => (
             <button
+              type="button"
               key={tab}
               onClick={() => setFilter(tab)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold capitalize transition-all ${
-                filter === tab
-                  ? 'gold-gradient-bg text-primary-900 font-bold shadow-sm'
+              className={`px-4 py-2 rounded-xl text-xs font-semibold capitalize transition-all cursor-pointer ${filter === tab
+                  ? 'filter-btn-active'
                   : 'text-charcoal-muted dark:text-gray-300 hover:text-white'
-              }`}
+                }`}
             >
               {tab === 'all' ? 'All Invoices' : `${tab} Folios`}
             </button>
@@ -245,8 +245,9 @@ export const CustomerPaymentsPage = () => {
                     </td>
                     <td className="py-4 px-6 text-right space-x-2">
                       <button
+                        type="button"
                         onClick={() => setSelectedBookingForInvoice(b)}
-                        className="px-3 py-1.5 rounded-xl btn-secondary-3d font-semibold text-xs text-charcoal dark:text-gray-200 hover:text-accent inline-flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-xl btn-secondary-3d font-semibold text-xs text-charcoal dark:text-gray-200 hover:text-accent inline-flex items-center gap-1.5 cursor-pointer"
                       >
                         <FileText className="w-3.5 h-3.5" />
                         <span>View Invoice</span>

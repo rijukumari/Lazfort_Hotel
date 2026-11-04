@@ -46,6 +46,20 @@ export const RaiseTicketModal = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen) onClose?.();
+    };
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleSubmit = (e) => {
@@ -86,12 +100,12 @@ export const RaiseTicketModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary/70 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="card-luxury-3d w-full max-w-xl bg-white dark:bg-[#111827] border border-accent/40 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="card-luxury-3d w-full max-w-xl bg-white dark:bg-[#101722] border border-border/80 dark:border-accent/40 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-6 py-4.5 border-b border-border dark:border-white/10 flex items-center justify-between bg-ivory/50 dark:bg-white/[0.02]">
+        <div className="px-6 py-4.5 border-b border-border/80 dark:border-white/10 flex items-center justify-between bg-ivory/50 dark:bg-primary-900/60 sticky top-0 z-10 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center text-accent">
+            <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center text-accent shrink-0">
               <Wrench className="w-5 h-5" />
             </div>
             <div>
@@ -105,14 +119,14 @@ export const RaiseTicketModal = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-charcoal-muted hover:text-accent hover:bg-ivory dark:hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-xl text-charcoal-muted hover:text-accent hover:bg-ivory dark:hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 flex-1">
+        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto no-scrollbar space-y-4 flex-1">
           {error && (
             <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs">
               {error}
@@ -121,27 +135,27 @@ export const RaiseTicketModal = ({
 
           <div className="space-y-1">
             <label className="text-[11px] uppercase tracking-wider font-semibold text-charcoal dark:text-gray-300">
-              Issue Title *
+              Work Order Title <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
               required
               value={formData.title}
               onChange={e => setFormData({ ...formData, title: e.target.value })}
-              placeholder="e.g., Suite 402 AC Chilled Water Valve Leak"
-              className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-white dark:bg-primary-950/60 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none"
+              placeholder="e.g. Master Bath Thermal Radiator Pressure Calibration"
+              className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/60 dark:bg-primary-950/70 border border-border/80 dark:border-white/15 focus:border-accent text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-[11px] uppercase tracking-wider font-semibold text-charcoal dark:text-gray-300">
-                Issue Category
+                Technical Category
               </label>
               <select
                 value={formData.category}
                 onChange={e => setFormData({ ...formData, category: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-white dark:bg-primary-950/60 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none cursor-pointer"
+                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/60 dark:bg-primary-950/70 border border-border/80 dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none cursor-pointer"
               >
                 {ISSUE_CATEGORIES.map(c => (
                   <option key={c} value={c} className="bg-white dark:bg-primary-900 text-primary dark:text-white">
@@ -153,15 +167,15 @@ export const RaiseTicketModal = ({
 
             <div className="space-y-1">
               <label className="text-[11px] uppercase tracking-wider font-semibold text-charcoal dark:text-gray-300">
-                Priority Tier
+                Dispatch Priority
               </label>
               <select
                 value={formData.priority}
                 onChange={e => setFormData({ ...formData, priority: e.target.value, blocksRoom: e.target.value === 'critical' ? true : formData.blocksRoom })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-white dark:bg-primary-950/60 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none cursor-pointer"
+                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/60 dark:bg-primary-950/70 border border-border/80 dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none cursor-pointer"
               >
                 <option value="low" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Low Priority (Routine Work)</option>
-                <option value="medium" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Medium Priority (Standard Fix)</option>
+                <option value="medium" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Medium (Routine Service)</option>
                 <option value="high" className="bg-white dark:bg-primary-900 text-primary dark:text-white">High Priority (Urgent Suite Touchup)</option>
                 <option value="critical" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Critical (Blocks Room / Out of Order)</option>
               </select>
@@ -169,17 +183,17 @@ export const RaiseTicketModal = ({
 
             <div className="space-y-1">
               <label className="text-[11px] uppercase tracking-wider font-semibold text-charcoal dark:text-gray-300">
-                Affected Room / Suite (Optional)
+                Chamber / Location
               </label>
               <select
                 value={formData.roomId}
                 onChange={e => setFormData({ ...formData, roomId: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-white dark:bg-primary-950/60 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none cursor-pointer"
+                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/60 dark:bg-primary-950/70 border border-border/80 dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none cursor-pointer"
               >
-                <option value="" className="bg-white dark:bg-primary-900 text-primary dark:text-white">No specific room (General property)</option>
+                <option value="" className="bg-white dark:bg-primary-900 text-primary dark:text-white">General Palace Property</option>
                 {rooms.map(r => (
                   <option key={r.id} value={r.id} className="bg-white dark:bg-primary-900 text-primary dark:text-white">
-                    Suite {r.roomNumber} ({r.type}) — Status: {r.status}
+                    Chamber {r.roomNumber} ({r.type})
                   </option>
                 ))}
               </select>
@@ -187,12 +201,12 @@ export const RaiseTicketModal = ({
 
             <div className="space-y-1">
               <label className="text-[11px] uppercase tracking-wider font-semibold text-charcoal dark:text-gray-300">
-                Assigned Technician
+                Assign Lead Technician
               </label>
               <select
                 value={formData.assignedTechnician}
                 onChange={e => setFormData({ ...formData, assignedTechnician: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-white dark:bg-primary-950/60 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none cursor-pointer"
+                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/60 dark:bg-primary-950/70 border border-border/80 dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none cursor-pointer"
               >
                 {TECHNICIANS.map(t => (
                   <option key={t} value={t} className="bg-white dark:bg-primary-900 text-primary dark:text-white">
@@ -211,7 +225,7 @@ export const RaiseTicketModal = ({
                 required
                 value={formData.expectedCompletionDate}
                 onChange={e => setFormData({ ...formData, expectedCompletionDate: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-white dark:bg-primary-950/60 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/60 dark:bg-primary-950/70 border border-border/80 dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none"
               />
             </div>
 
@@ -224,7 +238,7 @@ export const RaiseTicketModal = ({
                 min="0"
                 value={formData.estimatedCost}
                 onChange={e => setFormData({ ...formData, estimatedCost: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-white dark:bg-primary-950/60 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white font-mono focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/60 dark:bg-primary-950/70 border border-border/80 dark:border-white/15 focus:border-accent text-primary dark:text-white font-mono focus:outline-none"
               />
             </div>
           </div>
@@ -238,20 +252,20 @@ export const RaiseTicketModal = ({
               value={formData.location}
               onChange={e => setFormData({ ...formData, location: e.target.value })}
               placeholder="e.g., Grand Ballroom Chandelier West Wing, Spa Thermal Pool #2"
-              className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-white dark:bg-primary-950/60 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none"
+              className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/60 dark:bg-primary-950/70 border border-border/80 dark:border-white/15 focus:border-accent text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none"
             />
           </div>
 
           <div className="space-y-1">
             <label className="text-[11px] uppercase tracking-wider font-semibold text-charcoal dark:text-gray-300">
-              Detailed Description & Defect Notes
+              Technical Directives & Work Instructions
             </label>
             <textarea
               rows={3}
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Provide exact symptoms, parts required, or safety notes for engineering personnel..."
-              className="w-full px-3.5 py-2 rounded-xl text-xs bg-white dark:bg-primary-950/60 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none resize-none"
+              placeholder="Specify precise diagnostic instructions, guest privacy constraints, or replacement parts..."
+              className="w-full px-3.5 py-2 rounded-xl text-xs bg-ivory/60 dark:bg-primary-950/70 border border-border/80 dark:border-white/15 focus:border-accent text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none resize-none"
             />
           </div>
 

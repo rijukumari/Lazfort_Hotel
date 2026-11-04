@@ -323,6 +323,7 @@ export const DepartmentsPage = () => {
         keyField="id"
         pageSize={8}
         showSearch={false}
+        searchPlaceholder=""
         emptyMessage="No departments found matching search criteria."
       />
 

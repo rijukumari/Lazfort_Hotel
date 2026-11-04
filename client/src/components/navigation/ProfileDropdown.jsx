@@ -89,7 +89,15 @@ export const ProfileDropdown = () => {
               type="button"
               onClick={() => {
                 setIsOpen(false);
-                navigate(role === 'customer' ? '/customer/profile' : `/${role.replace(/_/g, '-')}/settings`);
+                if (role === 'customer') {
+                  navigate('/customer/profile');
+                } else if (role === 'hotel_admin') {
+                  navigate('/hotel-admin/profile');
+                } else if (role === 'super_admin') {
+                  navigate('/super-admin/platform/settings');
+                } else {
+                  navigate(`/${role.replace(/_/g, '-')}/profile`);
+                }
               }}
               className="w-full px-3 py-2 rounded-xl text-left hover:bg-ivory dark:hover:bg-primary-800/80 flex items-center gap-2.5 transition-colors"
             >
@@ -102,7 +110,15 @@ export const ProfileDropdown = () => {
               type="button"
               onClick={() => {
                 setIsOpen(false);
-                navigate(role === 'customer' ? '/customer/profile' : `/${role.replace(/_/g, '-')}/settings`);
+                if (role === 'customer') {
+                  navigate('/customer/preferences');
+                } else if (role === 'hotel_admin') {
+                  navigate('/hotel-admin/system-preferences');
+                } else if (role === 'super_admin') {
+                  navigate('/super-admin/platform/settings');
+                } else {
+                  navigate(`/${role.replace(/_/g, '-')}/settings`);
+                }
               }}
               className="w-full px-3 py-2 rounded-xl text-left hover:bg-ivory dark:hover:bg-primary-800/80 flex items-center gap-2.5 transition-colors"
             >
@@ -115,7 +131,7 @@ export const ProfileDropdown = () => {
               type="button"
               onClick={() => {
                 setIsOpen(false);
-                navigate(role === 'customer' ? '/customer/profile' : `/${role.replace(/_/g, '-')}/system/security`);
+                navigate(role === 'customer' ? '/customer/security' : `/${role.replace(/_/g, '-')}/system/security`);
               }}
               className="w-full px-3 py-2 rounded-xl text-left hover:bg-ivory dark:hover:bg-primary-800/80 flex items-center gap-2.5 transition-colors"
             >

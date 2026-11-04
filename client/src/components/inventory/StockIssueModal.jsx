@@ -65,12 +65,12 @@ export const StockIssueModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary/70 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="card-luxury-3d w-full max-w-lg bg-white dark:bg-[#111827] border border-blue-500/30 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="card-luxury-3d w-full max-w-lg bg-white dark:bg-[#101722] border border-border/80 dark:border-blue-500/30 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
         {/* Header */}
-        <div className="px-6 py-4.5 border-b border-border dark:border-white/10 flex items-center justify-between bg-blue-500/10">
+        <div className="px-6 py-4.5 border-b border-border/80 dark:border-white/10 flex items-center justify-between bg-blue-500/10 sticky top-0 z-10 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-500">
+            <div className="w-9 h-9 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-500 shrink-0">
               <PackageMinus className="w-5 h-5" />
             </div>
             <div>
@@ -84,14 +84,14 @@ export const StockIssueModal = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-charcoal-muted hover:text-accent hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-xl text-charcoal-muted hover:text-accent hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto no-scrollbar flex-1">
           {error && (
             <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs">
               {error}

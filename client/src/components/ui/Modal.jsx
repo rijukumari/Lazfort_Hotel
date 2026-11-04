@@ -44,9 +44,9 @@ export const Modal = ({
 
       {/* Modal Dialog Box */}
       <div
-        className={`relative w-full ${maxW} bg-white dark:bg-surface-dark border border-border dark:border-accent/30 rounded-3xl shadow-2xl p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200 ${className}`}
+        className={`relative w-full ${maxW} bg-white dark:bg-[#101722] border border-border/80 dark:border-accent/30 rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10 ${className}`}
       >
-        <div className="flex items-start justify-between gap-4 pb-4 border-b border-border/80 dark:border-white/10">
+        <div className="flex items-start justify-between gap-4 p-6 sm:px-8 sm:py-6 border-b border-border/80 dark:border-white/10 bg-white/95 dark:bg-[#101722]/95 backdrop-blur-md shrink-0 z-20">
           <div>
             {title && (
               <h3 className="font-serif font-bold text-xl text-primary dark:text-white">
@@ -60,14 +60,16 @@ export const Modal = ({
             )}
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-full text-charcoal-muted hover:text-accent hover:bg-ivory dark:hover:bg-primary-800 transition-colors"
+            className="p-1.5 rounded-full text-charcoal-muted hover:text-accent hover:bg-ivory dark:hover:bg-primary-800 transition-colors cursor-pointer shrink-0"
+            aria-label="Close dialog"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div>{children}</div>
+        <div className="relative p-6 sm:p-8 overflow-y-auto no-scrollbar flex-1">{children}</div>
       </div>
     </div>
   );

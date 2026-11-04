@@ -158,7 +158,7 @@ export const CreateJournalModal = ({ isOpen, onClose, onSuccess }) => {
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/70 text-xs focus:outline-none focus:border-accent text-primary dark:text-white"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/70 text-xs focus:outline-none focus:border-accent text-primary dark:text-white"
               />
             </div>
 
@@ -171,7 +171,7 @@ export const CreateJournalModal = ({ isOpen, onClose, onSuccess }) => {
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
                 placeholder="e.g. JV-ADJ-2026-09"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/70 text-xs text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none focus:border-accent font-mono"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/70 text-xs text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none focus:border-accent font-mono"
               />
             </div>
 
@@ -182,7 +182,7 @@ export const CreateJournalModal = ({ isOpen, onClose, onSuccess }) => {
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/70 text-xs focus:outline-none focus:border-accent text-primary dark:text-white"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/70 text-xs focus:outline-none focus:border-accent text-primary dark:text-white"
               >
                 <option value="draft" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Save as Draft (Review Later)</option>
                 <option value="posted" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Post Immediately to General Ledger</option>
@@ -199,7 +199,7 @@ export const CreateJournalModal = ({ isOpen, onClose, onSuccess }) => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="e.g. Reclassification of luxury banquet champagne surcharge to F&B ledger"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/70 text-xs text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none focus:border-accent"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/70 text-xs text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none focus:border-accent"
             />
           </div>
 
@@ -222,12 +222,12 @@ export const CreateJournalModal = ({ isOpen, onClose, onSuccess }) => {
 
             <div className="rounded-2xl border border-border/80 dark:border-white/10 overflow-hidden">
               <table className="w-full text-left text-xs">
-                <thead className="bg-ivory/80 dark:bg-primary-950/80 text-[10px] uppercase font-semibold text-charcoal dark:text-gray-300 border-b border-border/60 dark:border-white/10">
+                <thead className="bg-ivory/80 dark:bg-primary-800/40 text-[10px] uppercase font-semibold text-charcoal-muted dark:text-gray-300 border-b border-border/60 dark:border-white/10">
                   <tr>
-                    <th className="py-2.5 px-3 text-charcoal dark:text-gray-200">G/L Account</th>
-                    <th className="py-2.5 px-3 text-charcoal dark:text-gray-200">Line Memo</th>
-                    <th className="py-2.5 px-3 text-right text-charcoal dark:text-gray-200">Debit ($)</th>
-                    <th className="py-2.5 px-3 text-right text-charcoal dark:text-gray-200">Credit ($)</th>
+                    <th className="py-2.5 px-3 text-charcoal-muted dark:text-gray-300">G/L Account</th>
+                    <th className="py-2.5 px-3 text-charcoal-muted dark:text-gray-300">Line Memo</th>
+                    <th className="py-2.5 px-3 text-right text-charcoal-muted dark:text-gray-300">Debit ($)</th>
+                    <th className="py-2.5 px-3 text-right text-charcoal-muted dark:text-gray-300">Credit ($)</th>
                     <th className="py-2.5 px-3 text-center"></th>
                   </tr>
                 </thead>
@@ -238,7 +238,7 @@ export const CreateJournalModal = ({ isOpen, onClose, onSuccess }) => {
                         <select
                           value={line.accountCode}
                           onChange={(e) => handleLineChange(line.id, 'accountCode', e.target.value)}
-                          className="w-full px-2 py-1.5 rounded-lg border border-border dark:border-white/10 bg-white dark:bg-primary-950/80 text-primary dark:text-white text-xs focus:outline-none focus:border-accent"
+                          className="w-full px-2 py-1.5 rounded-lg border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/70 text-primary dark:text-white text-xs focus:outline-none focus:border-accent"
                         >
                           {chartOfAccounts.map((a) => (
                             <option key={a.id || a.code} value={a.code} className="bg-white dark:bg-primary-900 text-primary dark:text-white">
@@ -254,9 +254,8 @@ export const CreateJournalModal = ({ isOpen, onClose, onSuccess }) => {
                           value={line.description}
                           onChange={(e) => handleLineChange(line.id, 'description', e.target.value)}
                           placeholder="Optional line memo"
-                          className="w-full px-2 py-1.5 rounded-lg border border-border dark:border-white/10 bg-white dark:bg-primary-950/80 text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent"
-                        >
-                        </input>
+                          className="w-full px-2 py-1.5 rounded-lg border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/70 text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent"
+                        />
                       </td>
 
                       <td className="py-2.5 px-3 w-28 text-right">
@@ -265,7 +264,7 @@ export const CreateJournalModal = ({ isOpen, onClose, onSuccess }) => {
                           step="0.01"
                           value={line.debit}
                           onChange={(e) => handleLineChange(line.id, 'debit', e.target.value)}
-                          className="w-full px-2 py-1.5 rounded-lg border border-border dark:border-white/10 bg-white dark:bg-primary-950/80 text-xs text-right font-mono text-primary dark:text-white focus:outline-none focus:border-accent font-semibold"
+                          className="w-full px-2 py-1.5 rounded-lg border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/70 text-xs text-right font-mono text-primary dark:text-white focus:outline-none focus:border-accent font-semibold"
                         />
                       </td>
 
@@ -275,7 +274,7 @@ export const CreateJournalModal = ({ isOpen, onClose, onSuccess }) => {
                           step="0.01"
                           value={line.credit}
                           onChange={(e) => handleLineChange(line.id, 'credit', e.target.value)}
-                          className="w-full px-2 py-1.5 rounded-lg border border-border dark:border-white/10 bg-white dark:bg-primary-950/80 text-xs text-right font-mono text-primary dark:text-white focus:outline-none focus:border-accent font-semibold"
+                          className="w-full px-2 py-1.5 rounded-lg border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/70 text-xs text-right font-mono text-primary dark:text-white focus:outline-none focus:border-accent font-semibold"
                         />
                       </td>
 
@@ -291,7 +290,7 @@ export const CreateJournalModal = ({ isOpen, onClose, onSuccess }) => {
                     </tr>
                   ))}
                 </tbody>
-                <tfoot className="bg-ivory/60 dark:bg-primary-950/60 font-bold border-t border-border/80 dark:border-white/10">
+                <tfoot className="bg-ivory/60 dark:bg-primary-950/80 font-bold border-t border-border/80 dark:border-white/10">
                   <tr>
                     <td colSpan={2} className="py-3 px-3 text-right text-primary dark:text-white uppercase tracking-wider text-[11px]">
                       Totals:

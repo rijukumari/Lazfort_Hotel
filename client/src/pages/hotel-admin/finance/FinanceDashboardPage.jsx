@@ -106,27 +106,30 @@ export const FinanceDashboardPage = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-nowrap items-center gap-2.5 shrink-0">
           <button
+            type="button"
             onClick={() => setIsFolioModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl border border-border dark:border-white/10 text-xs font-semibold text-charcoal dark:text-gray-300 hover:bg-ivory dark:hover:bg-primary-800 transition-colors flex items-center gap-1.5"
+            className="px-4 py-2.5 rounded-xl border border-border/80 dark:border-white/15 text-xs font-semibold text-charcoal dark:text-gray-200 hover:bg-ivory dark:hover:bg-primary-800 transition-colors flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
           >
-            <Receipt className="w-3.5 h-3.5 text-accent" />
-            <span>New Folio</span>
+            <Receipt className="w-4 h-4 text-accent shrink-0" />
+            <span className="whitespace-nowrap">New Folio</span>
           </button>
           <button
+            type="button"
             onClick={() => setIsInvoiceModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl border border-accent/40 text-xs font-semibold text-accent hover:bg-accent/15 transition-colors flex items-center gap-1.5"
+            className="px-4 py-2.5 rounded-xl border border-accent/40 text-xs font-semibold text-accent hover:bg-accent/15 transition-colors flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
           >
-            <FileText className="w-3.5 h-3.5" />
-            <span>Generate Invoice</span>
+            <FileText className="w-4 h-4 shrink-0" />
+            <span className="whitespace-nowrap">Generate Invoice</span>
           </button>
           <button
+            type="button"
             onClick={() => setIsJournalModalOpen(true)}
-            className="px-4 py-2 rounded-xl gold-gradient-bg text-primary-900 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold flex items-center gap-1.5"
+            className="px-5 py-2.5 rounded-xl gold-gradient-bg text-primary-950 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
-            <span>Post Journal</span>
+            <Plus className="w-4 h-4 shrink-0" />
+            <span className="whitespace-nowrap">Post Journal</span>
           </button>
         </div>
       </div>
@@ -202,7 +205,7 @@ export const FinanceDashboardPage = () => {
                     ${ch.volume.toLocaleString()} ({ch.pct}%)
                   </span>
                 </div>
-                <div className="w-full bg-border dark:bg-white/10 rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-ivory-dark/60 dark:bg-primary-950/80 rounded-full h-2 overflow-hidden border border-border/40 dark:border-white/10">
                   <div className={`h-2 rounded-full ${ch.color}`} style={{ width: `${ch.pct}%` }} />
                 </div>
               </div>

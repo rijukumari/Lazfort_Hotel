@@ -53,12 +53,11 @@ export const InvoiceStatusBadge = ({ status = 'issued', size = 'md' }) => {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full font-semibold border ${current.color} ${
-        isSm ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-xs'
-      }`}
+      className={`inline-flex items-center gap-1.5 rounded-full font-semibold border ${current.color} whitespace-nowrap text-center ${isSm ? 'px-2.5 py-1 text-[11px]' : 'px-3.5 py-1 text-xs'
+        }`}
     >
-      <Icon className={isSm ? 'w-3 h-3' : 'w-3.5 h-3.5'} />
-      <span>{current.label}</span>
+      <Icon className={`${isSm ? 'w-3.5 h-3.5' : 'w-4 h-4'} shrink-0`} />
+      <span className="whitespace-nowrap">{current.label}</span>
     </span>
   );
 };

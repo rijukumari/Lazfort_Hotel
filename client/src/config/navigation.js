@@ -389,14 +389,14 @@ export const NAVIGATION_CONFIG = {
       items: [
         {
           id: 'rc-dashboard',
-          label: 'Dashboard',
+          label: 'Front Desk Dashboard',
           path: '/receptionist/dashboard',
           iconName: 'LayoutDashboard',
           children: [
-            { id: 'rc-dash-ov', label: 'Front Desk Overview', path: '/receptionist/dashboard' },
-            { id: 'rc-dash-arr', label: "Today's Arrivals", path: '/receptionist/dashboard/arrivals' },
-            { id: 'rc-dash-dep', label: "Today's Departures", path: '/receptionist/dashboard/departures' },
-            { id: 'rc-dash-avail', label: 'Available Rooms', path: '/receptionist/dashboard/available' }
+            { id: 'rc-dash-ov', label: 'Front Desk Overview', path: '/hotel-admin/dashboard/front-desk' },
+            { id: 'rc-dash-arr', label: "Today's Arrivals", path: '/hotel-admin/dashboard/arrivals' },
+            { id: 'rc-dash-dep', label: "Today's Departures", path: '/hotel-admin/dashboard/departures' },
+            { id: 'rc-dash-avail', label: 'Available Rooms', path: '/hotel-admin/dashboard/available-rooms' }
           ]
         },
         {
@@ -488,7 +488,7 @@ export const NAVIGATION_CONFIG = {
           iconName: 'Suitcase',
           children: [
             { id: 'cs-bkg-all', label: 'All Stays & Bookings', path: '/customer/bookings' },
-            { id: 'cs-bkg-upc', label: 'Upcoming Reservations', path: '/customer/bookings' },
+            { id: 'cs-bkg-upc', label: 'Upcoming Reservations', path: '/customer/upcoming-reservations' },
           ]
         },
         {
@@ -548,7 +548,7 @@ export const NAVIGATION_CONFIG = {
           path: '/housekeeping/cleaning',
           iconName: 'Sparkles',
           children: [
-            { id: 'hk-cln-assign', label: 'Assigned Rooms', path: '/housekeeping/cleaning' },
+            { id: 'hk-cln-assign', label: 'Assigned Rooms', path: '/housekeeping/cleaning/assigned' },
             { id: 'hk-cln-todo', label: 'Rooms to Clean', path: '/housekeeping/cleaning/todo' },
             { id: 'hk-cln-prog', label: 'In Progress', path: '/housekeeping/cleaning/in-progress' },
             { id: 'hk-cln-done', label: 'Completed Tasks', path: '/housekeeping/cleaning/completed' },
@@ -562,7 +562,7 @@ export const NAVIGATION_CONFIG = {
           path: '/housekeeping/maintenance',
           iconName: 'Wrench',
           children: [
-            { id: 'hk-maint-req', label: 'Maintenance Requests', path: '/housekeeping/maintenance' },
+            { id: 'hk-maint-req', label: 'Maintenance Requests', path: '/housekeeping/maintenance/requests' },
             { id: 'hk-maint-rep', label: 'Report an Issue', path: '/housekeeping/maintenance/report' },
             { id: 'hk-maint-hist', label: 'Maintenance History', path: '/housekeeping/maintenance/history' }
           ]
@@ -595,7 +595,7 @@ export const NAVIGATION_CONFIG = {
           iconName: 'LayoutDashboard',
           children: [
             { id: 'stf-dash-ov', label: 'My Dashboard', path: '/staff/dashboard' },
-            { id: 'stf-dash-today', label: "Today's Overview", path: '/staff/dashboard/today' }
+            { id: 'stf-dash-today', label: "Today's Overview", path: '/staff/today-overview' }
           ]
         },
         {
@@ -616,7 +616,7 @@ export const NAVIGATION_CONFIG = {
           iconName: 'Clock',
           children: [
             { id: 'stf-att-my', label: 'My Attendance', path: '/staff/attendance' },
-            { id: 'stf-att-clock', label: 'Check-in / Check-out', path: '/staff/attendance/clock' },
+            { id: 'stf-att-clock', label: 'Check-in / Check-out', path: '/staff/attendance/check-in' },
             { id: 'stf-att-hist', label: 'Attendance History', path: '/staff/attendance/history' }
           ]
         },
@@ -628,8 +628,8 @@ export const NAVIGATION_CONFIG = {
           children: [
             { id: 'stf-sch-shifts', label: 'My Shifts', path: '/staff/schedule' },
             { id: 'stf-sch-week', label: 'Weekly Schedule', path: '/staff/schedule/weekly' },
-            { id: 'stf-sch-leave', label: 'Leave Requests', path: '/staff/schedule/leave' },
-            { id: 'stf-sch-apply', label: 'Apply for Leave', path: '/staff/schedule/apply' }
+            { id: 'stf-sch-leave', label: 'Leave Requests', path: '/staff/schedule/leave-requests' },
+            { id: 'stf-sch-apply', label: 'Apply for Leave', path: '/staff/schedule/apply-leave' }
           ]
         },
         {

@@ -17,6 +17,7 @@ export const MobileSidebar = ({ isOpen, onClose }) => {
         <div className="relative w-72 max-w-xs shadow-2xl flex flex-col animate-in slide-in-from-left duration-300">
           {/* Close button float */}
           <button
+            type="button"
             onClick={onClose}
             className="absolute top-4 right-3 z-50 p-1.5 rounded-xl bg-primary-800 text-gray-300 hover:text-white transition-colors"
             aria-label="Close mobile navigation"

@@ -121,12 +121,12 @@ export const AddAccountModal = ({ isOpen, onClose, accountToEdit = null, onSucce
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl bg-white dark:bg-primary-900 border border-accent/40 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-xl bg-white dark:bg-[#101722] border border-border/80 dark:border-accent/40 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-border/80 dark:border-white/10 flex items-center justify-between bg-ivory/50 dark:bg-primary-800/40">
+        <div className="px-6 py-5 border-b border-border/80 dark:border-white/10 flex items-center justify-between bg-ivory/50 dark:bg-primary-800/40 sticky top-0 z-10 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-accent/20 border border-accent/40 flex items-center justify-center text-accent shadow-gold">
+            <div className="w-10 h-10 rounded-2xl bg-accent/20 border border-accent/40 flex items-center justify-center text-accent shadow-gold shrink-0">
               {isEditing ? <Edit2 className="w-5 h-5" /> : <Landmark className="w-5 h-5" />}
             </div>
             <div>
@@ -140,14 +140,14 @@ export const AddAccountModal = ({ isOpen, onClose, accountToEdit = null, onSucce
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-charcoal-muted hover:text-accent hover:bg-white dark:hover:bg-primary-800 transition-colors"
+            className="p-2 rounded-xl text-charcoal-muted hover:text-accent hover:bg-white dark:hover:bg-primary-800 transition-colors shrink-0 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto no-scrollbar">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-primary dark:text-white mb-1.5">
@@ -160,7 +160,7 @@ export const AddAccountModal = ({ isOpen, onClose, accountToEdit = null, onSucce
                 placeholder="e.g. 1010"
                 className={`w-full px-3.5 py-2.5 rounded-xl border ${
                   errors.code ? 'border-rose-500' : 'border-border dark:border-white/10'
-                } bg-white dark:bg-primary-950/50 text-xs focus:outline-none focus:border-accent font-mono font-bold`}
+                } bg-ivory/50 dark:bg-primary-950/70 text-primary dark:text-white text-xs focus:outline-none focus:border-accent font-mono font-bold`}
               />
               {errors.code && <p className="text-[10px] text-rose-500 mt-1">{errors.code}</p>}
             </div>
@@ -172,10 +172,10 @@ export const AddAccountModal = ({ isOpen, onClose, accountToEdit = null, onSucce
               <select
                 value={formData.type}
                 onChange={(e) => handleTypeChange(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/40 dark:bg-primary-950/50 text-xs focus:outline-none focus:border-accent text-primary dark:text-white"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/70 text-xs focus:outline-none focus:border-accent text-primary dark:text-white"
               >
                 {ACCOUNT_TYPES.map((t) => (
-                  <option key={t} value={t}>
+                  <option key={t} value={t} className="bg-white dark:bg-primary-900 text-primary dark:text-white">
                     {t}
                   </option>
                 ))}
@@ -194,7 +194,7 @@ export const AddAccountModal = ({ isOpen, onClose, accountToEdit = null, onSucce
               placeholder="e.g. UBS Sovereign Operating Vault"
               className={`w-full px-3.5 py-2.5 rounded-xl border ${
                 errors.name ? 'border-rose-500' : 'border-border dark:border-white/10'
-              } bg-white dark:bg-primary-950/50 text-xs focus:outline-none focus:border-accent`}
+              } bg-ivory/50 dark:bg-primary-950/70 text-primary dark:text-white text-xs focus:outline-none focus:border-accent`}
             />
             {errors.name && <p className="text-[10px] text-rose-500 mt-1">{errors.name}</p>}
           </div>
@@ -207,10 +207,10 @@ export const AddAccountModal = ({ isOpen, onClose, accountToEdit = null, onSucce
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/40 dark:bg-primary-950/50 text-xs focus:outline-none focus:border-accent text-primary dark:text-white"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/70 text-xs focus:outline-none focus:border-accent text-primary dark:text-white"
               >
                 {(CATEGORY_MAP[formData.type] || ['General']).map((cat) => (
-                  <option key={cat} value={cat}>
+                  <option key={cat} value={cat} className="bg-white dark:bg-primary-900 text-primary dark:text-white">
                     {cat}
                   </option>
                 ))}
@@ -227,7 +227,7 @@ export const AddAccountModal = ({ isOpen, onClose, accountToEdit = null, onSucce
                 value={formData.openingBalance}
                 onChange={(e) => setFormData({ ...formData, openingBalance: e.target.value })}
                 placeholder="0.00"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/50 text-xs focus:outline-none focus:border-accent font-mono"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/70 text-primary dark:text-white text-xs focus:outline-none focus:border-accent font-mono"
               />
             </div>
           </div>
@@ -241,7 +241,7 @@ export const AddAccountModal = ({ isOpen, onClose, accountToEdit = null, onSucce
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="e.g. Primary treasury account for guest folios and banquet settlements..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/50 text-xs focus:outline-none focus:border-accent"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/70 text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent"
             />
           </div>
 

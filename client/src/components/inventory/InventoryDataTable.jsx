@@ -50,7 +50,7 @@ export const InventoryDataTable = ({
   return (
     <div className="card-luxury-3d rounded-2xl border border-border dark:border-white/10 bg-white/90 dark:bg-[#111827]/90 overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs border-collapse">
+        <table className="w-full min-w-max text-left text-xs border-collapse">
           <thead>
             <tr className="border-b border-border/80 dark:border-white/10 bg-ivory/60 dark:bg-white/[0.02]">
               {columns.map(col => {
@@ -59,23 +59,20 @@ export const InventoryDataTable = ({
                   <th
                     key={col.key}
                     onClick={() => col.sortable && handleSort(col.key)}
-                    className={`px-4 py-3.5 text-[11px] uppercase tracking-wider font-bold text-charcoal-muted dark:text-gray-400 select-none ${
-                      col.sortable ? 'cursor-pointer hover:text-accent transition-colors' : ''
-                    } ${col.headerClassName || ''}`}
+                    className={`px-4 py-3.5 text-[11px] uppercase tracking-wider font-bold text-charcoal-muted dark:text-gray-400 select-none whitespace-nowrap ${col.sortable ? 'cursor-pointer hover:text-accent transition-colors' : ''
+                      } ${col.headerClassName || ''}`}
                   >
                     <div className="flex items-center gap-1.5">
                       <span>{col.header}</span>
                       {col.sortable && (
                         <div className="flex flex-col text-[8px] text-gray-400">
                           <ChevronUp
-                            className={`w-3 h-3 -mb-1 ${
-                              isSorted && sortDirection === 'asc' ? 'text-accent font-bold' : 'opacity-40'
-                            }`}
+                            className={`w-3 h-3 -mb-1 ${isSorted && sortDirection === 'asc' ? 'text-accent font-bold' : 'opacity-40'
+                              }`}
                           />
                           <ChevronDown
-                            className={`w-3 h-3 ${
-                              isSorted && sortDirection === 'desc' ? 'text-accent font-bold' : 'opacity-40'
-                            }`}
+                            className={`w-3 h-3 ${isSorted && sortDirection === 'desc' ? 'text-accent font-bold' : 'opacity-40'
+                              }`}
                           />
                         </div>
                       )}

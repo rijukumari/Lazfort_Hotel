@@ -9,6 +9,20 @@ export const RefundModal = ({ isOpen, onClose, payment, onSuccess }) => {
   const [reason, setReason] = useState('Executive Concierge Courtesy');
   const [errorMsg, setErrorMsg] = useState('');
 
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen) onClose?.();
+    };
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen || !payment) return null;
 
   const handleSubmit = (e) => {
@@ -25,12 +39,12 @@ export const RefundModal = ({ isOpen, onClose, payment, onSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md bg-white dark:bg-primary-900 border border-rose-500/40 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-md bg-white dark:bg-[#101722] border border-border/80 dark:border-rose-500/40 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-border/80 dark:border-white/10 flex items-center justify-between bg-rose-500/10">
+        <div className="px-6 py-5 border-b border-border/80 dark:border-white/10 flex items-center justify-between bg-rose-500/10 sticky top-0 z-10 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-rose-500/20 text-rose-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-rose-500/20 text-rose-500 flex items-center justify-center shrink-0">
               <RotateCcw className="w-5 h-5" />
             </div>
             <div>
@@ -44,14 +58,14 @@ export const RefundModal = ({ isOpen, onClose, payment, onSuccess }) => {
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-charcoal-muted hover:text-accent hover:bg-white dark:hover:bg-primary-800 transition-colors"
+            className="p-2 rounded-xl text-charcoal-muted hover:text-accent hover:bg-white dark:hover:bg-primary-800 transition-colors shrink-0 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto no-scrollbar flex-1">
           <div className="p-3.5 rounded-2xl bg-ivory/40 dark:bg-primary-950/40 border border-border/80 dark:border-white/10 flex items-center justify-between text-xs">
             <span className="text-charcoal-muted">Original Charged Amount:</span>
             <span className="font-mono font-bold text-primary dark:text-white">

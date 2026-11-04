@@ -215,173 +215,7 @@ export const RoomMaintenancePage = () => {
         let badgeColor = 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30';
         if (t.priority === 'urgent') badgeColor = 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold';
         if (t.priority === 'high') badgeColor = 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30';
-        // FORM VIEW: DEDICATED FULL PAGE WORK ORDER FORM
-  if (viewMode === 'form') {
-    return (
-      <div className="space-y-6 animate-in fade-in duration-300 pb-16">
-        <PageHeader
-          title={editingTicket ? `Edit Work Order #${editingTicket.ticketNumber || editingTicket.id}` : 'Create Suite Maintenance Request'}
-          description="Dispatch urgent or routine engineering protocols, schedule technician visits, and manage room blackout availability."
-          actions={
-            <Button
-              variant="outline"
-              onClick={() => setViewMode('list')}
-            >
-              Cancel & Return
-            </Button>
-          }
-        />
-
-        <div className="card-luxury p-6 sm:p-8 rounded-3xl border border-border/80 dark:border-accent/25 max-w-4xl mx-auto shadow-xl">
-          <div className="flex items-center gap-3 pb-5 border-b border-border/80 dark:border-white/10 mb-6">
-            <div className="w-10 h-10 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center text-accent shadow-gold">
-              <Wrench className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="font-serif font-bold text-lg text-primary dark:text-white">
-                {editingTicket ? 'Maintenance Ticket Modification' : 'Engineering Work Order Dispatch'}
-              </h3>
-              <p className="text-xs text-charcoal-muted">
-                Official protocol for physical facilities, plumbing, HVAC, and suite amenities.
-              </p>
-            </div>
-          </div>
-
-          <form onSubmit={handleSaveTicket} className="space-y-6 text-xs">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-charcoal-muted mb-1.5">
-                  Select Suite *
-                </label>
-                <select
-                  value={formData.roomId}
-                  onChange={e => setFormData({ ...formData, roomId: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl bg-ivory dark:bg-primary-900 border border-border/80 dark:border-white/10 text-xs text-primary dark:text-white focus:outline-none focus:border-accent font-medium cursor-pointer shadow-sm"
-                >
-                  {rooms.map(r => (
-                    <option key={r.id} value={r.id}>Suite {r.roomNumber} - {r.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-charcoal-muted mb-1.5">
-                  Maintenance Category *
-                </label>
-                <select
-                  value={formData.type}
-                  onChange={e => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl bg-ivory dark:bg-primary-900 border border-border/80 dark:border-white/10 text-xs text-primary dark:text-white focus:outline-none focus:border-accent font-medium cursor-pointer shadow-sm"
-                >
-                  <option value="Plumbing">Plumbing</option>
-                  <option value="HVAC">HVAC & Climate Control</option>
-                  <option value="Electrical">Electrical & Lighting</option>
-                  <option value="Jacuzzi">Jacuzzi / Infinity Pool</option>
-                  <option value="Interior">Interior Trim & Furniture</option>
-                  <option value="Painting">Painting & Plaster</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-charcoal-muted mb-1.5">
-                Issue Summary Headline *
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Master bath hydro-jet water pressure low"
-                value={formData.title}
-                onChange={e => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-ivory dark:bg-primary-900 border border-border/80 dark:border-white/10 text-xs text-primary dark:text-white focus:outline-none focus:border-accent font-medium shadow-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-charcoal-muted mb-1.5">
-                Technical Diagnosis / Detailed Description
-              </label>
-              <textarea
-                rows={4}
-                placeholder="Detail observations, valve numbers, parts required, or safety notes..."
-                value={formData.description}
-                onChange={e => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-ivory dark:bg-primary-900 border border-border/80 dark:border-white/10 text-xs text-primary dark:text-white focus:outline-none focus:border-accent font-medium leading-relaxed shadow-sm"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-charcoal-muted mb-1.5">
-                  Assigned Lead Technician
-                </label>
-                <select
-                  value={formData.assignedStaff}
-                  onChange={e => setFormData({ ...formData, assignedStaff: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl bg-ivory dark:bg-primary-900 border border-border/80 dark:border-white/10 text-xs text-primary dark:text-white focus:outline-none focus:border-accent font-medium cursor-pointer shadow-sm"
-                >
-                  {staff.map(s => (
-                    <option key={s.id} value={s.name}>{s.name} ({s.department || s.role})</option>
-                  ))}
-                  <option value="Chief Engineer Marcus Vance">Chief Engineer Marcus Vance</option>
-                  <option value="Senior Tech Jean Dupont">Senior Tech Jean Dupont</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-charcoal-muted mb-1.5">
-                  Priority Level
-                </label>
-                <select
-                  value={formData.priority}
-                  onChange={e => setFormData({ ...formData, priority: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl bg-ivory dark:bg-primary-900 border border-border/80 dark:border-white/10 text-xs text-primary dark:text-white focus:outline-none focus:border-accent font-bold cursor-pointer shadow-sm"
-                >
-                  <option value="urgent">Urgent (Immediate Dispatch)</option>
-                  <option value="high">High Priority</option>
-                  <option value="medium">Medium Priority</option>
-                  <option value="low">Low (Routine)</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="blocksRoomCheck"
-                checked={formData.blocksRoom}
-                onChange={e => setFormData({ ...formData, blocksRoom: e.target.checked })}
-                className="w-4 h-4 rounded border-accent text-accent focus:ring-accent cursor-pointer"
-              />
-              <label htmlFor="blocksRoomCheck" className="text-xs font-semibold text-primary dark:text-white cursor-pointer select-none">
-                Block suite from check-in availability during maintenance (Inventory Blackout)
-              </label>
-            </div>
-
-            <div className="flex items-center justify-between pt-5 border-t border-border/80 dark:border-white/10">
-              <button
-                type="button"
-                onClick={() => setViewMode('list')}
-                className="px-5 py-2.5 rounded-xl btn-secondary-3d text-xs font-semibold text-charcoal dark:text-gray-200"
-              >
-                Cancel & Return
-              </button>
-              <Button
-                variant="gold"
-                type="submit"
-                icon={Save}
-              >
-                {editingTicket ? 'Update Ticket' : 'Dispatch Work Order'}
-              </Button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  // LIST VIEW: DASHBOARD TABLE
-  return (
+        return (
           <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] uppercase font-bold ${badgeColor}`}>
             {t.priority === 'urgent' && <AlertTriangle className="w-3 h-3 text-rose-500" />}
             {t.priority}
@@ -447,14 +281,6 @@ export const RoomMaintenancePage = () => {
         <PageHeader
           title={editingTicket ? `Edit Work Order #${editingTicket.ticketNumber || editingTicket.id}` : 'Create Suite Maintenance Request'}
           description="Dispatch urgent or routine engineering protocols, schedule technician visits, and manage room blackout availability."
-          actions={
-            <Button
-              variant="outline"
-              onClick={() => setViewMode('list')}
-            >
-              Cancel & Return
-            </Button>
-          }
         />
 
         <div className="card-luxury p-6 sm:p-8 rounded-3xl border border-border/80 dark:border-accent/25 max-w-4xl mx-auto shadow-xl">
@@ -658,8 +484,8 @@ export const RoomMaintenancePage = () => {
             <button
               onClick={() => setActiveTab('active')}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${activeTab === 'active'
-                  ? 'gold-gradient-bg text-primary-950 font-bold shadow-gold'
-                  : 'btn-secondary-3d text-charcoal-muted hover:text-accent'
+                ? 'filter-btn-active'
+                : 'filter-btn-inactive'
                 }`}
             >
               Active Work Orders ({activeTickets.length})
@@ -667,8 +493,8 @@ export const RoomMaintenancePage = () => {
             <button
               onClick={() => setActiveTab('history')}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${activeTab === 'history'
-                  ? 'gold-gradient-bg text-primary-950 font-bold shadow-gold'
-                  : 'btn-secondary-3d text-charcoal-muted hover:text-accent'
+                ? 'filter-btn-active'
+                : 'filter-btn-inactive'
                 }`}
             >
               Maintenance History ({historyTickets.length})

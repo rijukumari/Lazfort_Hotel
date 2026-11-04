@@ -519,7 +519,7 @@ export const ChartOfAccountsPage = () => {
 
       {/* Account Type Balances Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <div className="p-3.5 rounded-2xl border border-border/80 dark:border-white/10 bg-white dark:bg-primary-900 shadow-sm">
+        <div className="p-3.5 rounded-2xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-xl dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.85)]">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-mono text-charcoal-muted dark:text-gray-400 uppercase">Total Assets</p>
             <span className="w-2 h-2 rounded-full bg-blue-500" />
@@ -529,7 +529,7 @@ export const ChartOfAccountsPage = () => {
           </p>
         </div>
 
-        <div className="p-3.5 rounded-2xl border border-border/80 dark:border-white/10 bg-white dark:bg-primary-900 shadow-sm">
+        <div className="p-3.5 rounded-2xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-xl dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.85)]">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-mono text-charcoal-muted dark:text-gray-400 uppercase">Liabilities</p>
             <span className="w-2 h-2 rounded-full bg-amber-500" />
@@ -539,7 +539,7 @@ export const ChartOfAccountsPage = () => {
           </p>
         </div>
 
-        <div className="p-3.5 rounded-2xl border border-border/80 dark:border-white/10 bg-white dark:bg-primary-900 shadow-sm">
+        <div className="p-3.5 rounded-2xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-xl dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.85)]">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-mono text-charcoal-muted dark:text-gray-400 uppercase">Equity</p>
             <span className="w-2 h-2 rounded-full bg-purple-500" />
@@ -549,7 +549,7 @@ export const ChartOfAccountsPage = () => {
           </p>
         </div>
 
-        <div className="p-3.5 rounded-2xl border border-border/80 dark:border-white/10 bg-white dark:bg-primary-900 shadow-sm">
+        <div className="p-3.5 rounded-2xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-xl dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.85)]">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-mono text-emerald-500 uppercase">Operating Rev</p>
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
@@ -559,7 +559,7 @@ export const ChartOfAccountsPage = () => {
           </p>
         </div>
 
-        <div className="p-3.5 rounded-2xl border border-border/80 dark:border-white/10 bg-white dark:bg-primary-900 shadow-sm">
+        <div className="p-3.5 rounded-2xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-xl dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.85)]">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-mono text-rose-500 uppercase">Expenses</p>
             <span className="w-2 h-2 rounded-full bg-rose-500" />
@@ -571,7 +571,7 @@ export const ChartOfAccountsPage = () => {
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="p-4 rounded-2xl border border-border/80 dark:border-white/10 bg-white dark:bg-primary-900 shadow-sm space-y-3">
+      <div className="p-4 rounded-2xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-xl dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.85)] space-y-3">
         <div className="flex flex-col md:flex-row items-center gap-3">
           <div className="relative flex-1 w-full">
             <Search className="w-4 h-4 text-charcoal-muted dark:text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -580,7 +580,7 @@ export const ChartOfAccountsPage = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by code, account title, or category..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/60 text-xs focus:outline-none focus:border-accent text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 shadow-inner"
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border/60 dark:border-white/10 bg-ivory/50 dark:bg-primary-950/60 text-xs focus:outline-none focus:border-accent text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 shadow-inner"
             />
           </div>
 
@@ -590,11 +590,10 @@ export const ChartOfAccountsPage = () => {
                 key={type}
                 type="button"
                 onClick={() => setTypeFilter(type)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
-                  typeFilter === type
-                    ? 'gold-gradient-bg text-primary-950 font-bold border-accent shadow-sm'
-                    : 'bg-ivory/80 dark:bg-primary-950/40 border-border/80 dark:border-white/10 text-charcoal-muted dark:text-gray-300 hover:text-accent hover:border-accent/40'
-                }`}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${typeFilter === type
+                    ? 'filter-btn-active'
+                    : 'filter-btn-inactive'
+                  }`}
               >
                 {type === 'all' ? 'All Classes' : type}
               </button>
@@ -604,8 +603,8 @@ export const ChartOfAccountsPage = () => {
       </div>
 
       {/* Accounts Table */}
-      <div className="rounded-3xl border border-border/80 dark:border-white/10 bg-white dark:bg-primary-900 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-border/80 dark:border-white/10 flex items-center justify-between bg-ivory/30 dark:bg-primary-800/40">
+      <div className="rounded-3xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-2xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.85)] overflow-hidden">
+        <div className="px-6 py-4 border-b border-border/40 dark:border-white/5 flex items-center justify-between bg-ivory/30 dark:bg-primary-950/30">
           <p className="text-xs font-semibold text-charcoal-muted dark:text-gray-400">
             Showing <span className="font-mono font-bold text-accent">{filteredAccounts.length}</span> of {chartOfAccounts.length} Accounts
           </p>
@@ -676,11 +675,10 @@ export const ChartOfAccountsPage = () => {
                     <td className="py-3.5 px-4 text-center">
                       <button
                         onClick={() => handleToggle(account)}
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase transition-colors cursor-pointer ${
-                          account.isActive
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase transition-colors cursor-pointer ${account.isActive
                             ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
                             : 'bg-gray-500/15 text-gray-400 border border-gray-500/30'
-                        }`}
+                          }`}
                         title="Click to toggle status"
                       >
                         <span className={`w-1.5 h-1.5 rounded-full ${account.isActive ? 'bg-emerald-500' : 'bg-gray-400'}`} />
@@ -690,14 +688,6 @@ export const ChartOfAccountsPage = () => {
 
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => startDetails(account)}
-                          className="p-1.5 rounded-lg text-accent hover:bg-accent/15 transition-colors"
-                          title="View Account Details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-
                         <button
                           onClick={() => startEdit(account)}
                           className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-500/15 transition-colors"

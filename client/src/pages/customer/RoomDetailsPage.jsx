@@ -104,8 +104,9 @@ export const RoomDetailsPage = () => {
       {/* Back button */}
       <div>
         <button
+          type="button"
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-charcoal-muted hover:text-accent dark:text-gray-300 dark:hover:text-accent transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-charcoal-muted hover:text-accent dark:text-gray-300 dark:hover:text-accent transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Suites & Villas</span>

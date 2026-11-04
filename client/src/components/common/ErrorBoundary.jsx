@@ -17,12 +17,15 @@ export class ErrorBoundary extends React.Component {
   }
 
   handleReload = () => {
-    window.location.reload();
+    this.setState({ hasError: false, error: null, errorInfo: null });
   };
 
   handleReset = () => {
     this.setState({ hasError: false, error: null, errorInfo: null });
-    window.location.href = '/super-admin/dashboard';
+    if (window.history && window.history.pushState) {
+      window.history.pushState(null, '', '/');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }
   };
 
   render() {

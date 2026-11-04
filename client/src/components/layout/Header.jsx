@@ -17,6 +17,7 @@ export const Header = ({ onOpenMobileSidebar }) => {
         {/* Left Section: Mobile Hamburger & 3D Global Search */}
         <div className="flex items-center gap-4">
           <button
+            type="button"
             onClick={onOpenMobileSidebar}
             className="lg:hidden p-2.5 rounded-xl text-charcoal-muted hover:text-accent hover:bg-ivory dark:hover:bg-primary-800/80 border border-transparent hover:border-accent/30 transition-all duration-200 active:scale-95"
             aria-label="Open mobile navigation"
@@ -26,6 +27,7 @@ export const Header = ({ onOpenMobileSidebar }) => {
 
           {/* 3D Global Search Bar */}
           <button
+            type="button"
             onClick={() => setIsSearchOpen(true)}
             className="group hidden sm:flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-white/80 dark:bg-primary-900/60 border border-border dark:border-border-dark hover:border-accent/60 dark:hover:border-accent/60 shadow-sm hover:shadow-gold text-charcoal-muted dark:text-gray-400 text-xs transition-all duration-300 w-72 md:w-88 hover:-translate-y-0.5 active:translate-y-0"
           >
@@ -46,6 +48,7 @@ export const Header = ({ onOpenMobileSidebar }) => {
         <div className="flex items-center gap-3 sm:gap-4">
           {/* Mobile Search trigger */}
           <button
+            type="button"
             onClick={() => setIsSearchOpen(true)}
             className="sm:hidden p-2 rounded-xl text-charcoal-muted hover:text-accent hover:bg-ivory dark:hover:bg-primary-800 transition-colors"
             aria-label="Search"

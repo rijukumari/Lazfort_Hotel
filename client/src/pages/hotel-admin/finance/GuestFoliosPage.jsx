@@ -807,7 +807,7 @@ export const GuestFoliosPage = () => {
 
       {/* Financial Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl border border-border/80 dark:border-white/10 bg-white dark:bg-primary-900 shadow-sm flex items-center justify-between">
+        <div className="p-4 rounded-2xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-xl dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.85)] flex items-center justify-between">
           <div>
             <p className="text-xs text-charcoal-muted dark:text-gray-400 font-medium">Open Folios</p>
             <p className="font-serif font-bold text-2xl text-primary dark:text-white mt-1">
@@ -820,7 +820,7 @@ export const GuestFoliosPage = () => {
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl border border-border/80 dark:border-white/10 bg-white dark:bg-primary-900 shadow-sm flex items-center justify-between">
+        <div className="p-4 rounded-2xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-xl dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.85)] flex items-center justify-between">
           <div>
             <p className="text-xs text-charcoal-muted dark:text-gray-400 font-medium">Total Charges</p>
             <p className="font-serif font-bold text-2xl text-primary dark:text-white mt-1">
@@ -833,7 +833,7 @@ export const GuestFoliosPage = () => {
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl border border-border/80 dark:border-white/10 bg-white dark:bg-primary-900 shadow-sm flex items-center justify-between">
+        <div className="p-4 rounded-2xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-xl dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.85)] flex items-center justify-between">
           <div>
             <p className="text-xs text-charcoal-muted dark:text-gray-400 font-medium">Total Settled</p>
             <p className="font-serif font-bold text-2xl text-emerald-600 dark:text-emerald-400 mt-1">
@@ -846,7 +846,7 @@ export const GuestFoliosPage = () => {
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl border border-border/80 dark:border-white/10 bg-white dark:bg-primary-900 shadow-sm flex items-center justify-between">
+        <div className="p-4 rounded-2xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-xl dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.85)] flex items-center justify-between">
           <div>
             <p className="text-xs text-charcoal-muted dark:text-gray-400 font-medium">Outstanding Due</p>
             <p className="font-serif font-bold text-2xl text-rose-600 dark:text-rose-400 mt-1">
@@ -861,7 +861,7 @@ export const GuestFoliosPage = () => {
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="p-4 rounded-2xl border border-border/80 dark:border-white/10 bg-white dark:bg-primary-900 shadow-sm space-y-3">
+      <div className="p-4 rounded-2xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-xl dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.85)] space-y-3">
         <div className="flex flex-col md:flex-row items-center gap-3">
           <div className="relative flex-1 w-full">
             <Search className="w-4 h-4 text-charcoal-muted dark:text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -870,7 +870,7 @@ export const GuestFoliosPage = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by guest name, room number, or folio ref..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/60 text-xs focus:outline-none focus:border-accent text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 shadow-inner"
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border/60 dark:border-white/10 bg-ivory/50 dark:bg-primary-950/60 text-xs focus:outline-none focus:border-accent text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 shadow-inner"
             />
           </div>
 
@@ -880,11 +880,10 @@ export const GuestFoliosPage = () => {
                 key={st}
                 type="button"
                 onClick={() => setStatusFilter(st)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold capitalize transition-all border ${
-                  statusFilter === st
-                    ? 'gold-gradient-bg text-primary-950 font-bold border-accent shadow-sm'
-                    : 'bg-ivory/80 dark:bg-primary-950/40 border-border/80 dark:border-white/10 text-charcoal-muted dark:text-gray-300 hover:text-accent hover:border-accent/40'
-                }`}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold capitalize transition-all border ${statusFilter === st
+                    ? 'filter-btn-active'
+                    : 'filter-btn-inactive'
+                  }`}
               >
                 {st === 'all' ? 'All Folios' : st}
               </button>
@@ -894,8 +893,8 @@ export const GuestFoliosPage = () => {
       </div>
 
       {/* Folios Data Table */}
-      <div className="rounded-3xl border border-border/80 dark:border-white/10 bg-white dark:bg-primary-900 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-border/80 dark:border-white/10 flex items-center justify-between bg-ivory/30 dark:bg-primary-800/40">
+      <div className="rounded-3xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-2xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.85)] overflow-hidden">
+        <div className="px-6 py-4 border-b border-border/40 dark:border-white/5 flex items-center justify-between bg-ivory/30 dark:bg-primary-950/30">
           <p className="text-xs font-semibold text-charcoal-muted dark:text-gray-400">
             Showing <span className="font-mono font-bold text-accent">{filteredFolios.length}</span> of {folios.length} Folios
           </p>
@@ -916,18 +915,18 @@ export const GuestFoliosPage = () => {
         {filteredFolios.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-border/80 dark:border-white/10 bg-ivory/80 dark:bg-primary-950/80 text-[11px] uppercase tracking-wider text-charcoal dark:text-gray-200 font-semibold">
+              <thead className="border-b border-border/80 dark:border-white/10 bg-ivory/60 dark:bg-black/30 text-[11px] uppercase tracking-wider text-charcoal dark:text-gray-300 font-semibold">
                 <tr>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Folio ID</th>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Guest Name</th>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Chamber</th>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Check-in</th>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Check-out</th>
-                  <th className="py-3.5 px-4 text-right text-charcoal dark:text-gray-200">Total Charges</th>
-                  <th className="py-3.5 px-4 text-right text-charcoal dark:text-gray-200">Amount Paid</th>
-                  <th className="py-3.5 px-4 text-right text-charcoal dark:text-gray-200">Balance Due</th>
-                  <th className="py-3.5 px-4 text-center text-charcoal dark:text-gray-200">Status</th>
-                  <th className="py-3.5 px-4 text-right text-charcoal dark:text-gray-200">Actions</th>
+                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-300">Folio ID</th>
+                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-300">Guest Name</th>
+                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-300">Chamber</th>
+                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-300">Check-in</th>
+                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-300">Check-out</th>
+                  <th className="py-3.5 px-4 text-right text-charcoal dark:text-gray-300">Total Charges</th>
+                  <th className="py-3.5 px-4 text-right text-charcoal dark:text-gray-300">Amount Paid</th>
+                  <th className="py-3.5 px-4 text-right text-charcoal dark:text-gray-300">Balance Due</th>
+                  <th className="py-3.5 px-4 text-center text-charcoal dark:text-gray-300">Status</th>
+                  <th className="py-3.5 px-4 text-right text-charcoal dark:text-gray-300">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60 dark:divide-white/5">

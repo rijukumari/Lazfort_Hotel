@@ -195,7 +195,7 @@ export const HotelAdminDashboard = () => {
                       {cat.count} Suites ({cat.percentage}%)
                     </span>
                   </div>
-                  <div className="h-2 w-full bg-ivory dark:bg-primary-950/80 rounded-full overflow-hidden p-0.5 border border-border/40 dark:border-white/5">
+                  <div className="h-2 w-full bg-border/60 dark:bg-black/50 rounded-full overflow-hidden p-0.5 border border-border/60 dark:border-white/10">
                     <div
                       className="h-full rounded-full transition-all duration-500 shadow-sm"
                       style={{ width: `${cat.percentage * 2}%`, backgroundColor: cat.color }}

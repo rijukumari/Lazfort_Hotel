@@ -12,6 +12,21 @@
     --color-charcoal: #252A34;
     --color-muted: #747B87;
     --color-border: #E5E1D8;
+
+    /* Theme Tokens - Interactive Controls */
+    --filter-inactive-bg: #F4EEDF;
+    --filter-inactive-text: #252A34;
+    --filter-inactive-border: #E5E1D8;
+    --filter-inactive-hover-bg: #EAE3D2;
+    --filter-inactive-hover-border: #C6A66B;
+  }
+
+  .dark {
+    --filter-inactive-bg: rgba(16, 23, 34, 0.75);
+    --filter-inactive-text: #D1D5DB;
+    --filter-inactive-border: rgba(255, 255, 255, 0.12);
+    --filter-inactive-hover-bg: rgba(27, 36, 50, 0.9);
+    --filter-inactive-hover-border: rgba(198, 166, 107, 0.45);
   }
 
   body {
@@ -19,6 +34,23 @@
     color: var(--color-charcoal);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     overflow-x: hidden;
+  }
+
+  .dark body {
+    background-color: #0b1017;
+    color: #F7F5F0;
+  }
+
+  /* Universal Dark Theme Form Inputs & Controls Normalization */
+  .dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([class*="gold-gradient"]):not([class*="bg-accent"]),
+  .dark textarea,
+  .dark select {
+    color-scheme: dark;
+  }
+
+  .dark select option {
+    background-color: #101722 !important;
+    color: #FFFFFF !important;
   }
 }
 
@@ -294,6 +326,56 @@
   background: linear-gradient(180deg, #131b26 0%, #0d131c 100%);
   border: 1px solid rgba(198, 166, 107, 0.22);
   box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.7);
+}
+
+/* Global Theme-Aware Filter, Status and Inactive Buttons */
+.filter-btn-inactive {
+  background-color: var(--filter-inactive-bg);
+  color: var(--filter-inactive-text);
+  border: 1px solid var(--filter-inactive-border);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.filter-btn-inactive:hover {
+  background-color: var(--filter-inactive-hover-bg);
+  border-color: var(--filter-inactive-hover-border);
+  color: #C6A66B;
+}
+
+/* Subtle, neutral dark-theme filter selected state for in-page tabs/filters (distinct from sidebar gold navigation) */
+.filter-btn-active {
+  background-color: #252A34;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-weight: 600;
+}
+
+.dark .filter-btn-active {
+  background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+  color: #F7F5F0;
+  border: 1px solid rgba(198, 166, 107, 0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  font-weight: 600;
+}
+
+/* Global Dark Theme Auto-Normalization for Form Controls & Inputs */
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([class*="gold-gradient"]):not([class*="bg-accent"]):not([class*="bg-rose"]):not([class*="bg-emerald"]),
+.dark select,
+.dark textarea {
+  background-color: #101722 !important;
+  color: #FFFFFF !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([class*="gold-gradient"]):not([class*="bg-accent"])::placeholder,
+.dark textarea::placeholder {
+  color: #9CA3AF !important;
+}
+
+.dark select option {
+  background-color: #101722 !important;
+  color: #FFFFFF !important;
 }
 
 .input-luxury {

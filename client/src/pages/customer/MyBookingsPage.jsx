@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { useERP } from '../../context/ERPContext';
 import { useAuth } from '../../context/AuthContext';
@@ -138,6 +138,7 @@ export const MyBookingsPage = () => {
         badge={`${customerBookings.length} Total Bookings`}
         actions={
           <button
+            type="button"
             onClick={() => navigate('/customer/discover/rooms')}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl gold-gradient-bg text-primary-900 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold"
           >
@@ -168,30 +169,32 @@ export const MyBookingsPage = () => {
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs / In-Page Filters */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-2xl text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-2 ${
-              activeTab === tab.id
-                ? 'gold-gradient-bg text-primary-900 font-bold shadow-gold'
-                : 'btn-secondary-3d text-charcoal-muted dark:text-gray-300 hover:text-accent'
-            }`}
-          >
-            <span>{tab.label}</span>
-            <span
-              className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                activeTab === tab.id
-                  ? 'bg-primary-900/20 text-primary-900'
-                  : 'bg-black/10 dark:bg-white/10 text-charcoal-muted dark:text-gray-400'
-              }`}
+        {tabs.map(tab => {
+          const isSelected = activeTab === tab.id;
+          return (
+            <button
+              type="button"
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 rounded-2xl text-xs transition-all whitespace-nowrap flex items-center gap-2 ${isSelected
+                  ? 'filter-btn-active'
+                  : 'filter-btn-inactive'
+                }`}
             >
-              {tab.count}
-            </span>
-          </button>
-        ))}
+              <span>{tab.label}</span>
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${isSelected
+                    ? 'bg-white/20 dark:bg-white/15 text-white dark:text-gray-100 font-bold'
+                    : 'bg-black/10 dark:bg-white/10 text-charcoal-muted dark:text-gray-400'
+                  }`}
+              >
+                {tab.count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Bookings List */}
@@ -321,6 +324,7 @@ export const MyBookingsPage = () => {
                 <div className="pt-3 border-t border-border/70 dark:border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-2">
                     <button
+                      type="button"
                       onClick={() => setSelectedInvoiceBooking(b)}
                       className="px-4 py-2 rounded-xl btn-secondary-3d text-charcoal dark:text-gray-200 hover:text-accent flex items-center gap-1.5 font-semibold"
                     >
@@ -329,6 +333,7 @@ export const MyBookingsPage = () => {
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => navigate(`/customer/bookings/${b.id}`)}
                       className="px-4 py-2 rounded-xl btn-secondary-3d text-charcoal dark:text-gray-200 hover:text-accent flex items-center gap-1.5 font-semibold"
                     >
@@ -339,6 +344,7 @@ export const MyBookingsPage = () => {
 
                   {isCancellable && (
                     <button
+                      type="button"
                       onClick={() => handleOpenCancelModal(b)}
                       className="px-4 py-2 rounded-xl border border-rose-500/40 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors font-semibold flex items-center gap-1.5"
                     >

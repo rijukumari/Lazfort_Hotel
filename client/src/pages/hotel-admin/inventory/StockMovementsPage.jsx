@@ -287,13 +287,13 @@ export const StockMovementsPage = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/80 dark:border-white/10 pb-5">
-        <div>
-          <div className="flex items-center gap-2">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-border/80 dark:border-white/10 pb-5">
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
             <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-primary dark:text-white">
               Stock Movement Audit Ledger
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-accent/10 text-accent border border-accent/25">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-accent/10 text-accent border border-accent/25 shrink-0">
               Verified Audit Trail
             </span>
           </div>
@@ -303,34 +303,34 @@ export const StockMovementsPage = () => {
         </div>
 
         {/* Action Controls */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 no-scrollbar shrink-0">
           <button
             onClick={() => setIsReceiptModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition-all flex items-center gap-1.5"
+            className="px-3.5 py-2 rounded-xl text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
           >
-            <PackagePlus className="w-3.5 h-3.5" />
+            <PackagePlus className="w-3.5 h-3.5 shrink-0" />
             <span>Stock In (Receipt)</span>
           </button>
           <button
             onClick={() => setIsIssueModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 transition-all flex items-center gap-1.5"
+            className="px-3.5 py-2 rounded-xl text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
           >
-            <PackageMinus className="w-3.5 h-3.5" />
+            <PackageMinus className="w-3.5 h-3.5 shrink-0" />
             <span>Stock Out (Issue)</span>
           </button>
           <button
             onClick={() => setIsAdjustmentModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl text-xs font-semibold text-charcoal dark:text-gray-200 bg-white/70 dark:bg-white/5 hover:bg-white border border-border dark:border-white/10 transition-all flex items-center gap-1.5"
+            className="px-3.5 py-2 rounded-xl text-xs font-semibold text-charcoal dark:text-gray-200 bg-white/70 dark:bg-white/5 hover:bg-white border border-border dark:border-white/10 transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
           >
-            <Sliders className="w-3.5 h-3.5 text-accent" />
+            <Sliders className="w-3.5 h-3.5 text-accent shrink-0" />
             <span>Adjustment / Transfer</span>
           </button>
           <button
             onClick={handleExportCSV}
-            className="px-3.5 py-2 rounded-xl text-xs font-semibold text-charcoal dark:text-gray-200 bg-white/70 dark:bg-white/5 hover:bg-white border border-border dark:border-white/10 transition-all flex items-center gap-1.5"
+            className="px-3.5 py-2 rounded-xl text-xs font-semibold text-charcoal dark:text-gray-200 bg-white/70 dark:bg-white/5 hover:bg-white border border-border dark:border-white/10 transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
             title="Export CSV audit report"
           >
-            <Download className="w-3.5 h-3.5" />
+            <Download className="w-3.5 h-3.5 shrink-0" />
             <span>Export Report</span>
           </button>
         </div>
