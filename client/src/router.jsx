@@ -84,7 +84,9 @@ const UserDetailPage = lazyLoad(() => import('./pages/super-admin/users/UserDeta
 const ActiveUsersPage = lazyLoad(() => import('./pages/super-admin/users/ActiveUsersPage'), 'ActiveUsersPage');
 const SuspendedUsersPage = lazyLoad(() => import('./pages/super-admin/users/SuspendedUsersPage'), 'SuspendedUsersPage');
 
-// Super Admin Platform
+// Super Admin Platform & System Preferences
+const SuperAdminProfilePage = lazyLoad(() => import('./pages/super-admin/profile/SuperAdminProfilePage'), 'SuperAdminProfilePage');
+const SuperAdminSystemPreferencesPage = lazyLoad(() => import('./pages/super-admin/settings/SuperAdminSystemPreferencesPage'), 'SuperAdminSystemPreferencesPage');
 const GlobalSettingsPage = lazyLoad(() => import('./pages/super-admin/platform/GlobalSettingsPage'), 'GlobalSettingsPage');
 const FeatureManagementPage = lazyLoad(() => import('./pages/super-admin/platform/FeatureManagementPage'), 'FeatureManagementPage');
 const SystemAnnouncementsPage = lazyLoad(() => import('./pages/super-admin/platform/SystemAnnouncementsPage'), 'SystemAnnouncementsPage');
@@ -157,7 +159,9 @@ const GuestDetailPage = lazyLoad(() => import('./pages/hotel-admin/GuestDetailPa
 const HousekeepingOverviewPage = lazyLoad(() => import('./pages/hotel-admin/housekeeping/HousekeepingOverviewPage'), 'HousekeepingOverviewPage');
 const RoomCleaningPage = lazyLoad(() => import('./pages/hotel-admin/housekeeping/RoomCleaningPage'), 'RoomCleaningPage');
 const CleaningAssignmentsPage = lazyLoad(() => import('./pages/hotel-admin/housekeeping/CleaningAssignmentsPage'), 'CleaningAssignmentsPage');
+const AssignChamberTurnoverPage = lazyLoad(() => import('./pages/hotel-admin/housekeeping/AssignChamberTurnoverPage'), 'AssignChamberTurnoverPage');
 const HousekeepingInspectionPage = lazyLoad(() => import('./pages/hotel-admin/housekeeping/HousekeepingInspectionPage'), 'HousekeepingInspectionPage');
+const InspectionDetailPage = lazyLoad(() => import('./pages/hotel-admin/housekeeping/InspectionDetailPage'), 'InspectionDetailPage');
 const HousekeepingMaintenancePage = lazyLoad(() => import('./pages/hotel-admin/housekeeping/HousekeepingMaintenancePage'), 'HousekeepingMaintenancePage');
 const LostAndFoundPage = lazyLoad(() => import('./pages/hotel-admin/housekeeping/LostAndFoundPage'), 'LostAndFoundPage');
 const HousekeepingAdminPage = HousekeepingOverviewPage;
@@ -172,6 +176,7 @@ const MenuItemsPage = lazyLoad(() => import('./pages/hotel-admin/restaurant/Menu
 const FoodOrdersPage = lazyLoad(() => import('./pages/hotel-admin/restaurant/FoodOrdersPage'), 'FoodOrdersPage');
 const RestaurantTablesPage = lazyLoad(() => import('./pages/hotel-admin/restaurant/RestaurantTablesPage'), 'RestaurantTablesPage');
 const RestaurantBillingPage = lazyLoad(() => import('./pages/hotel-admin/restaurant/RestaurantBillingPage'), 'RestaurantBillingPage');
+const GenerateRestaurantBillPage = lazyLoad(() => import('./pages/hotel-admin/restaurant/GenerateRestaurantBillPage'), 'GenerateRestaurantBillPage');
 const StaffManagementPage = lazyLoad(() => import('./pages/hotel-admin/StaffManagementPage'), 'StaffManagementPage');
 const AddStaffPage = lazyLoad(() => import('./pages/hotel-admin/AddStaffPage'), 'AddStaffPage');
 const EditStaffPage = lazyLoad(() => import('./pages/hotel-admin/EditStaffPage'), 'EditStaffPage');
@@ -260,6 +265,8 @@ const HousekeepingDashboard = lazyLoad(() => import('./pages/housekeeping/Housek
 const HousekeepingTodayTasksPage = lazyLoad(() => import('./pages/housekeeping/HousekeepingTodayTasksPage'), 'HousekeepingTodayTasksPage');
 const HousekeepingPendingTasksPage = lazyLoad(() => import('./pages/housekeeping/HousekeepingPendingTasksPage'), 'HousekeepingPendingTasksPage');
 const HousekeepingServicesPage = lazyLoad(() => import('./pages/housekeeping/HousekeepingServicesPage'), 'HousekeepingServicesPage');
+const HousekeepingProfilePage = lazyLoad(() => import('./pages/housekeeping/profile/HousekeepingProfilePage'), 'HousekeepingProfilePage');
+const HousekeepingSystemPreferencesPage = lazyLoad(() => import('./pages/housekeeping/settings/HousekeepingSystemPreferencesPage'), 'HousekeepingSystemPreferencesPage');
 const StaffDashboard = lazyLoad(() => import('./pages/staff/StaffDashboard'), 'StaffDashboard');
 const StaffTodayOverviewPage = lazyLoad(() => import('./pages/staff/StaffTodayOverviewPage'), 'StaffTodayOverviewPage');
 const StaffAssignedTasksPage = lazyLoad(() => import('./pages/staff/StaffAssignedTasksPage'), 'StaffAssignedTasksPage');
@@ -275,6 +282,8 @@ const StaffApplyLeavePage = lazyLoad(() => import('./pages/staff/StaffApplyLeave
 const StaffAnnouncementsPage = lazyLoad(() => import('./pages/staff/StaffAnnouncementsPage'), 'StaffAnnouncementsPage');
 const StaffNotificationsPage = lazyLoad(() => import('./pages/staff/StaffNotificationsPage'), 'StaffNotificationsPage');
 const StaffMessagesPage = lazyLoad(() => import('./pages/staff/StaffMessagesPage'), 'StaffMessagesPage');
+const StaffProfilePage = lazyLoad(() => import('./pages/staff/profile/StaffProfilePage'), 'StaffProfilePage');
+const StaffSystemPreferencesPage = lazyLoad(() => import('./pages/staff/settings/StaffSystemPreferencesPage'), 'StaffSystemPreferencesPage');
 
 // ERP Modules - Maintenance & Engineering Dedicated Pages
 const MaintenanceDashboardPage = lazyLoad(() => import('./pages/hotel-admin/maintenance/MaintenanceDashboardPage'), 'MaintenanceDashboardPage');
@@ -291,10 +300,14 @@ const ApprovedSuppliersPage = lazyLoad(() => import('./pages/hotel-admin/invento
 // ERP Modules - Finance & General Ledger Dedicated Pages
 const FinanceDashboardPage = lazyLoad(() => import('./pages/hotel-admin/finance/FinanceDashboardPage'), 'FinanceDashboardPage');
 const GuestFoliosPage = lazyLoad(() => import('./pages/hotel-admin/finance/GuestFoliosPage'), 'GuestFoliosPage');
+const CreateFolioPage = lazyLoad(() => import('./pages/hotel-admin/finance/CreateFolioPage'), 'CreateFolioPage');
 const InvoicesPage = lazyLoad(() => import('./pages/hotel-admin/finance/InvoicesPage'), 'InvoicesPage');
+const CreateInvoicePage = lazyLoad(() => import('./pages/hotel-admin/finance/CreateInvoicePage'), 'CreateInvoicePage');
 const ChartOfAccountsPage = lazyLoad(() => import('./pages/hotel-admin/finance/ChartOfAccountsPage'), 'ChartOfAccountsPage');
 const JournalEntriesPage = lazyLoad(() => import('./pages/hotel-admin/finance/JournalEntriesPage'), 'JournalEntriesPage');
+const CreateJournalEntryPage = lazyLoad(() => import('./pages/hotel-admin/finance/CreateJournalEntryPage'), 'CreateJournalEntryPage');
 const PaymentOperationsPage = lazyLoad(() => import('./pages/hotel-admin/finance/PaymentOperationsPage'), 'PaymentOperationsPage');
+const PaymentReceiptDetailPage = lazyLoad(() => import('./pages/hotel-admin/finance/PaymentReceiptDetailPage'), 'PaymentReceiptDetailPage');
 
 // ERP Modules - Executive Payroll Dedicated Pages
 const PayrollRunsPage = lazyLoad(() => import('./pages/hotel-admin/payroll/PayrollRunsPage'), 'PayrollRunsPage');
@@ -433,6 +446,14 @@ export const AppRouter = () => {
           <Route path="/super-admin/users/active" element={<ActiveUsersPage />} />
           <Route path="/super-admin/users/suspended" element={<SuspendedUsersPage />} />
           <Route path="/super-admin/users/*" element={<AllUsersPage />} />
+
+          {/* Super Admin Profile, Preferences & Security */}
+          <Route path="/super-admin/profile" element={<SuperAdminProfilePage />} />
+          <Route path="/super-admin/profile/*" element={<SuperAdminProfilePage />} />
+          <Route path="/super-admin/preferences" element={<SuperAdminSystemPreferencesPage />} />
+          <Route path="/super-admin/settings" element={<SuperAdminSystemPreferencesPage />} />
+          <Route path="/super-admin/system/security" element={<SecuritySettingsPage />} />
+          <Route path="/super-admin/security" element={<SecuritySettingsPage />} />
 
           {/* Module 3: Platform Management */}
           <Route path="/super-admin/platform/announcements/add" element={<AddAnnouncementPage />} />
@@ -610,6 +631,8 @@ export const AppRouter = () => {
           <Route path="/admin/guests/*" element={<GuestsManagementPage />} />
 
           {/* Housekeeping Submenus */}
+          <Route path="/hotel-admin/housekeeping/assignments/create" element={<AssignChamberTurnoverPage />} />
+          <Route path="/hotel-admin/housekeeping/assignments/assign" element={<AssignChamberTurnoverPage />} />
           <Route path="/hotel-admin/housekeeping/schedule" element={<ScheduleTurnoverPage />} />
           <Route path="/hotel-admin/housekeeping/cleaning/assigned" element={<AssignedRoomsPage />} />
           <Route path="/hotel-admin/housekeeping/cleaning/todo" element={<RoomsToCleanPage />} />
@@ -619,6 +642,8 @@ export const AppRouter = () => {
           <Route path="/hotel-admin/housekeeping/cleaning/inspection" element={<HousekeepingInspectionPage />} />
           <Route path="/hotel-admin/housekeeping/cleaning" element={<RoomCleaningPage />} />
           <Route path="/hotel-admin/housekeeping/assignments" element={<CleaningAssignmentsPage />} />
+          <Route path="/hotel-admin/housekeeping/inspection/details/:id" element={<InspectionDetailPage />} />
+          <Route path="/hotel-admin/housekeeping/inspection/:id" element={<InspectionDetailPage />} />
           <Route path="/hotel-admin/housekeeping/inspection" element={<HousekeepingInspectionPage />} />
           <Route path="/hotel-admin/housekeeping/maintenance/requests" element={<MaintenanceRequestsPage />} />
           <Route path="/hotel-admin/housekeeping/maintenance/report" element={<ReportIssuePage />} />
@@ -632,12 +657,16 @@ export const AppRouter = () => {
           <Route path="/hotel-admin/housekeeping/*" element={<HousekeepingOverviewPage />} />
 
           {/* Admin Aliases for Housekeeping */}
+          <Route path="/admin/housekeeping/assignments/create" element={<AssignChamberTurnoverPage />} />
+          <Route path="/admin/housekeeping/assignments/assign" element={<AssignChamberTurnoverPage />} />
           <Route path="/admin/housekeeping/schedule" element={<ScheduleTurnoverPage />} />
           <Route path="/admin/housekeeping/cleaning/assigned" element={<AssignedRoomsPage />} />
           <Route path="/admin/housekeeping/cleaning/todo" element={<RoomsToCleanPage />} />
           <Route path="/admin/housekeeping/cleaning/in-progress" element={<InProgressCleaningPage />} />
           <Route path="/admin/housekeeping/cleaning/completed" element={<CompletedCleaningTasksPage />} />
           <Route path="/admin/housekeeping/cleaning/checklist" element={<CleaningChecklistPage />} />
+          <Route path="/admin/housekeeping/inspection/details/:id" element={<InspectionDetailPage />} />
+          <Route path="/admin/housekeeping/inspection/:id" element={<InspectionDetailPage />} />
           <Route path="/admin/housekeeping/cleaning/inspection" element={<HousekeepingInspectionPage />} />
           <Route path="/admin/housekeeping/cleaning" element={<RoomCleaningPage />} />
           <Route path="/admin/housekeeping/assignments" element={<CleaningAssignmentsPage />} />
@@ -663,6 +692,9 @@ export const AppRouter = () => {
           <Route path="/hotel-admin/restaurant/order" element={<NewRestaurantOrderPage />} />
           <Route path="/hotel-admin/restaurant/tables" element={<RestaurantTablesPage />} />
           <Route path="/hotel-admin/restaurant/room-service" element={<FoodOrdersPage />} />
+          <Route path="/hotel-admin/restaurant/billing/create" element={<GenerateRestaurantBillPage />} />
+          <Route path="/hotel-admin/restaurant/billing/generate" element={<GenerateRestaurantBillPage />} />
+          <Route path="/hotel-admin/restaurant/billing/:id" element={<GenerateRestaurantBillPage />} />
           <Route path="/hotel-admin/restaurant/billing" element={<RestaurantBillingPage />} />
           <Route path="/hotel-admin/restaurant/*" element={<RestaurantDashboardPage />} />
 
@@ -676,6 +708,9 @@ export const AppRouter = () => {
           <Route path="/admin/restaurant/order" element={<NewRestaurantOrderPage />} />
           <Route path="/admin/restaurant/tables" element={<RestaurantTablesPage />} />
           <Route path="/admin/restaurant/room-service" element={<FoodOrdersPage />} />
+          <Route path="/admin/restaurant/billing/create" element={<GenerateRestaurantBillPage />} />
+          <Route path="/admin/restaurant/billing/generate" element={<GenerateRestaurantBillPage />} />
+          <Route path="/admin/restaurant/billing/:id" element={<GenerateRestaurantBillPage />} />
           <Route path="/admin/restaurant/billing" element={<RestaurantBillingPage />} />
           <Route path="/admin/restaurant/*" element={<RestaurantDashboardPage />} />
 
@@ -723,22 +758,40 @@ export const AppRouter = () => {
           {/* Finance & General Ledger Dedicated Submenus */}
           <Route path="/hotel-admin/finance" element={<FinanceDashboardPage />} />
           <Route path="/hotel-admin/finance/overview" element={<FinanceDashboardPage />} />
+          <Route path="/hotel-admin/finance/folios/create" element={<CreateFolioPage />} />
+          <Route path="/hotel-admin/finance/folios/new" element={<CreateFolioPage />} />
+          <Route path="/hotel-admin/finance/folio/create" element={<CreateFolioPage />} />
           <Route path="/hotel-admin/finance/folios" element={<GuestFoliosPage />} />
+          <Route path="/hotel-admin/finance/invoices/create" element={<CreateInvoicePage />} />
+          <Route path="/hotel-admin/finance/invoices/new" element={<CreateInvoicePage />} />
+          <Route path="/hotel-admin/finance/invoice/create" element={<CreateInvoicePage />} />
+          <Route path="/hotel-admin/finance/invoices/:id" element={<InvoiceDetailPage />} />
           <Route path="/hotel-admin/finance/invoices" element={<InvoicesPage />} />
           <Route path="/hotel-admin/finance/accounts" element={<ChartOfAccountsPage />} />
           <Route path="/hotel-admin/finance/coa" element={<ChartOfAccountsPage />} />
+          <Route path="/hotel-admin/finance/journals/create" element={<CreateJournalEntryPage />} />
+          <Route path="/hotel-admin/finance/journals/new" element={<CreateJournalEntryPage />} />
+          <Route path="/hotel-admin/finance/journal/create" element={<CreateJournalEntryPage />} />
           <Route path="/hotel-admin/finance/journals" element={<JournalEntriesPage />} />
           <Route path="/hotel-admin/finance/journal" element={<JournalEntriesPage />} />
+          <Route path="/hotel-admin/finance/payments/receipt/:id" element={<PaymentReceiptDetailPage />} />
+          <Route path="/hotel-admin/finance/payments/:id" element={<PaymentReceiptDetailPage />} />
           <Route path="/hotel-admin/finance/payments" element={<PaymentOperationsPage />} />
           <Route path="/hotel-admin/finance/*" element={<FinanceDashboardPage />} />
 
           {/* Payments Dedicated Operations */}
+          <Route path="/hotel-admin/payments/receipt/:id" element={<PaymentReceiptDetailPage />} />
+          <Route path="/hotel-admin/payments/:id" element={<PaymentReceiptDetailPage />} />
           <Route path="/hotel-admin/payments" element={<PaymentOperationsPage />} />
           <Route path="/hotel-admin/payments/transactions" element={<PaymentOperationsPage />} />
+          <Route path="/hotel-admin/payments/invoices/create" element={<CreateInvoicePage />} />
           <Route path="/hotel-admin/payments/invoices" element={<InvoicesPage />} />
           <Route path="/hotel-admin/payments/coa" element={<ChartOfAccountsPage />} />
+          <Route path="/hotel-admin/payments/journal/create" element={<CreateJournalEntryPage />} />
+          <Route path="/hotel-admin/payments/journals/create" element={<CreateJournalEntryPage />} />
           <Route path="/hotel-admin/payments/journal" element={<JournalEntriesPage />} />
           <Route path="/hotel-admin/payments/journals" element={<JournalEntriesPage />} />
+          <Route path="/hotel-admin/payments/folios/create" element={<CreateFolioPage />} />
           <Route path="/hotel-admin/payments/folios" element={<GuestFoliosPage />} />
           <Route path="/hotel-admin/payments/*" element={<PaymentOperationsPage />} />
 
@@ -750,10 +803,16 @@ export const AppRouter = () => {
           {/* Admin Aliases for Payments & Finance */}
           <Route path="/admin/finance" element={<FinanceDashboardPage />} />
           <Route path="/admin/finance/overview" element={<FinanceDashboardPage />} />
+          <Route path="/admin/finance/folios/create" element={<CreateFolioPage />} />
           <Route path="/admin/finance/folios" element={<GuestFoliosPage />} />
+          <Route path="/admin/finance/invoices/create" element={<CreateInvoicePage />} />
+          <Route path="/admin/finance/invoices/:id" element={<InvoiceDetailPage />} />
           <Route path="/admin/finance/invoices" element={<InvoicesPage />} />
           <Route path="/admin/finance/accounts" element={<ChartOfAccountsPage />} />
           <Route path="/admin/finance/coa" element={<ChartOfAccountsPage />} />
+          <Route path="/admin/finance/journals/create" element={<CreateJournalEntryPage />} />
+          <Route path="/admin/finance/journals/new" element={<CreateJournalEntryPage />} />
+          <Route path="/admin/finance/journal/create" element={<CreateJournalEntryPage />} />
           <Route path="/admin/finance/journals" element={<JournalEntriesPage />} />
           <Route path="/admin/finance/journal" element={<JournalEntriesPage />} />
           <Route path="/admin/finance/payments" element={<PaymentOperationsPage />} />
@@ -893,14 +952,16 @@ export const AppRouter = () => {
           <Route path="/admin/settings/*" element={<HotelProfilePage />} />
 
           <Route path="/hotel-admin/system-preferences" element={<HotelSystemPreferencesPage />} />
+          <Route path="/hotel-admin/preferences" element={<HotelSystemPreferencesPage />} />
           <Route path="/hotel-admin/system/security" element={<SecuritySettingsPage />} />
-          <Route path="/hotel-admin/system" element={<SettingsPage />} />
-          <Route path="/hotel-admin/system/*" element={<SettingsPage />} />
+          <Route path="/hotel-admin/system" element={<HotelSystemPreferencesPage />} />
+          <Route path="/hotel-admin/system/*" element={<HotelSystemPreferencesPage />} />
           <Route path="/hotel-admin/security" element={<SecuritySettingsPage />} />
           <Route path="/hotel-admin/security/*" element={<SecuritySettingsPage />} />
           <Route path="/hotel-admin/profile" element={<AdminProfilePage />} />
           <Route path="/hotel-admin/profile/*" element={<AdminProfilePage />} />
           <Route path="/admin/system-preferences" element={<HotelSystemPreferencesPage />} />
+          <Route path="/admin/preferences" element={<HotelSystemPreferencesPage />} />
           <Route path="/admin/profile" element={<AdminProfilePage />} />
           <Route path="/admin/profile/*" element={<AdminProfilePage />} />
 
@@ -1027,15 +1088,16 @@ export const AppRouter = () => {
           <Route path="/housekeeping/services/*" element={<HousekeepingLostAndFoundPage />} />
 
           {/* System & Settings */}
-          <Route path="/housekeeping/settings" element={<SettingsPage />} />
-          <Route path="/housekeeping/settings/*" element={<SettingsPage />} />
+          <Route path="/housekeeping/profile" element={<HousekeepingProfilePage />} />
+          <Route path="/housekeeping/profile/*" element={<HousekeepingProfilePage />} />
+          <Route path="/housekeeping/preferences" element={<HousekeepingSystemPreferencesPage />} />
+          <Route path="/housekeeping/settings" element={<HousekeepingSystemPreferencesPage />} />
+          <Route path="/housekeeping/settings/*" element={<HousekeepingSystemPreferencesPage />} />
           <Route path="/housekeeping/system/security" element={<SecuritySettingsPage />} />
-          <Route path="/housekeeping/system" element={<SettingsPage />} />
-          <Route path="/housekeeping/system/*" element={<SettingsPage />} />
+          <Route path="/housekeeping/system" element={<HousekeepingSystemPreferencesPage />} />
+          <Route path="/housekeeping/system/*" element={<HousekeepingSystemPreferencesPage />} />
           <Route path="/housekeeping/security" element={<SecuritySettingsPage />} />
           <Route path="/housekeeping/security/*" element={<SecuritySettingsPage />} />
-          <Route path="/housekeeping/profile" element={<AdminProfilePage />} />
-          <Route path="/housekeeping/profile/*" element={<AdminProfilePage />} />
           <Route path="/housekeeping/reports" element={<ReportsPage />} />
           <Route path="/housekeeping/reports/*" element={<ReportsPage />} />
           <Route path="/housekeeping/*" element={<HousekeepingOverviewPage />} />
@@ -1154,15 +1216,16 @@ export const AppRouter = () => {
           <Route path="/staff/communication/messages" element={<StaffMessagesPage />} />
           <Route path="/staff/communication" element={<StaffAnnouncementsPage />} />
           <Route path="/staff/communication/*" element={<StaffAnnouncementsPage />} />
-          <Route path="/staff/settings" element={<SettingsPage />} />
-          <Route path="/staff/settings/*" element={<SettingsPage />} />
+          <Route path="/staff/profile" element={<StaffProfilePage />} />
+          <Route path="/staff/profile/*" element={<StaffProfilePage />} />
+          <Route path="/staff/preferences" element={<StaffSystemPreferencesPage />} />
+          <Route path="/staff/settings" element={<StaffSystemPreferencesPage />} />
+          <Route path="/staff/settings/*" element={<StaffSystemPreferencesPage />} />
           <Route path="/staff/system/security" element={<SecuritySettingsPage />} />
-          <Route path="/staff/system" element={<SettingsPage />} />
-          <Route path="/staff/system/*" element={<SettingsPage />} />
+          <Route path="/staff/system" element={<StaffSystemPreferencesPage />} />
+          <Route path="/staff/system/*" element={<StaffSystemPreferencesPage />} />
           <Route path="/staff/security" element={<SecuritySettingsPage />} />
           <Route path="/staff/security/*" element={<SecuritySettingsPage />} />
-          <Route path="/staff/profile" element={<SettingsPage />} />
-          <Route path="/staff/profile/*" element={<SettingsPage />} />
           <Route path="/staff/reports" element={<ReportsPage />} />
           <Route path="/staff/reports/*" element={<ReportsPage />} />
           <Route path="/staff/*" element={<StaffDashboard />} />

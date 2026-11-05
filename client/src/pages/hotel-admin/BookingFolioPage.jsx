@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useERP } from '../../context/ERPContext';
 import { useToast } from '../../context/ToastContext';
 import { StatusBadge, Button, Card } from '../../components/ui';
+import { printElement } from '../../utils/printSystem';
 import {
   ArrowLeft,
   CalendarCheck,
@@ -103,7 +104,9 @@ export const BookingFolioPage = () => {
             icon={Printer}
             onClick={() => {
               showToast('Print Folio', `Printing folio dossier for ${booking.bookingCode}`, 'info');
-              window.print();
+              printElement('printable-reservation-folio', {
+                documentTitle: `Folio_${booking.bookingCode}`
+              });
             }}
           >
             Print Folio
@@ -131,7 +134,8 @@ export const BookingFolioPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Folio Sheet (8 Cols) */}
-        <Card variant="luxury" className="lg:col-span-8 p-8 sm:p-10 shadow-2xl space-y-8">
+        <div id="printable-reservation-folio" className="lg:col-span-8">
+          <Card variant="luxury" className="p-8 sm:p-10 shadow-2xl space-y-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-8 border-b border-border/80 dark:border-white/10">
             <div>
               <div className="flex items-center gap-2">
@@ -250,6 +254,7 @@ export const BookingFolioPage = () => {
             </table>
           </div>
         </Card>
+        </div>
 
         {/* Sidebar Controls (4 Cols) */}
         <div className="lg:col-span-4 space-y-6">
@@ -279,7 +284,9 @@ export const BookingFolioPage = () => {
               icon={Printer}
               onClick={() => {
                 showToast('Print Folio', `Printing folio dossier for ${booking.bookingCode}`, 'info');
-                window.print();
+                printElement('printable-reservation-folio', {
+                  documentTitle: `Folio_${booking.bookingCode}`
+                });
               }}
               className="w-full"
             >

@@ -542,7 +542,7 @@ export const JournalEntriesPage = () => {
         </div>
 
         <button
-          onClick={startCreate}
+          onClick={() => navigate('/hotel-admin/finance/journals/create')}
           className="px-4 py-2.5 rounded-xl bg-accent hover:opacity-95 text-primary-950 text-xs font-bold shadow-gold flex items-center gap-2 transition-all cursor-pointer self-start sm:self-center shrink-0"
         >
           <Plus className="w-4 h-4" />

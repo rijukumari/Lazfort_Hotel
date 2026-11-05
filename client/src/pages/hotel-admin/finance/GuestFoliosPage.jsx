@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Receipt,
   Plus,
@@ -26,6 +27,7 @@ import {
   PaymentStatusBadge,
   DeleteConfirmationDialog
 } from '../../../components/finance';
+import { printElement } from '../../../utils/printSystem';
 
 const CHARGE_CATEGORIES = [
   { value: 'room_charge', label: 'Room & Suite Accommodation' },
@@ -47,6 +49,7 @@ const PAYMENT_METHODS = [
 ];
 
 export const GuestFoliosPage = () => {
+  const navigate = useNavigate();
   const {
     folios = [],
     bookings = [],
@@ -245,7 +248,7 @@ export const GuestFoliosPage = () => {
           </button>
         </div>
 
-        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-primary-900 border border-accent/40 shadow-xl space-y-6">
+        <div id="printable-guest-folio" className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-primary-900 border border-accent/40 shadow-xl space-y-6">
           <div className="flex items-center gap-3.5 border-b border-border/60 dark:border-white/10 pb-5">
             <div className="w-12 h-12 rounded-2xl bg-accent/20 border border-accent/40 flex items-center justify-center text-accent shadow-gold">
               <Plus className="w-6 h-6" />
@@ -385,9 +388,12 @@ export const GuestFoliosPage = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
-                showToast('Printing Folio', `Printed guest statement ${selectedFolio.bookingCode}.`, 'info');
+                printElement('printable-guest-folio', {
+                  documentTitle: `Folio_${selectedFolio.bookingCode || selectedFolio.id}`
+                });
+                showToast('Printing Folio', `Dispatched statement for ${selectedFolio.guestName}.`, 'info');
               }}
-              className="px-3.5 py-2 rounded-xl border border-border/80 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-primary-800 text-xs font-semibold text-primary dark:text-white flex items-center gap-1.5"
+              className="px-3.5 py-2 rounded-xl border border-border/80 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-primary-800 text-xs font-semibold text-primary dark:text-white flex items-center gap-1.5 cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print Statement</span>
@@ -417,7 +423,7 @@ export const GuestFoliosPage = () => {
           </div>
         </div>
 
-        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-primary-900 border border-accent/40 shadow-xl space-y-6">
+        <div id="printable-guest-folio" className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-primary-900 border border-accent/40 shadow-xl space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 dark:border-white/10 pb-5">
             <div>
               <div className="flex items-center gap-3">
@@ -795,7 +801,7 @@ export const GuestFoliosPage = () => {
         </div>
 
         <button
-          onClick={() => setPageView('create')}
+          onClick={() => navigate('/hotel-admin/finance/folios/create')}
           className="px-4 py-2.5 rounded-xl bg-accent hover:opacity-95 text-primary-950 text-xs font-bold shadow-gold flex items-center gap-2 transition-all cursor-pointer self-start sm:self-center shrink-0"
         >
           <Plus className="w-4 h-4" />
@@ -881,8 +887,8 @@ export const GuestFoliosPage = () => {
                 type="button"
                 onClick={() => setStatusFilter(st)}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold capitalize transition-all border ${statusFilter === st
-                    ? 'filter-btn-active'
-                    : 'filter-btn-inactive'
+                  ? 'filter-btn-active'
+                  : 'filter-btn-inactive'
                   }`}
               >
                 {st === 'all' ? 'All Folios' : st}

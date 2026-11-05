@@ -278,53 +278,69 @@ export const Sidebar = ({
       }`}
     >
       {/* 3D Brand Insignia Header */}
-      <div className="h-20 flex items-center justify-between px-5 border-b border-white/10 relative overflow-hidden">
+      <div className={`h-20 flex items-center border-b border-white/10 relative overflow-hidden ${isCollapsed ? 'justify-center px-2' : 'justify-between px-5'}`}>
         {/* Shimmer light sweep across brand header */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
 
         {!isCollapsed ? (
-          <Link
-            to={`/${role.replace(/_/g, '-')}/dashboard`}
-            onClick={handleMobileClose}
-            className="flex items-center gap-3.5 overflow-hidden cursor-pointer group"
-          >
-            {/* 3D Glowing Crest */}
-            <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-accent/30 via-accent/15 to-accent/5 border border-accent/50 flex items-center justify-center text-accent shadow-gold group-hover:scale-105 group-hover:border-accent transition-all duration-300">
-              <Sparkles className="w-5 h-5 text-accent animate-pulse" />
-              <div className="absolute inset-0 rounded-2xl bg-accent/20 blur-sm -z-10 group-hover:blur-md transition-all" />
-            </div>
+          <>
+            <Link
+              to={`/${role.replace(/_/g, '-')}/dashboard`}
+              onClick={handleMobileClose}
+              className="flex items-center gap-3.5 overflow-hidden cursor-pointer group"
+            >
+              {/* 3D Glowing Crest */}
+              <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-accent/30 via-accent/15 to-accent/5 border border-accent/50 flex items-center justify-center text-accent shadow-gold group-hover:scale-105 group-hover:border-accent transition-all duration-300">
+                <Sparkles className="w-5 h-5 text-accent animate-pulse" />
+                <div className="absolute inset-0 rounded-2xl bg-accent/20 blur-sm -z-10 group-hover:blur-md transition-all" />
+              </div>
 
-            <div className="truncate">
-              <h2 className="font-serif font-bold text-xl tracking-wider text-white flex items-center gap-1.5">
-                <span className="gold-gradient-text">LAZFORT</span>
-                <span className="text-white text-sm font-sans tracking-widest">ERP</span>
-              </h2>
-              <p className="text-[10px] tracking-[0.2em] text-accent/90 uppercase font-mono font-medium">
-                Resort & Palace
-              </p>
-            </div>
-          </Link>
+              <div className="truncate">
+                <h2 className="font-serif font-bold text-xl tracking-wider text-white flex items-center gap-1.5">
+                  <span className="gold-gradient-text">LAZFORT</span>
+                  <span className="text-white text-sm font-sans tracking-widest">ERP</span>
+                </h2>
+                <p className="text-[10px] tracking-[0.2em] text-accent/90 uppercase font-mono font-medium">
+                  Resort & Palace
+                </p>
+              </div>
+            </Link>
+
+            {/* 3D Desktop Collapse Toggle Button (Expanded mode) */}
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className="hidden lg:flex items-center justify-center w-7 h-7 rounded-lg bg-white/5 hover:bg-accent/20 border border-white/10 hover:border-accent/40 text-gray-400 hover:text-accent transition-all duration-200 active:scale-90 flex-shrink-0"
+              title="Collapse sidebar"
+              aria-label="Collapse sidebar"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          </>
         ) : (
-          <Link
-            to={`/${role.replace(/_/g, '-')}/dashboard`}
-            onClick={handleMobileClose}
-            className="w-11 h-11 mx-auto rounded-2xl bg-gradient-to-br from-accent/30 to-accent/10 border border-accent/50 flex items-center justify-center text-accent shadow-gold cursor-pointer hover:scale-110 transition-transform"
-            title="Lazfort ERP Luxury Management"
-          >
-            <Sparkles className="w-5 h-5 text-accent" />
-          </Link>
-        )}
+          /* Collapsed mode: Logo container with clean, non-overlapping expand chevron positioned cleanly on hover/edge */
+          <div className="relative flex items-center justify-center w-full">
+            <Link
+              to={`/${role.replace(/_/g, '-')}/dashboard`}
+              onClick={handleMobileClose}
+              className="w-11 h-11 rounded-2xl bg-gradient-to-br from-accent/30 to-accent/10 border border-accent/50 flex items-center justify-center text-accent shadow-gold cursor-pointer hover:scale-105 transition-transform"
+              title="Lazfort ERP Luxury Management"
+            >
+              <Sparkles className="w-5 h-5 text-accent" />
+            </Link>
 
-        {/* 3D Desktop Collapse Toggle Button */}
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          className="hidden lg:flex items-center justify-center w-7 h-7 rounded-lg bg-white/5 hover:bg-accent/20 border border-white/10 hover:border-accent/40 text-gray-400 hover:text-accent transition-all duration-200 active:scale-90"
-          title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-        </button>
+            {/* 3D Desktop Expand Toggle Button (Floating cleanly on border without overlapping the logo) */}
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 items-center justify-center w-6 h-6 rounded-full bg-[#111827] hover:bg-accent border border-accent/40 text-accent hover:text-primary-950 shadow-gold transition-all duration-200 active:scale-90 z-40"
+              title="Expand sidebar"
+              aria-label="Expand sidebar"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Navigation Groups Container */}

@@ -419,3 +419,155 @@
   background-color: #131b26 !important;
   color: #FFFFFF !important;
 }
+
+/* ==========================================================================
+   Lazfort Hotel ERP - Professional Master Print Engine Styles
+   Ensures ONLY the targeted document prints on pure A4 without any application UI
+   ========================================================================== */
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  /* Universal reset for print medium */
+  html, body {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+    color: #111827 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    font-size: 11pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide entire application shell and non-document elements */
+  aside,
+  nav,
+  header,
+  footer,
+  .no-print,
+  button:not(.allow-print),
+  input[type="button"],
+  input[type="submit"],
+  [role="navigation"],
+  [aria-label="Sidebar"],
+  .fixed,
+  .sticky,
+  .notification-bell,
+  .user-dropdown,
+  .backdrop-blur-md,
+  .modal-backdrop,
+  #root > div > aside,
+  #root > div > div > header {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  /* When an element has .print-area or id="printable-content", isolate it completely */
+  body.has-print-area * {
+    visibility: hidden !important;
+  }
+
+  body.has-print-area .print-area,
+  body.has-print-area .print-area *,
+  .print-area,
+  .print-area * {
+    visibility: visible !important;
+  }
+
+  .print-area {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 16px !important;
+    background: #FFFFFF !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    z-index: 999999 !important;
+  }
+
+  /* Dark mode overrides for document printing - ensure paper white fidelity */
+  .dark .print-area,
+  .print-area.dark,
+  .print-area [class*="bg-primary"],
+  .print-area [class*="bg-secondary"],
+  .print-area [class*="bg-[#101722]"],
+  .print-area [class*="bg-[#0b1017]"] {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+    color: #111827 !important;
+  }
+
+  .print-area p,
+  .print-area span,
+  .print-area div,
+  .print-area th,
+  .print-area td,
+  .print-area h1,
+  .print-area h2,
+  .print-area h3,
+  .print-area h4 {
+    color: #111827 !important;
+    text-shadow: none !important;
+  }
+
+  .print-area [class*="text-gray-"],
+  .print-area [class*="text-slate-"],
+  .print-area [class*="text-muted"] {
+    color: #4B5563 !important;
+  }
+
+  .print-area [class*="text-accent"],
+  .print-area [class*="text-[#C6A66B]"],
+  .print-area [class*="text-amber-"] {
+    color: #8C6D23 !important;
+  }
+
+  .print-area [class*="border"] {
+    border-color: #E5E7EB !important;
+  }
+
+  /* Table styling for print clarity */
+  .print-area table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  .print-area tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .print-area th,
+  .print-area td {
+    padding: 8px 10px !important;
+    border-bottom: 1px solid #E5E7EB !important;
+  }
+
+  .print-area th {
+    background-color: #F9FAFB !important;
+    color: #111827 !important;
+    font-weight: 600 !important;
+  }
+
+  /* Hide interactive actions inside printable documents */
+  .print-area button,
+  .print-area .actions-bar,
+  .print-area .action-btn {
+    display: none !important;
+  }
+}

@@ -457,7 +457,3 @@ export const CustomerSecurityPage = () => {
 
 export default CustomerSecurityPage;
 
-export default CustomerSecurityPage;
-
-export default CustomerSecurityPage;
-

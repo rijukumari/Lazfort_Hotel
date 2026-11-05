@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader, Button, Modal, FormField, Input, Select } from '../../../components/ui';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { useERP } from '../../../context/ERPContext';
@@ -29,6 +30,7 @@ const CLEANING_STAFF = [
 ];
 
 export const CleaningAssignmentsPage = () => {
+  const navigate = useNavigate();
   const { cleaningTasks: tasks, rooms, addCleaningTask, updateCleaningTaskStatus } = useERP();
   const { showToast } = useToast();
 
@@ -130,7 +132,7 @@ export const CleaningAssignmentsPage = () => {
           <Button
             variant="gold"
             icon={Plus}
-            onClick={() => setIsAssignModalOpen(true)}
+            onClick={() => navigate('/hotel-admin/housekeeping/assignments/create')}
           >
             Assign Chamber Turnover
           </Button>
@@ -315,108 +317,7 @@ export const CleaningAssignmentsPage = () => {
       </div>
 
       {/* Assign Chamber Modal */}
-      <Modal
-        isOpen={isAssignModalOpen}
-        onClose={() => setIsAssignModalOpen(false)}
-        title="Assign Chamber Turnover"
-        description="Allocate royal suite sanitation duty to an on-shift housekeeping specialist."
-        maxWidth="lg"
-      >
-        <form onSubmit={handleCreateAssignment} className="space-y-4 text-xs">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField label="Target Chamber / Suite" required>
-              <select
-                value={assignForm.roomId}
-                onChange={e => setAssignForm(prev => ({ ...prev, roomId: e.target.value }))}
-                className="w-full px-3 py-2.5 rounded-xl bg-ivory/60 dark:bg-primary-900 border border-border/80 dark:border-white/10 text-xs font-semibold text-primary dark:text-white focus:outline-none focus:border-accent"
-              >
-                {rooms.map(room => (
-                  <option key={room.id} value={room.id} className="dark:bg-primary-950">
-                    Suite {room.roomNumber} — {room.type} ({room.status})
-                  </option>
-                ))}
-              </select>
-            </FormField>
-
-            <FormField label="Assigned Housekeeping Attendant" required>
-              <select
-                value={assignForm.staffName}
-                onChange={e => setAssignForm(prev => ({ ...prev, staffName: e.target.value }))}
-                className="w-full px-3 py-2.5 rounded-xl bg-ivory/60 dark:bg-primary-900 border border-border/80 dark:border-white/10 text-xs font-semibold text-primary dark:text-white focus:outline-none focus:border-accent"
-              >
-                {CLEANING_STAFF.map(st => (
-                  <option key={st.id} value={st.name} className="dark:bg-primary-950">
-                    {st.name} ({st.role})
-                  </option>
-                ))}
-              </select>
-            </FormField>
-
-            <FormField label="Dispatch Priority" required>
-              <select
-                value={assignForm.priority}
-                onChange={e => setAssignForm(prev => ({ ...prev, priority: e.target.value }))}
-                className="w-full px-3 py-2.5 rounded-xl bg-ivory/60 dark:bg-primary-900 border border-border/80 dark:border-white/10 text-xs font-semibold text-primary dark:text-white focus:outline-none focus:border-accent"
-              >
-                <option value="urgent" className="dark:bg-primary-950">Urgent (VIP Departure/Arrival &lt; 2 hrs)</option>
-                <option value="high" className="dark:bg-primary-950">High Priority (Standard Departure)</option>
-                <option value="medium" className="dark:bg-primary-950">Medium (Daily Stayover Refresh)</option>
-                <option value="low" className="dark:bg-primary-950">Low (Deep Turndown Service)</option>
-              </select>
-            </FormField>
-
-            <FormField label="Turnover Type" required>
-              <select
-                value={assignForm.cleaningType}
-                onChange={e => setAssignForm(prev => ({ ...prev, cleaningType: e.target.value }))}
-                className="w-full px-3 py-2.5 rounded-xl bg-ivory/60 dark:bg-primary-900 border border-border/80 dark:border-white/10 text-xs font-semibold text-primary dark:text-white focus:outline-none focus:border-accent"
-              >
-                <option value="Full Turnover" className="dark:bg-primary-950">Full Turnover & Linen Change</option>
-                <option value="Daily Refresh" className="dark:bg-primary-950">Daily Refresh & Restock</option>
-                <option value="Deep Sanitization" className="dark:bg-primary-950">Deep Medical Sanitization</option>
-                <option value="VIP Turndown" className="dark:bg-primary-950">VIP Evening Turndown</option>
-              </select>
-            </FormField>
-
-            <FormField label="Assignment Date" required>
-              <Input
-                type="date"
-                value={assignForm.date}
-                onChange={e => setAssignForm(prev => ({ ...prev, date: e.target.value }))}
-              />
-            </FormField>
-
-            <FormField label="Estimated Duration (Mins)" required>
-              <Input
-                type="number"
-                min="15"
-                max="180"
-                value={assignForm.estimatedMinutes}
-                onChange={e => setAssignForm(prev => ({ ...prev, estimatedMinutes: e.target.value }))}
-              />
-            </FormField>
-          </div>
-
-          <FormField label="Special Directives & Guest Requests">
-            <textarea
-              rows={2}
-              value={assignForm.notes}
-              onChange={e => setAssignForm(prev => ({ ...prev, notes: e.target.value }))}
-              placeholder="e.g. Feather-free pillows, champagne welcome tray, terrace glass polish..."
-              className="w-full px-3 py-2 rounded-xl bg-ivory/60 dark:bg-primary-900 border border-border/80 dark:border-white/10 text-xs font-medium text-primary dark:text-white focus:outline-none focus:border-accent"
-            />
-          </FormField>
-
-          <div className="flex justify-end gap-3 pt-3 border-t border-border/80 dark:border-white/10">
-            <Button variant="outline" type="button" onClick={() => setIsAssignModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="gold" type="submit">
-              Dispatch Assignment
-            </Button>
-          </div>
-        </form>
-      </Modal>
+      {/* Modal removed in favor of dedicated standalone page /hotel-admin/housekeeping/assignments/create */}
     </div>
   );
 };

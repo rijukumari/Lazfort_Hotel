@@ -152,7 +152,11 @@ export const PaymentHistoryPage = () => {
             variant="ghost"
             size="xs"
             icon={Eye}
-            onClick={() => setSelectedTx(p)}
+            onClick={() => {
+              navigate('/receptionist/payments/receipt', {
+                state: { selectedPayment: p }
+              });
+            }}
           >
             Details
           </Button>
@@ -161,7 +165,9 @@ export const PaymentHistoryPage = () => {
             size="xs"
             icon={Printer}
             onClick={() => {
-              navigate('/receptionist/payments/receipt');
+              navigate('/receptionist/payments/receipt', {
+                state: { selectedPayment: p }
+              });
             }}
           >
             Receipt
@@ -260,56 +266,6 @@ export const PaymentHistoryPage = () => {
           emptyMessage="No payment records found matching criteria."
         />
       </div>
-
-      {/* Details Modal */}
-      {selectedTx && (
-        <Modal
-          isOpen={Boolean(selectedTx)}
-          onClose={() => setSelectedTx(null)}
-          title={`Payment Voucher • ${selectedTx.transactionRef || selectedTx.reference || selectedTx.id}`}
-        >
-          <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-charcoal-bg dark:bg-[#080d19] border border-primary/10 dark:border-white/5 space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-charcoal-muted dark:text-gray-400">Guest Name</span>
-                <span className="font-serif font-bold text-sm text-primary dark:text-white">{selectedTx.guestName}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-charcoal-muted dark:text-gray-400">Suite</span>
-                <span className="text-xs font-bold text-accent">{selectedTx.roomNumber || 'Counter Service'}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-charcoal-muted dark:text-gray-400">Payment Channel</span>
-                <span className="text-xs text-primary dark:text-white">{selectedTx.paymentMethod || 'Credit Card'}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-charcoal-muted dark:text-gray-400">Authorized Amount</span>
-                <span className="font-mono font-bold text-base text-emerald-400">${Number(selectedTx.amount || 0).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-charcoal-muted dark:text-gray-400">Timestamp</span>
-                <span className="text-xs text-charcoal-muted dark:text-gray-400">{selectedTx.date || 'Today'}</span>
-              </div>
-              {selectedTx.notes && (
-                <div className="pt-2 border-t border-primary/10 dark:border-white/5">
-                  <span className="text-[11px] text-charcoal-muted dark:text-gray-400 block mb-1">Notes:</span>
-                  <p className="text-xs italic text-charcoal dark:text-gray-300">{selectedTx.notes}</p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSelectedTx(null)}
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        </Modal>
-      )}
     </div>
   );
 };

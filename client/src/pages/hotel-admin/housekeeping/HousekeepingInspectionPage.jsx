@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader, Button, Modal, FormField } from '../../../components/ui';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { useERP } from '../../../context/ERPContext';
@@ -79,6 +80,7 @@ const INITIAL_INSPECTIONS = [
 ];
 
 export const HousekeepingInspectionPage = () => {
+  const navigate = useNavigate();
   const { updateCleaningTaskStatus, rooms, updateRoomStatus } = useERP();
   const { showToast } = useToast();
 
@@ -321,9 +323,9 @@ export const HousekeepingInspectionPage = () => {
                     <td className="py-3.5 px-3 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => setSelectedInspection(insp)}
-                          className="px-2.5 py-1 rounded-lg border border-border dark:border-white/10 hover:border-accent text-charcoal-muted hover:text-accent text-[11px] font-semibold transition-all inline-flex items-center gap-1"
-                          title="View Audit Checklist"
+                          onClick={() => navigate(`/hotel-admin/housekeeping/inspection/${insp.id}`)}
+                          className="px-2.5 py-1 rounded-lg border border-border dark:border-white/10 hover:border-accent text-charcoal-muted hover:text-accent text-[11px] font-semibold transition-all inline-flex items-center gap-1 cursor-pointer"
+                          title="View Full Audit Protocol Page"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>Review</span>
@@ -355,92 +357,7 @@ export const HousekeepingInspectionPage = () => {
         </div>
       </div>
 
-      {/* Detailed Checklist Modal */}
-      {selectedInspection && !rejectModalOpen && (
-        <Modal
-          isOpen={true}
-          onClose={() => setSelectedInspection(null)}
-          title={`Hygiene Inspection Protocol — Suite ${selectedInspection.roomNumber}`}
-          description={`Conducted by ${selectedInspection.inspectorName} • Score: ${selectedInspection.score}%`}
-          maxWidth="lg"
-        >
-          <div className="space-y-4 text-xs">
-            <div className="p-4 rounded-2xl bg-ivory/60 dark:bg-primary-950/40 border border-border/80 dark:border-white/10 flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-mono text-accent uppercase tracking-widest font-bold block">
-                  Suite {selectedInspection.roomNumber} • {selectedInspection.roomType}
-                </span>
-                <p className="font-serif font-bold text-base text-primary dark:text-white mt-0.5">
-                  Auditor: {selectedInspection.inspectorName}
-                </p>
-                <span className="text-[11px] text-charcoal-muted">Timestamp: {selectedInspection.inspectionDate}</span>
-              </div>
-              <div className="text-right">
-                <span className="font-mono text-3xl font-bold text-accent">{selectedInspection.score}%</span>
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block uppercase">
-                  Verified Audit
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="font-serif font-bold text-sm text-primary dark:text-white">
-                Detailed 5-Point Quality Checklist:
-              </h4>
-              <div className="divide-y divide-border/60 dark:divide-white/5 border border-border/70 dark:border-white/10 rounded-2xl overflow-hidden">
-                {selectedInspection.checklist?.map((item, idx) => (
-                  <div key={idx} className="p-3.5 flex items-start justify-between gap-3 bg-white/50 dark:bg-white/[0.02]">
-                    <div className="flex items-start gap-2.5">
-                      {item.passed ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                      ) : (
-                        <XCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-                      )}
-                      <div>
-                        <p className={`font-semibold ${item.passed ? 'text-primary dark:text-white' : 'text-rose-500'}`}>
-                          {item.criterion}
-                        </p>
-                        <p className="text-[11px] text-charcoal-muted mt-0.5">{item.notes}</p>
-                      </div>
-                    </div>
-                    <span className={`px-2 py-0.5 rounded-full font-mono text-[10px] font-bold ${
-                      item.passed ? 'bg-emerald-500/15 text-emerald-600' : 'bg-rose-500/15 text-rose-500'
-                    }`}>
-                      {item.passed ? 'PASSED' : 'DEFECT'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {selectedInspection.notes && (
-              <div className="p-3.5 rounded-xl bg-accent/5 border border-accent/20 text-charcoal-muted text-[11px]">
-                <strong className="text-primary dark:text-white block font-serif">Auditor Directives:</strong>
-                {selectedInspection.notes}
-              </div>
-            )}
-
-            <div className="flex justify-between items-center pt-3 border-t border-border/80 dark:border-white/10">
-              <Button variant="outline" onClick={() => setSelectedInspection(null)}>
-                Close
-              </Button>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => handleOpenReject(selectedInspection)}
-                  className="border-rose-500/40 text-rose-500 hover:bg-rose-500/10"
-                >
-                  Reject & Re-clean
-                </Button>
-                <Button variant="gold" onClick={() => handleApprove(selectedInspection)}>
-                  Approve & Release Suite
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Modal>
-      )}
+      {/* Detailed Checklist Modal removed in favor of dedicated standalone page /hotel-admin/housekeeping/inspection/:id */}
 
       {/* Reject Confirmation Modal */}
       {rejectModalOpen && selectedInspection && (

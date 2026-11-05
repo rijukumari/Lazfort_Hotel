@@ -1,8 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader, StatusBadge, Button } from '../../../components/ui';
+import { PageHeader, StatusBadge, Button, StatCard } from '../../../components/ui';
 import { DataTable } from '../../../components/data-display/DataTable';
-import { StatCard } from '../../../components/ui/StatCard';
 import {
   BedDouble,
   Calendar,

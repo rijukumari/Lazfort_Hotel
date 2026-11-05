@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   FileText,
   Plus,
@@ -28,6 +29,7 @@ import {
 } from '../../../components/finance';
 
 export const InvoicesPage = () => {
+  const navigate = useNavigate();
   const { folios = [], invoices = [], cancelInvoice, deleteInvoice, recordInvoicePayment, createInvoice } = useERP();
   const { showToast } = useToast();
 
@@ -474,26 +476,8 @@ export const InvoicesPage = () => {
           </button>
 
           <button
-            onClick={() => {
-              setFormData({
-                folioId: '',
-                guestName: '',
-                guestEmail: '',
-                companyName: '',
-                guestAddress: '',
-                issuedDate: new Date().toISOString().split('T')[0],
-                dueDate: new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0],
-                description: 'Luxury Suite Accommodation & Gastronomy',
-                subtotal: '3500',
-                taxRate: '10',
-                discountAmount: '0',
-                amountPaid: '0',
-                notes: 'Payment due within 7 days. Statutory VAT applies.',
-              });
-              setFormErrors({});
-              setPageView('create');
-            }}
-            className="px-5 py-2.5 rounded-xl gold-gradient-bg text-primary-900 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold flex items-center gap-2"
+            onClick={() => navigate('/hotel-admin/finance/invoices/create')}
+            className="px-5 py-2.5 rounded-xl gold-gradient-bg text-primary-900 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold flex items-center gap-2 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Generate New Invoice</span>
@@ -686,11 +670,12 @@ export const InvoicesPage = () => {
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => {
-                            setSelectedInvoice(inv);
-                            setIsDetailsModalOpen(true);
+                            navigate(`/hotel-admin/finance/invoices/${inv.id || inv.invoiceNumber}`, {
+                              state: { invoice: inv }
+                            });
                           }}
-                          className="p-1.5 rounded-lg text-accent hover:bg-accent/15 transition-colors"
-                          title="View Tax Invoice"
+                          className="p-1.5 rounded-lg text-accent hover:bg-accent/15 transition-colors cursor-pointer"
+                          title="View Tax Invoice on Dedicated Page"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
@@ -735,28 +720,7 @@ export const InvoicesPage = () => {
         )}
       </div>
 
-      {/* Modals */}
-      <CreateInvoiceModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={() => {
-          showToast('Invoice Issued', 'New VAT tax invoice generated.', 'success');
-        }}
-      />
-
-      <InvoiceDetailsModal
-        isOpen={isDetailsModalOpen}
-        onClose={() => {
-          setIsDetailsModalOpen(false);
-          setSelectedInvoice(null);
-        }}
-        invoice={selectedInvoice}
-        onRecordPayment={(inv) => {
-          handleQuickPay(inv);
-          setIsDetailsModalOpen(false);
-        }}
-      />
-
+      {/* Modals & Dialogs */}
       <DeleteConfirmationDialog
         isOpen={isCancelModalOpen}
         onClose={() => {

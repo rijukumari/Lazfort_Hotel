@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { PageHeader, Button } from '../../../components/ui';
 import { DataTable } from '../../../components/data-display/DataTable';
 import {
@@ -18,14 +18,17 @@ import {
 } from 'lucide-react';
 import { useERP } from '../../../context/ERPContext';
 import { useToast } from '../../../context/ToastContext';
+import { printElement } from '../../../utils/printSystem';
 
 export const PrintReceiptPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { payments = [] } = useERP();
   const { showToast } = useToast();
 
+  const statePayment = location.state?.selectedPayment;
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedReceipt, setSelectedReceipt] = useState(payments[0] || null);
+  const [selectedReceipt, setSelectedReceipt] = useState(statePayment || payments[0] || null);
 
   const filteredPayments = useMemo(() => {
     return payments.filter((p) => {
@@ -41,7 +44,9 @@ export const PrintReceiptPage = () => {
   }, [payments, searchQuery]);
 
   const handlePrint = () => {
-    window.print();
+    printElement('printable-receipt-slip', {
+      documentTitle: `Receipt_${selectedReceipt?.transactionRef || 'LZ-Receipt'}`
+    });
     showToast('Receipt Printed', 'Voucher dispatched to terminal printer.', 'success');
   };
 
@@ -135,13 +140,16 @@ export const PrintReceiptPage = () => {
         {/* Right 7 Cols: Thermal / Voucher Receipt Preview */}
         <div className="lg:col-span-7">
           {selectedReceipt ? (
-            <div className="card-luxury-3d p-8 max-w-md mx-auto font-mono text-xs space-y-4 print:shadow-none print:border-none print:w-full print:max-w-none print:bg-white print:text-black">
+            <div
+              id="printable-receipt-slip"
+              className="card-luxury-3d p-8 max-w-md mx-auto font-mono text-xs space-y-4 bg-white dark:bg-[#0c1322] text-[#111827] dark:text-[#f1f5f9] border border-border/80 dark:border-accent/20 shadow-xl dark:shadow-2xl print:shadow-none print:border-none print:w-full print:max-w-none print:bg-white print:text-black"
+            >
               {/* Header */}
-              <div className="text-center space-y-1.5 border-b border-dashed border-border/80 dark:border-white/20 pb-5">
+              <div className="text-center space-y-1.5 border-b border-dashed border-border/80 dark:border-white/10 pb-5">
                 <div className="w-10 h-10 mx-auto rounded-xl bg-accent/15 border border-accent/40 flex items-center justify-center text-accent shadow-gold mb-2">
                   <Sparkles className="w-5 h-5 text-accent" />
                 </div>
-                <h2 className="font-serif font-black text-2xl tracking-wider text-primary dark:text-white">
+                <h2 className="font-serif font-black text-2xl tracking-wider text-primary dark:text-[#e6c387]">
                   LAZFORT PALACE
                 </h2>
                 <p className="text-[10px] uppercase font-mono tracking-widest text-accent font-bold">
@@ -156,7 +164,7 @@ export const PrintReceiptPage = () => {
               </div>
 
               {/* Transaction Meta */}
-              <div className="space-y-1.5 border-b border-dashed border-border/80 dark:border-white/20 pb-4 text-[11px]">
+              <div className="space-y-1.5 border-b border-dashed border-border/80 dark:border-white/10 pb-4 text-[11px]">
                 <div className="flex justify-between">
                   <span className="text-charcoal-muted dark:text-gray-400">RECEIPT NO:</span>
                   <span className="font-bold font-mono text-accent">
@@ -192,8 +200,8 @@ export const PrintReceiptPage = () => {
               </div>
 
               {/* Items Breakdown */}
-              <div className="space-y-2 border-b border-dashed border-border/80 dark:border-white/20 pb-4 text-[11px]">
-                <div className="flex justify-between font-bold border-b border-border/60 dark:border-white/10 pb-1 text-charcoal-muted dark:text-gray-300 uppercase tracking-wider text-[10px]">
+              <div className="space-y-2 border-b border-dashed border-border/80 dark:border-white/10 pb-4 text-[11px]">
+                <div className="flex justify-between font-bold border-b border-border/60 dark:border-white/10 pb-1 text-charcoal-muted dark:text-gray-400 uppercase tracking-wider text-[10px]">
                   <span>DESCRIPTION</span>
                   <span>AMOUNT</span>
                 </div>
@@ -208,7 +216,7 @@ export const PrintReceiptPage = () => {
               </div>
 
               {/* Totals */}
-              <div className="space-y-1.5 border-b border-dashed border-border/80 dark:border-white/20 pb-4 text-[12px]">
+              <div className="space-y-1.5 border-b border-dashed border-border/80 dark:border-white/10 pb-4 text-[12px]">
                 <div className="flex justify-between font-serif font-black text-lg pt-1 text-primary dark:text-white">
                   <span>TOTAL PAID:</span>
                   <span className="text-accent font-mono font-bold">

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   CreditCard,
   Plus,
@@ -37,6 +38,7 @@ const CHANNELS = [
 ];
 
 export const PaymentOperationsPage = () => {
+  const navigate = useNavigate();
   const { payments = [], deletePayment, processPayment } = useERP();
   const { showToast } = useToast();
 
@@ -510,11 +512,9 @@ export const PaymentOperationsPage = () => {
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
-                          onClick={() => {
-                            setSelectedPayment(p);
-                            setIsDetailsModalOpen(true);
-                          }}
-                          className="p-1.5 rounded-lg text-accent hover:bg-accent/15 transition-colors"
+                          type="button"
+                          onClick={() => navigate(`/hotel-admin/finance/payments/receipt/${p.id || p.transactionRef}`)}
+                          className="p-1.5 rounded-lg text-accent hover:bg-accent/15 transition-colors cursor-pointer"
                           title="View Authorization Details"
                         >
                           <Eye className="w-4 h-4" />

@@ -12,6 +12,7 @@ import {
   Phone,
   Mail
 } from 'lucide-react';
+import { printElement } from '../../utils/printSystem';
 
 export const BookingConfirmationPage = () => {
   const { bookingId } = useParams();
@@ -24,7 +25,9 @@ export const BookingConfirmationPage = () => {
   const room = rooms.find(r => r.id === booking?.roomId) || stateData?.room || rooms[0];
 
   const handlePrint = () => {
-    window.print();
+    printElement('printable-booking-confirmation', {
+      documentTitle: `Confirmation_${booking?.bookingCode || 'Lazfort'}`
+    });
   };
 
   if (!booking) {
@@ -79,22 +82,23 @@ export const BookingConfirmationPage = () => {
       </Card>
 
       {/* Complete Itinerary Dossier Card */}
-      <Card variant="luxury" className="p-6 sm:p-8 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-border/70 dark:border-white/10 gap-3">
-          <div>
-            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-accent">
-              Official Stay Dossier
-            </span>
-            <h3 className="font-serif text-xl font-bold text-primary dark:text-white mt-0.5">
-              Reservation Specifics & Folio Details
-            </h3>
-          </div>
+      <div id="printable-booking-confirmation">
+        <Card variant="luxury" className="p-6 sm:p-8 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-border/70 dark:border-white/10 gap-3">
+            <div>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-accent">
+                Official Stay Dossier
+              </span>
+              <h3 className="font-serif text-xl font-bold text-primary dark:text-white mt-0.5">
+                Reservation Specifics & Folio Details
+              </h3>
+            </div>
 
-          <div className="flex items-center gap-2">
-            <BookingStatusBadge status={booking.status} />
-            <PaymentStatusBadge status={booking.paymentStatus} />
+            <div className="flex items-center gap-2">
+              <BookingStatusBadge status={booking.status} />
+              <PaymentStatusBadge status={booking.paymentStatus} />
+            </div>
           </div>
-        </div>
 
         {/* Suite Details Preview */}
         {room && (
@@ -199,7 +203,7 @@ export const BookingConfirmationPage = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="pt-6 border-t border-border/70 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
+        <div className="pt-6 border-t border-border/70 dark:border-white/10 flex flex-wrap items-center justify-between gap-3 print:hidden">
           <Button
             variant="outline"
             icon={Printer}
@@ -225,6 +229,7 @@ export const BookingConfirmationPage = () => {
           </div>
         </div>
       </Card>
+      </div>
     </div>
   );
 };

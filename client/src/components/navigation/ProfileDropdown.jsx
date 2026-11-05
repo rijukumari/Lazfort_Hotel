@@ -94,7 +94,7 @@ export const ProfileDropdown = () => {
                 } else if (role === 'hotel_admin') {
                   navigate('/hotel-admin/profile');
                 } else if (role === 'super_admin') {
-                  navigate('/super-admin/platform/settings');
+                  navigate('/super-admin/profile');
                 } else {
                   navigate(`/${role.replace(/_/g, '-')}/profile`);
                 }
@@ -115,7 +115,7 @@ export const ProfileDropdown = () => {
                 } else if (role === 'hotel_admin') {
                   navigate('/hotel-admin/system-preferences');
                 } else if (role === 'super_admin') {
-                  navigate('/super-admin/platform/settings');
+                  navigate('/super-admin/preferences');
                 } else {
                   navigate(`/${role.replace(/_/g, '-')}/settings`);
                 }

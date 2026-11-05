@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { InvoiceStatusBadge } from './InvoiceStatusBadge';
+import { printElement } from '../../utils/printSystem';
 
 export const InvoiceDetailsModal = ({
   isOpen,
@@ -29,7 +30,6 @@ export const InvoiceDetailsModal = ({
     };
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-      window.addEventListener('keydown', handleKeyDown);
     }
     return () => {
       document.body.style.overflow = 'unset';
@@ -40,7 +40,9 @@ export const InvoiceDetailsModal = ({
   if (!isOpen || !invoice) return null;
 
   const handlePrint = () => {
-    window.print();
+    printElement('printable-invoice-details', {
+      documentTitle: `Tax_Invoice_${invoice.invoiceNumber || 'Lazfort'}`
+    });
   };
 
   const handleSendEmail = () => {
@@ -100,7 +102,7 @@ export const InvoiceDetailsModal = ({
         </div>
 
         {/* Printable Invoice Sheet */}
-        <div className="overflow-y-auto no-scrollbar p-6 sm:p-8 space-y-6 flex-1 bg-white dark:bg-[#101722] text-charcoal dark:text-gray-200">
+        <div id="printable-invoice-details" className="overflow-y-auto no-scrollbar p-6 sm:p-8 space-y-6 flex-1 bg-white dark:bg-[#101722] text-charcoal dark:text-gray-200">
           {/* Top Brand & Status Section */}
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-border/80 dark:border-white/10 pb-6">
             <div>

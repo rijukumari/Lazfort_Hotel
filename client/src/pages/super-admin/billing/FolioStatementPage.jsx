@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useERP } from '../../../context/ERPContext';
 import { StatusBadge, Button, Card } from '../../../components/ui';
+import { printElement } from '../../../utils/printSystem';
 import {
   ArrowLeft,
   FileText,
@@ -94,7 +95,11 @@ export const FolioStatementPage = () => {
           <Button
             variant="outline"
             icon={Printer}
-            onClick={() => window.print()}
+            onClick={() => {
+              printElement('printable-superadmin-folio', {
+                documentTitle: `FolioStatement_${folio.bookingCode || 'Lazfort'}`
+              });
+            }}
           >
             Print Statement
           </Button>
@@ -134,7 +139,7 @@ export const FolioStatementPage = () => {
       </div>
 
       {/* Itemized Ledger Postings Table */}
-      <div className="bg-white/90 dark:bg-surface-dark/95 backdrop-blur-2xl rounded-3xl border border-accent/25 p-6 sm:p-8 shadow-xl space-y-5">
+      <div id="printable-superadmin-folio" className="bg-white/90 dark:bg-surface-dark/95 backdrop-blur-2xl rounded-3xl border border-accent/25 p-6 sm:p-8 shadow-xl space-y-5">
         <div className="flex items-center justify-between pb-4 border-b border-border/70 dark:border-white/10">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-accent/15 text-accent">
