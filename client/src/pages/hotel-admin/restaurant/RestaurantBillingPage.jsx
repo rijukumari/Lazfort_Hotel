@@ -145,11 +145,10 @@ export const RestaurantBillingPage = () => {
       render: b => (
         <div>
           <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-              b.paymentStatus === 'Paid'
+            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${b.paymentStatus === 'Paid'
                 ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                 : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
-            }`}
+              }`}
           >
             <span className={`w-1.5 h-1.5 rounded-full ${b.paymentStatus === 'Paid' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
             <span>{b.paymentStatus}</span>

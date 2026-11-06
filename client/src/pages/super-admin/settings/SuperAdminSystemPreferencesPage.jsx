@@ -399,5 +399,3 @@ export const SuperAdminSystemPreferencesPage = () => {
 
 export default SuperAdminSystemPreferencesPage;
 
-export default SuperAdminSystemPreferencesPage;
-

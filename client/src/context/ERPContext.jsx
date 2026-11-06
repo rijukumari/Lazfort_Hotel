@@ -562,15 +562,15 @@ export const ERPProvider = ({ children }) => {
       guest_phone: newBooking.guestPhone,
       room_number: newBooking.roomNumber,
       room_type: newBooking.roomType,
-      check_in_date: newBooking.checkInDate,
-      check_out_date: newBooking.checkOutDate,
+      check_in_date: newBooking.checkIn || newBooking.checkInDate,
+      check_out_date: newBooking.checkOut || newBooking.checkOutDate,
       adults: newBooking.adults || 1,
       children: newBooking.children || 0,
       total_amount: newBooking.totalAmount,
       paid_amount: newBooking.paidAmount || 0,
       status: newBooking.status,
       payment_status: newBooking.paymentStatus,
-      booking_source: newBooking.bookingSource,
+      booking_source: newBooking.bookingSource || 'Front Desk',
       special_requests: newBooking.specialRequests,
     }).catch(err => console.warn('Could not persist booking to MySQL backend:', err.message));
 

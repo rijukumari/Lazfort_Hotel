@@ -10,9 +10,11 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:80
  */
 async function apiRequest(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
+  const token = localStorage.getItem('lazfort_token');
   const defaultHeaders = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
   };
 
   const config = {
@@ -41,8 +43,20 @@ async function apiRequest(endpoint, options = {}) {
 }
 
 export const hotelApi = {
-  // Health
+  // Authentication
+  login: (data) => apiRequest('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+  signup: (data) => apiRequest('/auth/signup', { method: 'POST', body: JSON.stringify(data) }),
+  getCurrentUser: () => apiRequest('/auth/me'),
+
+  // Health & Diagnostics
   checkHealth: () => apiRequest('/health'),
+  checkDb: () => apiRequest('/diag/db-test'),
+
+  // Users
+  getUsers: () => apiRequest('/users'),
+  createUser: (data) => apiRequest('/users', { method: 'POST', body: JSON.stringify(data) }),
+  updateUser: (id, data) => apiRequest(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteUser: (id) => apiRequest(`/users/${id}`, { method: 'DELETE' }),
 
   // Hotels & Properties
   getHotels: () => apiRequest('/hotels'),

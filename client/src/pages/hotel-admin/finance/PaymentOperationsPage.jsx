@@ -14,7 +14,9 @@ import {
   Clock,
   XCircle,
   ShieldCheck,
-  Terminal
+  Terminal,
+  ArrowRight,
+  ArrowLeft
 } from 'lucide-react';
 import { useERP } from '../../../context/ERPContext';
 import { useToast } from '../../../context/ToastContext';

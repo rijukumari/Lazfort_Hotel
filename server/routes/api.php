@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\HotelErpController;
+use App\Http\Controllers\Api\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,7 +14,21 @@ use App\Http\Controllers\Api\HotelErpController;
 |
 */
 
+// Authentication Routes (Signup, Login, Current User)
+Route::post('/auth/register', [AuthController::class, 'register']);
+Route::post('/auth/signup', [AuthController::class, 'register']);
+Route::post('/auth/login', [AuthController::class, 'login']);
+Route::get('/auth/me', [AuthController::class, 'me']);
+
+// Diagnostic & Health
 Route::get('/health', [HotelErpController::class, 'health']);
+Route::get('/diag/db-test', [HotelErpController::class, 'diagDbTest']);
+
+// Users / Super Admin User Management
+Route::get('/users', [HotelErpController::class, 'getUsers']);
+Route::post('/users', [HotelErpController::class, 'createUser']);
+Route::put('/users/{id}', [HotelErpController::class, 'updateUser']);
+Route::delete('/users/{id}', [HotelErpController::class, 'deleteUser']);
 
 // Hotels & Properties
 Route::get('/hotels', [HotelErpController::class, 'getHotels']);
@@ -73,4 +88,3 @@ Route::put('/inventory/{id}', [HotelErpController::class, 'updateInventory']);
 
 // Initial Database Seeding / Sync Endpoint
 Route::post('/sync-seed', [HotelErpController::class, 'seedInitialData']);
-

@@ -101,11 +101,10 @@ export const PrintReceiptPage = () => {
                   <div
                     key={p.id || p.transactionRef}
                     onClick={() => setSelectedReceipt(p)}
-                    className={`p-3.5 rounded-2xl cursor-pointer border transition-all text-xs ${
-                      isSelected
+                    className={`p-3.5 rounded-2xl cursor-pointer border transition-all text-xs ${isSelected
                         ? 'border-accent bg-accent/15 ring-1 ring-accent/40 shadow-gold'
                         : 'border-border/60 dark:border-white/5 bg-ivory/60 dark:bg-primary-900/40 hover:border-accent/40'
-                    }`}
+                      }`}
                   >
                     <div className="flex justify-between items-start">
                       <div>

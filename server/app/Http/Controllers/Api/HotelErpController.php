@@ -15,11 +15,50 @@ use App\Models\MaintenanceTicket;
 use App\Models\GuestFolio;
 use App\Models\InventoryItem;
 use App\Models\RoomCategory;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 
 class HotelErpController extends Controller
 {
+    /**
+     * Auto migration & table ensure helper
+     */
+    protected function ensureTables()
+    {
+        try {
+            if (!Schema::hasTable('hotels') || !Schema::hasTable('bookings') || !Schema::hasTable('users')) {
+                Artisan::call('migrate', ['--force' => true]);
+            }
+
+            // Ensure extra user columns if missing
+            if (Schema::hasTable('users')) {
+                if (!Schema::hasColumn('users', 'role')) {
+                    DB::statement("ALTER TABLE users ADD COLUMN role VARCHAR(100) DEFAULT 'Staff' AFTER email");
+                }
+                if (!Schema::hasColumn('users', 'hotel_access')) {
+                    DB::statement("ALTER TABLE users ADD COLUMN hotel_access VARCHAR(255) NULL AFTER role");
+                }
+                if (!Schema::hasColumn('users', 'phone')) {
+                    DB::statement("ALTER TABLE users ADD COLUMN phone VARCHAR(100) NULL AFTER email");
+                }
+                if (!Schema::hasColumn('users', 'status')) {
+                    DB::statement("ALTER TABLE users ADD COLUMN status VARCHAR(50) DEFAULT 'active' AFTER role");
+                }
+                if (!Schema::hasColumn('users', 'custom_id')) {
+                    DB::statement("ALTER TABLE users ADD COLUMN custom_id VARCHAR(50) NULL AFTER id");
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('ensureTables warning: ' . $e->getMessage());
+        }
+    }
+
     // Health check
     public function health()
     {
@@ -28,6 +67,177 @@ class HotelErpController extends Controller
             'message' => 'Hotel ERP Laravel REST API is online',
             'timestamp' => now()->toIso8601String(),
         ]);
+    }
+
+    /**
+     * Live MySQL Diagnostic Endpoint
+     */
+    public function diagDbTest()
+    {
+        $this->ensureTables();
+
+        $diagnostics = [
+            'status' => 'checking',
+            'database_connected' => false,
+            'database_name' => null,
+            'table_counts' => [],
+            'test_write_read' => null,
+        ];
+
+        try {
+            $pdo = DB::connection()->getPdo();
+            $diagnostics['database_connected'] = true;
+            $diagnostics['database_name'] = DB::connection()->getDatabaseName();
+
+            $tables = ['users', 'hotels', 'rooms', 'bookings', 'guests', 'payments', 'invoices', 'staff'];
+            foreach ($tables as $t) {
+                if (Schema::hasTable($t)) {
+                    $diagnostics['table_counts'][$t] = DB::table($t)->count();
+                } else {
+                    $diagnostics['table_counts'][$t] = 'TABLE_MISSING';
+                }
+            }
+
+            // Perform real safe write-test in users or hotels
+            $testEmail = 'diag_probe_' . time() . '@lazfort.test';
+            $testUser = User::create([
+                'name' => 'Diagnostic Probe User',
+                'email' => $testEmail,
+                'password' => Hash::make('secret123'),
+                'role' => 'Super Administrator',
+                'status' => 'active',
+            ]);
+
+            $verified = User::where('email', $testEmail)->first();
+            if ($verified) {
+                $diagnostics['test_write_read'] = [
+                    'success' => true,
+                    'probe_user_id' => $verified->id,
+                    'probe_user_name' => $verified->name,
+                ];
+                // Clean up probe
+                $verified->delete();
+            }
+
+            $diagnostics['status'] = 'healthy';
+            return response()->json($diagnostics);
+        } catch (\Throwable $e) {
+            $diagnostics['status'] = 'error';
+            $diagnostics['error'] = $e->getMessage();
+            return response()->json($diagnostics, 500);
+        }
+    }
+
+    // ----------------------------------------------------
+    // USER / SUPER ADMIN USER OPERATIONS
+    // ----------------------------------------------------
+    public function getUsers()
+    {
+        $this->ensureTables();
+        try {
+            $users = User::orderBy('created_at', 'desc')->get()->map(function ($u) {
+                return [
+                    'id' => $u->custom_id ?: ('usr-' . $u->id),
+                    'db_id' => $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'role' => $u->role ?? 'Staff',
+                    'hotelAccess' => $u->hotel_access ? explode(',', $u->hotel_access) : ['All Properties'],
+                    'phone' => $u->phone,
+                    'status' => $u->status ?? 'active',
+                    'registeredDate' => $u->created_at ? $u->created_at->toDateString() : now()->toDateString(),
+                    'lastLogin' => 'Recent Active Session',
+                ];
+            });
+
+            return response()->json($users);
+        } catch (\Throwable $e) {
+            Log::error('getUsers error: ' . $e->getMessage());
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function createUser(Request $request)
+    {
+        $this->ensureTables();
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|max:255',
+                'role' => 'nullable|string',
+                'phone' => 'nullable|string',
+                'password' => 'nullable|string|min:6',
+                'hotelAccess' => 'nullable',
+                'status' => 'nullable|string',
+            ]);
+
+            $hotelAccessStr = null;
+            if ($request->has('hotelAccess')) {
+                $hAccess = $request->input('hotelAccess');
+                $hotelAccessStr = is_array($hAccess) ? implode(',', $hAccess) : (string)$hAccess;
+            }
+
+            $user = User::create([
+                'custom_id' => $request->input('id') ?: ('usr-' . rand(1000, 9999)),
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone' => $request->input('phone'),
+                'role' => $request->input('role') ?? 'Staff',
+                'status' => $request->input('status') ?? 'active',
+                'hotel_access' => $hotelAccessStr,
+                'password' => Hash::make($request->input('password') ?? 'Lazfort#2026!'),
+            ]);
+
+            return response()->json([
+                'id' => $user->custom_id ?: ('usr-' . $user->id),
+                'db_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'hotelAccess' => $user->hotel_access ? explode(',', $user->hotel_access) : ['All Properties'],
+                'phone' => $user->phone,
+                'status' => $user->status,
+                'registeredDate' => now()->toDateString(),
+                'lastLogin' => 'Never (New Account)',
+            ], 201);
+        } catch (\Throwable $e) {
+            Log::error('createUser error: ' . $e->getMessage());
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function updateUser(Request $request, $id)
+    {
+        $this->ensureTables();
+        try {
+            $user = User::where('id', $id)->orWhere('custom_id', $id)->firstOrFail();
+            $data = $request->all();
+            if (isset($data['hotelAccess']) && is_array($data['hotelAccess'])) {
+                $data['hotel_access'] = implode(',', $data['hotelAccess']);
+                unset($data['hotelAccess']);
+            }
+            if (!empty($data['password'])) {
+                $data['password'] = Hash::make($data['password']);
+            } else {
+                unset($data['password']);
+            }
+            $user->update($data);
+            return response()->json(['status' => 'success', 'user' => $user]);
+        } catch (\Throwable $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function deleteUser($id)
+    {
+        $this->ensureTables();
+        try {
+            $user = User::where('id', $id)->orWhere('custom_id', $id)->firstOrFail();
+            $user->delete();
+            return response()->json(['status' => 'success', 'message' => 'User deleted successfully']);
+        } catch (\Throwable $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
     }
 
     // ----------------------------------------------------
@@ -212,35 +422,51 @@ class HotelErpController extends Controller
 
     public function createBooking(Request $request)
     {
-        $validated = $request->validate([
-            'guest_name' => 'required|string',
-            'check_in_date' => 'required|date',
-            'check_out_date' => 'required|date',
-            'room_number' => 'nullable|string',
-            'room_type' => 'nullable|string',
-            'total_amount' => 'nullable|numeric',
-            'paid_amount' => 'nullable|numeric',
-            'status' => 'nullable|string',
-            'guest_email' => 'nullable|email',
-            'guest_phone' => 'nullable|string',
-            'special_requests' => 'nullable|string',
-            'booking_source' => 'nullable|string',
-        ]);
+        $this->ensureTables();
+        try {
+            $guestName = $request->input('guest_name') ?: $request->input('guestName') ?: $request->input('name') ?: 'Guest';
+            $checkIn = $request->input('check_in_date') ?: $request->input('checkInDate') ?: $request->input('checkIn') ?: now()->toDateString();
+            $checkOut = $request->input('check_out_date') ?: $request->input('checkOutDate') ?: $request->input('checkOut') ?: now()->addDays(2)->toDateString();
+            $roomNumber = $request->input('room_number') ?: $request->input('roomNumber') ?: $request->input('room');
+            $roomType = $request->input('room_type') ?: $request->input('roomType') ?: $request->input('suite') ?: 'Luxury Suite';
+            $totalAmount = $request->input('total_amount') ?: $request->input('totalAmount') ?: $request->input('total') ?: 0;
+            $paidAmount = $request->input('paid_amount') ?: $request->input('paidAmount') ?: $request->input('paid') ?: 0;
+            $status = $request->input('status') ?: 'confirmed';
+            $guestEmail = $request->input('guest_email') ?: $request->input('guestEmail') ?: $request->input('email');
+            $guestPhone = $request->input('guest_phone') ?: $request->input('guestPhone') ?: $request->input('phone');
+            $bookingSource = $request->input('booking_source') ?: $request->input('bookingSource') ?: 'Direct';
+            $specialRequests = $request->input('special_requests') ?: $request->input('specialRequests');
 
-        $id = $request->input('id') ?: 'bk-' . strtoupper(Str::random(6));
-        $bookingCode = $request->input('booking_code') ?: 'AUR-' . rand(1000, 9999);
+            $id = $request->input('id') ?: ('bk-' . strtoupper(Str::random(6)));
+            $bookingCode = $request->input('booking_code') ?: $request->input('bookingCode') ?: ('AUR-' . rand(1000, 9999));
 
-        $booking = Booking::create(array_merge($request->all(), [
-            'id' => $id,
-            'booking_code' => $bookingCode,
-        ]));
+            $booking = Booking::create([
+                'id' => $id,
+                'booking_code' => $bookingCode,
+                'guest_name' => $guestName,
+                'guest_email' => $guestEmail,
+                'guest_phone' => $guestPhone,
+                'check_in_date' => $checkIn,
+                'check_out_date' => $checkOut,
+                'room_number' => $roomNumber,
+                'room_type' => $roomType,
+                'total_amount' => $totalAmount,
+                'paid_amount' => $paidAmount,
+                'status' => $status,
+                'booking_source' => $bookingSource,
+                'special_requests' => $specialRequests,
+            ]);
 
-        // If walk-in or immediate check-in, update room status
-        if ($booking->room_number && in_array($booking->status, ['checked_in', 'occupied'])) {
-            Room::where('room_number', $booking->room_number)->update(['status' => 'occupied']);
+            // If walk-in or immediate check-in, update room status
+            if ($booking->room_number && in_array($booking->status, ['checked_in', 'occupied'])) {
+                Room::where('room_number', $booking->room_number)->update(['status' => 'occupied']);
+            }
+
+            return response()->json($booking, 201);
+        } catch (\Throwable $e) {
+            Log::error('createBooking error: ' . $e->getMessage());
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
-
-        return response()->json($booking, 201);
     }
 
     public function updateBooking(Request $request, $id)
