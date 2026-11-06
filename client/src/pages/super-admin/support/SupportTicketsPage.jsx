@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
@@ -7,6 +7,8 @@ import { Modal } from '../../../components/ui/Modal';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { initialSupportTickets } from '../../../data/mockSuperAdminModules';
 import { useToast } from '../../../context/ToastContext';
+import { useERP } from '../../../context/ERPContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   HelpCircle,
   MessageSquare,
@@ -26,6 +28,7 @@ import {
 export const SupportTicketsPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { supportTickets: erpSupportTickets = [], updateSupportTicketStatus } = useERP();
   const [tickets, setTickets] = useState(() => {
     try {
       const stored = localStorage.getItem('lazfort_support_tickets');
@@ -33,6 +36,18 @@ export const SupportTicketsPage = () => {
     } catch {}
     return initialSupportTickets || [];
   });
+
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getSupportTickets().then(data => {
+      if (isMounted && Array.isArray(data) && data.length > 0) {
+        setTickets(data);
+      }
+    }).catch(() => {});
+
+    return () => { isMounted = false; };
+  }, []);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');

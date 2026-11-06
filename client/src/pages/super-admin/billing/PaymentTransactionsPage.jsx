@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
@@ -7,6 +7,8 @@ import { Modal } from '../../../components/ui/Modal';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { initialPaymentTransactions } from '../../../data/mockSuperAdminModules';
 import { useToast } from '../../../context/ToastContext';
+import { useERP } from '../../../context/ERPContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   CreditCard,
   DollarSign,
@@ -23,8 +25,29 @@ import {
 export const PaymentTransactionsPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { payments = [] } = useERP();
   const [transactions, setTransactions] = useState(initialPaymentTransactions || []);
   const [methodFilter, setMethodFilter] = useState('all');
+
+  useEffect(() => {
+    hotelApi.getPayments().then(res => {
+      if (Array.isArray(res) && res.length > 0) {
+        const mapped = res.map((p, idx) => ({
+          id: p.id || `tx-${idx}`,
+          transactionId: p.transaction_ref || p.transactionRef || `TXN-2026-${98100 + idx}`,
+          reference: p.booking_id ? `RES-${p.booking_id}` : 'General Settlement',
+          clientName: p.guest_name || p.guestName || 'Distinguished Guest',
+          hotelName: p.hotel_name || 'Lazfort Sovereign Portfolio',
+          paymentMethod: p.payment_method || p.paymentMethod || 'Amex Centurion',
+          date: p.payment_date || p.date || new Date().toISOString().replace('T', ' ').slice(0, 16),
+          amount: Number(p.amount) || 0,
+          currency: 'USD',
+          status: p.status || 'paid',
+        }));
+        setTransactions([...mapped, ...initialPaymentTransactions]);
+      }
+    }).catch(() => {});
+  }, [payments.length]);
 
   // Computed KPI Metrics
   const totalVolume = useMemo(

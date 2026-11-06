@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useERP } from '../../context/ERPContext';
 import { useToast } from '../../context/ToastContext';
+import { CurrencySelect } from '../../components/common/CurrencySelect';
 import {
   Building2,
   ArrowLeft,
@@ -27,6 +28,7 @@ export const AddHotelPage = () => {
   const [formLocation, setFormLocation] = useState('Palm Jumeirah, Dubai, UAE');
   const [formRooms, setFormRooms] = useState('80');
   const [formPlan, setFormPlan] = useState('Palace Enterprise ($4,900/mo)');
+  const [formCurrency, setFormCurrency] = useState('USD');
   const [formAdminName, setFormAdminName] = useState('Baroness Camille Beaumont');
   const [formAdminEmail, setFormAdminEmail] = useState('gm@resort.com');
   const [formAdminContact, setFormAdminContact] = useState('+1 (800) 555-0199');
@@ -60,6 +62,7 @@ export const AddHotelPage = () => {
         location: formLocation.trim(),
         totalRooms: Number(formRooms),
         subscriptionPlan: formPlan.split(' (')[0],
+        currencyCode: formCurrency,
         adminName: formAdminName.trim() || 'General Manager',
         adminEmail: formAdminEmail.trim() || 'gm@resort.com',
         adminContact: formAdminContact.trim() || '+1 (800) 555-0199',
@@ -199,8 +202,8 @@ export const AddHotelPage = () => {
             </div>
           </div>
 
-          {/* Row 2: Total Suites & Subscription Tier */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Row 2: Total Suites, Subscription Tier & Currency */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-[11px] font-bold tracking-wider uppercase text-charcoal dark:text-gray-200">
@@ -232,7 +235,7 @@ export const AddHotelPage = () => {
                   SUBSCRIPTION TIER <span className="text-rose-500">*</span>
                 </label>
                 <span className="text-[11px] text-charcoal-muted dark:text-gray-400">
-                  Platform feature clearance tier
+                  Platform clearance tier
                 </span>
               </div>
               <select
@@ -245,6 +248,13 @@ export const AddHotelPage = () => {
                 <option value="Boutique Heritage ($1,400/mo)">Boutique Heritage ($1,400/mo)</option>
               </select>
             </div>
+
+            <CurrencySelect
+              value={formCurrency}
+              onChange={setFormCurrency}
+              label="PROPERTY CURRENCY"
+              helperText="Global pricing unit"
+            />
           </div>
 
           {/* Row 3: General Manager Name */}

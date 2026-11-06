@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader, Button, SearchBar, Select, StatusBadge, Pagination, EmptyState, ConfirmDialog } from '../../components/ui';
 import { HotelCard } from '../../components/hotel/HotelCard';
 import { DataTable } from '../../components/data-display/DataTable';
 import { useERP } from '../../context/ERPContext';
 import { useToast } from '../../context/ToastContext';
+import { hotelApi } from '../../services/hotelApi';
 import {
   Plus,
   LayoutGrid,
@@ -22,6 +23,13 @@ export const HotelsListPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [deleteHotelId, setDeleteHotelId] = useState(null);
+
+  // Trigger getHotels with caching
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getHotels().catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   const handleConfirmDelete = () => {
     if (!deleteHotelId) return;

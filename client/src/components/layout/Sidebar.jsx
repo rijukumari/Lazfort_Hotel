@@ -414,7 +414,14 @@ export const Sidebar = ({
                     <NavLink
                       to={hasChildren ? (item.children?.[0]?.path || item.path) : item.path}
                       end
-                      onClick={handleMobileClose}
+                      onClick={(e) => {
+                        const targetPath = hasChildren ? (item.children?.[0]?.path || item.path) : item.path;
+                        if (location.pathname === targetPath) {
+                          e.preventDefault();
+                          return;
+                        }
+                        handleMobileClose();
+                      }}
                       className={({ isActive }) => {
                         const isCurrentlyActive = isActive || active;
                         return `w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 group relative ${
@@ -465,7 +472,13 @@ export const Sidebar = ({
                             key={child.id}
                             to={child.path}
                             end
-                            onClick={handleMobileClose}
+                            onClick={(e) => {
+                              if (location.pathname === child.path) {
+                                e.preventDefault();
+                                return;
+                              }
+                              handleMobileClose();
+                            }}
                             className={() => {
                               return `w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-all duration-150 text-left ${
                                 childActive

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/ui';
 import { mockActiveSubscriptions } from '../../data/mockSubscriptions';
@@ -6,6 +6,7 @@ import { SubscriptionTable } from '../../components/subscription/SubscriptionTab
 import { SearchFilter } from '../../components/subscription/SearchFilter';
 import { SubscriptionNavTabs } from '../../components/subscription/SubscriptionNavTabs';
 import { StatCard, StatsGrid } from '../../components/ui/StatCard';
+import { hotelApi } from '../../services/hotelApi';
 import {
   AlertTriangle,
   DollarSign,
@@ -14,7 +15,24 @@ import {
 
 export const ActiveSubscriptionsPage = () => {
   const navigate = useNavigate();
-  const [subscriptions] = useState(mockActiveSubscriptions);
+  const [subscriptions, setSubscriptions] = useState(mockActiveSubscriptions);
+
+  // Fetch active subscriptions from Laravel MySQL backend with caching
+  useEffect(() => {
+    let isMounted = true;
+    const fetchActiveSubs = async () => {
+      try {
+        const subs = await hotelApi.getSubscriptions('active');
+        if (isMounted && Array.isArray(subs) && subs.length > 0) {
+          setSubscriptions(subs);
+        }
+      } catch (err) {
+        console.warn('[ActiveSubscriptionsPage] Backend unavailable, using fallback', err);
+      }
+    };
+    fetchActiveSubs();
+    return () => { isMounted = false; };
+  }, []);
 
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState('');

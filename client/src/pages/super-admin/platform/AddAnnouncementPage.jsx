@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { initialAnnouncements } from '../../../data/mockSuperAdminModules';
 import { useToast } from '../../../context/ToastContext';
+import { useERP } from '../../../context/ERPContext';
 import { FormField, Input, Select, Textarea, Button, Card } from '../../../components/ui';
 import {
   ArrowLeft,
@@ -21,6 +22,7 @@ export const AddAnnouncementPage = () => {
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { addAnnouncement } = useERP();
 
   const getStoredAnnouncements = () => {
     try {
@@ -112,6 +114,7 @@ export const AddAnnouncementPage = () => {
           readCount: 0,
         };
         updatedList = [newItem, ...currentList];
+        addAnnouncement?.(newItem);
       }
       localStorage.setItem('lazfort_announcements', JSON.stringify(updatedList));
 

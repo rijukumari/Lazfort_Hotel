@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { useToast } from '../../../context/ToastContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   Activity,
   CheckCircle2,
@@ -16,15 +17,29 @@ import {
 export const SystemHealthPage = () => {
   const { showToast } = useToast();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastCheck, setLastCheck] = useState('Just now (2026-10-28 20:30 UTC)');
+  const [lastCheck, setLastCheck] = useState('Online (MySQL Verified)');
+  const [dbStatus, setDbStatus] = useState('healthy');
 
-  const handleRefresh = () => {
+  useEffect(() => {
+    hotelApi.checkDb().then(res => {
+      if (res?.database_connected) {
+        setDbStatus(`Connected (${res.database_name})`);
+      }
+    }).catch(() => {});
+  }, []);
+
+  const handleRefresh = async () => {
     setIsRefreshing(true);
-    setTimeout(() => {
+    try {
+      const res = await hotelApi.checkDb();
       setIsRefreshing(false);
-      setLastCheck(new Date().toLocaleTimeString() + ' (Diagnostics Healthy)');
-      showToast('Diagnostics Completed', 'All 18 platform microservices and database shards operating within optimal parameters.', 'success');
-    }, 700);
+      setLastCheck(new Date().toLocaleTimeString() + ` (DB: ${res?.database_name || 'hotel_erp'} OK)`);
+      setDbStatus(`Connected (${res?.database_name || 'hotel_erp'})`);
+      showToast('Live Diagnostics Completed', `MySQL Database "${res?.database_name}" is online with all core tables active.`, 'success');
+    } catch {
+      setIsRefreshing(false);
+      showToast('Diagnostics Alert', 'Backend server responding with warnings.', 'info');
+    }
   };
 
   return (

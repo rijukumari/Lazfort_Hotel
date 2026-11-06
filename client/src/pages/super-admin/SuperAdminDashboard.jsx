@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader, Button, StatusBadge } from '../../components/ui';
 import { StatCard, StatsGrid } from '../../components/ui/StatCard';
 import { SimpleAreaChart, SimpleBarChart } from '../../components/data-display/SimpleChart';
@@ -8,11 +8,35 @@ import { Plus, ArrowUpRight, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../context/ToastContext';
 import { useERP } from '../../context/ERPContext';
+import { hotelApi } from '../../services/hotelApi';
 
 export const SuperAdminDashboard = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { hotels } = useERP();
+  const [dashboardMetrics, setDashboardMetrics] = useState(null);
+  const [revenueChartData, setRevenueChartData] = useState(monthlyRevenueData);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    hotelApi.getSuperAdminStats()
+      .then(res => {
+        if (isMounted && res?.status === 'success' && res.metrics) {
+          setDashboardMetrics(res.metrics);
+          if (Array.isArray(res.monthlyRevenue)) {
+            setRevenueChartData(res.monthlyRevenue);
+          }
+        }
+      })
+      .catch(err => {
+        console.warn('Could not load live dashboard stats from MySQL:', err.message);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const hotelColumns = [
     {
@@ -110,28 +134,34 @@ export const SuperAdminDashboard = () => {
       <StatsGrid columns={4}>
         <StatCard
           title="Consolidated Platform Revenue"
-          value={superAdminMetrics.totalRevenue}
+          value={dashboardMetrics ? (
+            typeof dashboardMetrics.totalRevenue === 'number'
+              ? `$${dashboardMetrics.totalRevenue >= 1000000 
+                  ? (dashboardMetrics.totalRevenue / 1000000).toFixed(2) + 'M' 
+                  : dashboardMetrics.totalRevenue.toLocaleString()}`
+              : `$${dashboardMetrics.totalRevenue}`
+          ) : superAdminMetrics.totalRevenue}
           change={superAdminMetrics.revenueGrowth}
           isPositive={true}
           iconName="DollarSign"
         />
         <StatCard
-          title="Platform Active Hotels"
-          value={hotels.length}
-          change="+2 new"
+          title="Platform Registered Hotels"
+          value={dashboardMetrics ? dashboardMetrics.totalHotels : hotels.length}
+          change={dashboardMetrics ? `${dashboardMetrics.activeHotels} Active` : "+2 new"}
           isPositive={true}
           iconName="Building2"
         />
         <StatCard
-          title="Avg Sovereign Occupancy"
-          value={superAdminMetrics.avgOccupancy}
-          change="+4.2%"
+          title="Total Platform Users"
+          value={dashboardMetrics ? dashboardMetrics.totalUsers : "2,480"}
+          change={dashboardMetrics ? `${dashboardMetrics.totalAdmins} Admins` : "+4.2%"}
           isPositive={true}
           iconName="TrendingUp"
         />
         <StatCard
           title="Platform Health Score"
-          value="99.98%"
+          value={dashboardMetrics ? dashboardMetrics.healthScore : "99.98%"}
           change="Optimal"
           isPositive={true}
           iconName="ShieldCheck"

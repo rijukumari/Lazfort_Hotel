@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useERP } from '../../context/ERPContext';
 import { useToast } from '../../context/ToastContext';
 import { Button, Input, Select, FormField } from '../../components/ui';
+import { CurrencySelect } from '../../components/common/CurrencySelect';
 import {
   Building2,
   ArrowLeft,
@@ -40,6 +41,7 @@ export const EditHotelPage = () => {
   const [formRooms, setFormRooms] = useState(80);
   const [formStars, setFormStars] = useState(5);
   const [formPlan, setFormPlan] = useState('Palace Enterprise');
+  const [formCurrency, setFormCurrency] = useState('USD');
   const [formStatus, setFormStatus] = useState('active');
   const [formAdminName, setFormAdminName] = useState('');
   const [formAdminEmail, setFormAdminEmail] = useState('');
@@ -57,6 +59,7 @@ export const EditHotelPage = () => {
       setFormRooms(hotel.totalRooms);
       setFormStars(hotel.stars || 5);
       setFormPlan(hotel.subscriptionPlan);
+      setFormCurrency(hotel.currencyCode || hotel.currency_code || 'USD');
       setFormStatus(hotel.status);
       setFormAdminName(hotel.adminName || '');
       setFormAdminEmail(hotel.adminEmail || '');
@@ -127,6 +130,7 @@ export const EditHotelPage = () => {
         totalRooms: Number(formRooms),
         stars: Number(formStars),
         subscriptionPlan: formPlan,
+        currencyCode: formCurrency,
         status: formStatus,
         adminName: formAdminName.trim(),
         adminEmail: formAdminEmail.trim(),
@@ -257,7 +261,7 @@ export const EditHotelPage = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               <FormField label="Platform Plan Tier">
                 <Select
                   value={formPlan}
@@ -268,6 +272,13 @@ export const EditHotelPage = () => {
                   <option value="Boutique Elite">Boutique Elite ($1,400/mo - Up to 80 Keys)</option>
                 </Select>
               </FormField>
+
+              <CurrencySelect
+                value={formCurrency}
+                onChange={setFormCurrency}
+                label="Property Currency"
+                helperText="Dynamic pricing standard"
+              />
 
               <FormField label="Operational Status">
                 <Select

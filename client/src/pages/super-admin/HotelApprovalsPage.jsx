@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader, Tabs, SearchBar, StatusBadge, ConfirmDialog, StatCard } from '../../components/ui';
 import { useERP } from '../../context/ERPContext';
 import { useToast } from '../../context/ToastContext';
 import { DataTable } from '../../components/data-display/DataTable';
+import { hotelApi } from '../../services/hotelApi';
 import {
   FileCheck,
   Eye,
@@ -91,6 +92,13 @@ export const HotelApprovalsPage = () => {
   const [appToApprove, setAppToApprove] = useState(null);
   const [appToReject, setAppToReject] = useState(null);
   const [rejectionReasonInput, setRejectionReasonInput] = useState('');
+
+  // Trigger dedicated Hotel Approvals API on mount
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getHotelApprovals().catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   const pendingCount = applications.filter(a => a.reviewStatus === 'pending').length;
   const approvedCount = applications.filter(a => a.reviewStatus === 'approved').length;

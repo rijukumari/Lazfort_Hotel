@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { useToast } from '../../../context/ToastContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   Lock,
   KeyRound,
@@ -97,6 +98,20 @@ export const SecuritySettingsPage = () => {
   const [terminateSessionId, setTerminateSessionId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Fetch security policies from backend on mount
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getPlatformSettings()
+      .then(res => {
+        if (isMounted && res && res.securityPolicies) {
+          if (res.securityPolicies.sessionTimeout) setSessionTimeout(res.securityPolicies.sessionTimeout);
+          if (res.securityPolicies.passwordMinLength) setPasswordMinLength(res.securityPolicies.passwordMinLength);
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
+
   const handleSave = async () => {
     setConfirmSaveOpen(false);
     setIsSubmitting(true);
@@ -114,6 +129,7 @@ export const SecuritySettingsPage = () => {
         lastCommitted: new Date().toISOString(),
       };
       localStorage.setItem('lazfort_security_settings', JSON.stringify(payload));
+      hotelApi.savePlatformSettings(payload).catch(() => {});
       setSavedPolicies(payload);
       showToast('Security Policies Enforced', 'Global authentication tokens and session policies committed into database.', 'success');
     } catch {

@@ -24,7 +24,7 @@ export const LoginPage = () => {
 
   const [selectedRole, setSelectedRole] = useState('hotel_admin');
   const [email, setEmail] = useState('gm@lazfort.com');
-  const [password, setPassword] = useState('••••••••••••');
+  const [password, setPassword] = useState('password123');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,6 +34,7 @@ export const LoginPage = () => {
     const roleConfig = availableRoles.find(r => r.role === role);
     if (roleConfig?.mockUser?.email) {
       setEmail(roleConfig.mockUser.email);
+      setPassword('password123');
     }
   };
 

@@ -57,6 +57,69 @@ class AuthController extends Controller
                 if (!Schema::hasColumn('users', 'custom_id')) {
                     DB::statement("ALTER TABLE users ADD COLUMN custom_id VARCHAR(50) NULL AFTER id");
                 }
+
+                // Ensure demo/default accounts exist in MySQL users table
+                $defaultDemoAccounts = [
+                    [
+                        'name' => 'Julian St. Clair',
+                        'email' => 'julian@grandluxe-group.com',
+                        'role' => 'super_admin',
+                        'hotel_name' => 'Lazfort Global Corporate Office',
+                        'phone' => '+377 98 00 11 01',
+                    ],
+                    [
+                        'name' => 'Lord Alistair Sterling',
+                        'email' => 'gm@lazfort.com',
+                        'role' => 'hotel_admin',
+                        'hotel_name' => 'Lazfort Grand Palace & Royal Spa',
+                        'phone' => '+377 98 00 10 00',
+                    ],
+                    [
+                        'name' => 'Camilla Valente',
+                        'email' => 'camilla.v@lazfort.com',
+                        'role' => 'receptionist',
+                        'hotel_name' => 'Lazfort Grand Palace',
+                        'phone' => '+377 98 00 12 34',
+                    ],
+                    [
+                        'name' => 'Sir Alexander Kensington',
+                        'email' => 'a.kensington@capitalgroup.co.uk',
+                        'role' => 'customer',
+                        'hotel_name' => 'Lazfort Grand Palace & Royal Spa',
+                        'phone' => '+44 20 7946 0912',
+                    ],
+                    [
+                        'name' => 'Margaux Dubois',
+                        'email' => 'margaux.d@lazfort.com',
+                        'role' => 'housekeeping',
+                        'hotel_name' => 'Lazfort Grand Palace',
+                        'phone' => '+377 98 00 14 20',
+                    ],
+                    [
+                        'name' => 'Antoine Mercier',
+                        'email' => 'antoine.m@lazfort.com',
+                        'role' => 'staff',
+                        'hotel_name' => 'Lazfort Grand Palace',
+                        'phone' => '+377 98 00 15 55',
+                    ],
+                ];
+
+                foreach ($defaultDemoAccounts as $acc) {
+                    $existing = User::where('email', $acc['email'])->first();
+                    if (!$existing) {
+                        User::create([
+                            'custom_id' => 'usr-' . substr($acc['role'], 0, 2) . '-1',
+                            'name' => $acc['name'],
+                            'email' => $acc['email'],
+                            'password' => Hash::make('password123'),
+                            'role' => $acc['role'],
+                            'hotel_name' => $acc['hotel_name'],
+                            'phone' => $acc['phone'],
+                            'status' => 'active',
+                            'avatar' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+                        ]);
+                    }
+                }
             }
         } catch (\Throwable $e) {
             Log::warning('AuthController ensureUsersTable warning: ' . $e->getMessage());
@@ -175,6 +238,31 @@ class AuthController extends Controller
         $email = strtolower(trim($validated['email']));
         $user = User::where('email', $email)->first();
 
+        // If demo preset account is selected or user not yet in DB, check demo presets
+        $isDemoPlaceholderPassword = in_array($validated['password'], ['••••••••••••', 'password', 'password123', 'admin', 'admin123', 'secret123']);
+        $demoEmails = [
+            'julian@grandluxe-group.com' => ['name' => 'Julian St. Clair', 'role' => 'super_admin', 'hotel' => 'Lazfort Global Corporate Office'],
+            'gm@lazfort.com' => ['name' => 'Lord Alistair Sterling', 'role' => 'hotel_admin', 'hotel' => 'Lazfort Grand Palace & Royal Spa'],
+            'camilla.v@lazfort.com' => ['name' => 'Camilla Valente', 'role' => 'receptionist', 'hotel' => 'Lazfort Grand Palace'],
+            'a.kensington@capitalgroup.co.uk' => ['name' => 'Sir Alexander Kensington', 'role' => 'customer', 'hotel' => 'Lazfort Grand Palace & Royal Spa'],
+            'margaux.d@lazfort.com' => ['name' => 'Margaux Dubois', 'role' => 'housekeeping', 'hotel' => 'Lazfort Grand Palace'],
+            'antoine.m@lazfort.com' => ['name' => 'Antoine Mercier', 'role' => 'staff', 'hotel' => 'Lazfort Grand Palace'],
+        ];
+
+        if (!$user && isset($demoEmails[$email])) {
+            $demo = $demoEmails[$email];
+            $user = User::create([
+                'custom_id' => 'usr-' . substr($demo['role'], 0, 2) . '-1',
+                'name' => $demo['name'],
+                'email' => $email,
+                'password' => Hash::make($validated['password']),
+                'role' => $demo['role'],
+                'hotel_name' => $demo['hotel'],
+                'status' => 'active',
+                'avatar' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+            ]);
+        }
+
         if (!$user) {
             return response()->json([
                 'status' => 'error',
@@ -182,8 +270,11 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Verify password
-        if (!Hash::check($validated['password'], $user->password)) {
+        // Verify password (allow demo password tokens for quick role switcher or match hashed password)
+        $passwordMatches = Hash::check($validated['password'], $user->password) ||
+                           (isset($demoEmails[$email]) && $isDemoPlaceholderPassword);
+
+        if (!$passwordMatches) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Invalid security passcode. Clearance denied.',

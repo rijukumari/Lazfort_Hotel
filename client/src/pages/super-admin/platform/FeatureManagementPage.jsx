@@ -6,6 +6,8 @@ import { DataTable } from '../../../components/data-display/DataTable';
 import { Modal } from '../../../components/ui/Modal';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { useToast } from '../../../context/ToastContext';
+import { useERP } from '../../../context/ERPContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   Sliders,
   CheckCircle2,
@@ -139,6 +141,7 @@ const initialPlatformFeatures = [
 export const FeatureManagementPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { planFeatures = [] } = useERP();
   const [features, setFeatures] = useState(() => {
     try {
       const stored = localStorage.getItem('lazfort_platform_features');
@@ -148,6 +151,24 @@ export const FeatureManagementPage = () => {
     }
     return initialPlatformFeatures;
   });
+
+  React.useEffect(() => {
+    hotelApi.getPlanFeatures().then(res => {
+      if (Array.isArray(res) && res.length > 0) {
+        const mapped = res.map(f => ({
+          id: f.id,
+          code: f.code,
+          name: f.name,
+          category: f.category || 'Core Operations',
+          description: f.description,
+          targetTier: 'Enterprise',
+          isEnabled: f.status === 'enabled',
+          maxAllocationLimit: 'Configured via Plan',
+        }));
+        setFeatures([...mapped, ...initialPlatformFeatures]);
+      }
+    }).catch(() => {});
+  }, [planFeatures.length]);
 
   const persistFeatures = (updated) => {
     setFeatures(updated);

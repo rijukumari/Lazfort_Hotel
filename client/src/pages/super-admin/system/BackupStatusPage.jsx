@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
 import { Modal } from '../../../components/ui/Modal';
 import { initialBackupHistory } from '../../../data/mockSuperAdminModules';
 import { useToast } from '../../../context/ToastContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   HardDrive,
   CheckCircle2,
@@ -23,9 +24,25 @@ export const BackupStatusPage = () => {
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [selectedBackup, setSelectedBackup] = useState(null);
 
-  const handleRunBackup = () => {
+  // Fetch platform settings / backup status from API on mount
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getPlatformSettings().catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
+
+  const handleRunBackup = async () => {
     setIsBackingUp(true);
     showToast('Snapshot Initiated', 'Capturing immutable write-ahead log & database cluster dump...', 'info');
+
+    try {
+      await hotelApi.createAuditLog({
+        action: 'BACKUP_SNAPSHOT',
+        module: 'System & Security',
+        targetId: 'MYSQL_CLUSTER',
+        description: 'Initiated manual database snapshot backup',
+      });
+    } catch {}
 
     setTimeout(() => {
       const newBackup = {
@@ -42,7 +59,7 @@ export const BackupStatusPage = () => {
       setBackups(prev => [newBackup, ...prev]);
       setIsBackingUp(false);
       showToast('Cluster Backup Complete', 'Manual backup completed successfully with 256-bit AES encryption seal.', 'success');
-    }, 1500);
+    }, 1200);
   };
 
   const columns = [

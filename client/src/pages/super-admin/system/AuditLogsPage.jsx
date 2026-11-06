@@ -1,9 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
 import { Modal } from '../../../components/ui/Modal';
 import { useToast } from '../../../context/ToastContext';
+import { useERP } from '../../../context/ERPContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   ShieldCheck,
   Search,
@@ -93,12 +95,33 @@ const mockAuditLogs = [
 
 export const AuditLogsPage = () => {
   const { showToast } = useToast();
-  const [logs] = useState(mockAuditLogs);
+  const { auditLogs = [] } = useERP();
+  const [logs, setLogs] = useState(mockAuditLogs);
   const [searchQuery, setSearchQuery] = useState('');
   const [moduleFilter, setModuleFilter] = useState('all');
   const [resultFilter, setResultFilter] = useState('all');
 
   const [selectedLog, setSelectedLog] = useState(null);
+
+  useEffect(() => {
+    hotelApi.getAuditLogs().then(data => {
+      if (Array.isArray(data) && data.length > 0) {
+        const mapped = data.map((d, index) => ({
+          id: d.id || `log-${index}`,
+          eventId: `EVT-${d.id || (1000 + index)}`,
+          timestamp: d.created_at ? d.created_at.replace('T', ' ').slice(0, 19) : new Date().toISOString().replace('T', ' ').slice(0, 19),
+          user: d.performed_by || 'Super Administrator',
+          role: 'Super Admin',
+          action: d.action || 'SYSTEM',
+          module: d.module || 'Platform Core',
+          ipAddress: d.ip_address || '127.0.0.1 (Local)',
+          result: 'Success',
+          details: d.description || 'System operation executed.',
+        }));
+        setLogs([...mapped, ...mockAuditLogs]);
+      }
+    }).catch(() => {});
+  }, [auditLogs.length]);
 
   const filteredLogs = useMemo(() => {
     return logs.filter(l => {

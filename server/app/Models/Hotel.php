@@ -25,6 +25,7 @@ class Hotel extends Model
         'image',
         'total_rooms',
         'subscription_plan',
+        'currency_code',
         'amenities',
     ];
 
@@ -33,4 +34,3 @@ class Hotel extends Model
         'total_rooms' => 'integer',
     ];
 }
-

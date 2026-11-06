@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader, StatCard, SearchBar, Select, StatusBadge, ConfirmDialog, Button } from '../../components/ui';
 import { useERP } from '../../context/ERPContext';
 import { useToast } from '../../context/ToastContext';
 import { DataTable } from '../../components/data-display/DataTable';
+import { hotelApi } from '../../services/hotelApi';
 import {
   Activity,
   CheckCircle2,
@@ -64,6 +65,13 @@ export const HotelStatusPage = () => {
 
   // Status Change Audit History
   const [statusHistory, setStatusHistory] = useState(INITIAL_STATUS_HISTORY);
+
+  // Trigger dedicated Hotel Status API on mount
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getHotelStatuses().catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   // Filtered Hotels
   const filteredHotels = useMemo(() => {

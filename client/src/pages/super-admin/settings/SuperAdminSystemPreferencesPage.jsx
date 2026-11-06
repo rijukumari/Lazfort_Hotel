@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader, Card, Button } from '../../../components/ui';
 import { useToast } from '../../../context/ToastContext';
 import { useTheme } from '../../../context/ThemeContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   Sliders,
   Building2,
@@ -66,12 +67,26 @@ export const SuperAdminSystemPreferencesPage = () => {
 
   const [isSaving, setIsSaving] = useState(false);
 
+  // Fetch settings from API on mount
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getPlatformSettings()
+      .then(res => {
+        if (isMounted && res && Object.keys(res).length > 0) {
+          setSettings(prev => ({ ...prev, ...res }));
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
+
   const handleSave = (e) => {
     e.preventDefault();
     setIsSaving(true);
 
     setTimeout(() => {
       localStorage.setItem('lazfort_superadmin_system_preferences', JSON.stringify(settings));
+      hotelApi.savePlatformSettings(settings).catch(() => {});
       setIsSaving(false);
       showToast(
         'System Preferences Applied',

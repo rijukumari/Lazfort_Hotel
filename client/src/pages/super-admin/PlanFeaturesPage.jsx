@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader, Button, ConfirmDialog } from '../../components/ui';
 import { mockPlanFeatures } from '../../data/mockSubscriptions';
@@ -7,6 +7,7 @@ import { FeatureTable } from '../../components/subscription/FeatureTable';
 import { SearchFilter } from '../../components/subscription/SearchFilter';
 import { SubscriptionNavTabs } from '../../components/subscription/SubscriptionNavTabs';
 import { useToast } from '../../context/ToastContext';
+import { hotelApi } from '../../services/hotelApi';
 import { Plus } from 'lucide-react';
 
 export const PlanFeaturesPage = () => {
@@ -14,6 +15,13 @@ export const PlanFeaturesPage = () => {
   const { showToast } = useToast();
   const { planFeatures = mockPlanFeatures, updatePlanFeature, deletePlanFeature } = useERP();
   const features = planFeatures;
+
+  // Trigger getPlanFeatures with caching
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getPlanFeatures().catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState('');

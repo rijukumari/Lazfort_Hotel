@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
@@ -8,6 +8,7 @@ import { Button } from '../../../components/ui/Button';
 import { useERP } from '../../../context/ERPContext';
 import { useToast } from '../../../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   DollarSign,
   Receipt,
@@ -45,6 +46,14 @@ export const PlatformRevenuePage = () => {
 
   // Local state for Chart of Accounts to allow Add/Edit
   const [coaList, setCoaList] = useState(chartOfAccounts || []);
+
+  // Fetch Super Admin Stats & Payments with in-memory caching
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getSuperAdminStats().catch(() => {});
+    hotelApi.getPayments().catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   const totalReceivables = (folios || []).reduce((sum, f) => sum + (f.balanceDue || 0), 0);
   const totalCollected = (folios || []).reduce((sum, f) => sum + (f.totalPaid || 0), 0);

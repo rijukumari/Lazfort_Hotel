@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
@@ -6,6 +6,7 @@ import { Modal } from '../../../components/ui/Modal';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { useSuperAdminUsers } from '../../../context/SuperAdminUserContext';
 import { useToast } from '../../../context/ToastContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   UserCheck,
   Building2,
@@ -30,6 +31,13 @@ export const ActiveUsersPage = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [suspendingUser, setSuspendingUser] = useState(null);
   const [suspensionReason, setSuspensionReason] = useState('');
+
+  // Fetch users from API with in-memory caching
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getUsers().catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   // Only active users
   const activeUsers = useMemo(() => (users || []).filter(u => u.status === 'active'), [users]);

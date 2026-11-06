@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
@@ -7,6 +7,8 @@ import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { initialRefundRequests } from '../../../data/mockSuperAdminModules';
 import { useToast } from '../../../context/ToastContext';
+import { useERP } from '../../../context/ERPContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   RotateCcw,
   CheckCircle,
@@ -26,6 +28,7 @@ import {
 export const RefundRequestsPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { refundRequests = [], updateRefundRequestStatus } = useERP();
   const [refunds, setRefunds] = useState(() => {
     try {
       const stored = localStorage.getItem('lazfort_refund_requests');
@@ -33,6 +36,17 @@ export const RefundRequestsPage = () => {
     } catch {}
     return initialRefundRequests || [];
   });
+
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getRefundRequests().then(data => {
+      if (isMounted && Array.isArray(data) && data.length > 0) {
+        setRefunds(data);
+      }
+    }).catch(() => {});
+
+    return () => { isMounted = false; };
+  }, []);
 
   const persistRefunds = (list) => {
     setRefunds(list);
@@ -56,33 +70,36 @@ export const RefundRequestsPage = () => {
 
   const handleApprove = (id) => {
     const updated = refunds.map(r =>
-      r.id === id
+      r.id === id || r.requestId === id
         ? {
           ...r,
           status: 'approved',
-          reviewedBy: 'Lord Alistair Sterling (Super Admin)',
+          reviewedBy: 'Super Administrator',
           reviewedDate: new Date().toISOString().split('T')[0],
         }
         : r
     );
     persistRefunds(updated);
+    updateRefundRequestStatus?.(id, 'approved');
     setConfirmApproveId(null);
     showToast('Refund Approved', `Refund request ${id} approved and disbursement ledger updated.`, 'success');
   };
 
   const handleReject = () => {
     if (!rejectItem) return;
+    const targetId = rejectItem.id || rejectItem.requestId;
     const updated = refunds.map(r =>
-      r.id === rejectItem.id
+      r.id === targetId || r.requestId === targetId
         ? {
           ...r,
           status: 'rejected',
-          reviewedBy: 'Lord Alistair Sterling (Super Admin)',
+          reviewedBy: 'Super Administrator',
           reviewedDate: new Date().toISOString().split('T')[0],
         }
         : r
     );
     persistRefunds(updated);
+    updateRefundRequestStatus?.(targetId, 'rejected');
     setRejectItem(null);
     setRejectionReasonInput('');
     showToast('Refund Rejected', 'Refund claim declined with audited note.', 'info');

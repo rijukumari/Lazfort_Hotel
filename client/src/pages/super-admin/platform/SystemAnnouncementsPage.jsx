@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
@@ -6,6 +6,8 @@ import { DataTable } from '../../../components/data-display/DataTable';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { initialAnnouncements } from '../../../data/mockSuperAdminModules';
 import { useToast } from '../../../context/ToastContext';
+import { useERP } from '../../../context/ERPContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   Megaphone,
   Plus,
@@ -26,6 +28,7 @@ import {
 export const SystemAnnouncementsPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { announcements: erpAnnouncements = [], deleteAnnouncement: erpDeleteAnnouncement } = useERP();
   const [announcements, setAnnouncements] = useState(() => {
     try {
       const stored = localStorage.getItem('lazfort_announcements');
@@ -35,6 +38,17 @@ export const SystemAnnouncementsPage = () => {
     }
     return initialAnnouncements || [];
   });
+
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getAnnouncements().then(data => {
+      if (isMounted && Array.isArray(data) && data.length > 0) {
+        setAnnouncements(data);
+      }
+    }).catch(() => {});
+
+    return () => { isMounted = false; };
+  }, []);
 
   const persistAnnouncements = (list) => {
     setAnnouncements(list);
@@ -74,6 +88,7 @@ export const SystemAnnouncementsPage = () => {
     if (!deleteId) return;
     const updated = announcements.filter(a => a.id !== deleteId);
     persistAnnouncements(updated);
+    erpDeleteAnnouncement?.(deleteId);
     setDeleteId(null);
     showToast('Announcement Deleted', 'Broadcast notice removed from tenant feeds.', 'info');
   };

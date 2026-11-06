@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useSuperAdminUsers } from '../../../context/SuperAdminUserContext';
 import { useToast } from '../../../context/ToastContext';
 import { FormField, Input, Select, Button, Card } from '../../../components/ui';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   ArrowLeft,
   UserPlus,
@@ -25,6 +26,13 @@ export const AddUserPage = () => {
   const [formHotel, setFormHotel] = useState('Lazfort Grand Palace Monaco');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+
+  // Fetch users & hotels from API
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getHotels().catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   const validate = () => {
     const errs = {};

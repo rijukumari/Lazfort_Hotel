@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useERP } from '../../context/ERPContext';
 import { useToast } from '../../context/ToastContext';
 import { StatusBadge, Button, Tabs, EmptyState } from '../../components/ui';
+import { hotelApi } from '../../services/hotelApi';
 import {
   Building2,
   ArrowLeft,
@@ -25,13 +26,22 @@ export const HotelDetailPage = () => {
   const { id: paramId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { hotels, updateHotelStatus } = useERP();
+  const { hotels, updateHotelStatus, getHotelCurrencySymbol, getHotelCurrencyCode } = useERP();
   const { showToast } = useToast();
 
   const effectiveId = paramId || searchParams.get('id') || hotels[0]?.id;
   const hotel = hotels.find(h => h.id === effectiveId) || hotels[0];
+  const currencySymbol = getHotelCurrencySymbol(hotel?.id);
+  const currencyCode = getHotelCurrencyCode(hotel?.id);
 
   const [activeTab, setActiveTab] = useState('overview');
+
+  // Trigger dedicated Hotel Details API on mount
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getHotelDetails(effectiveId).catch(() => {});
+    return () => { isMounted = false; };
+  }, [effectiveId]);
 
   if (!hotel) {
     return (
@@ -273,8 +283,12 @@ export const HotelDetailPage = () => {
                 <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">{hotel.occupancyRate}%</span>
               </div>
               <div className="flex justify-between py-2 border-b border-border/60 dark:border-white/5">
+                <span className="text-charcoal-muted">Operating Currency</span>
+                <span className="font-bold text-accent font-mono">{currencyCode} ({currencySymbol})</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-border/60 dark:border-white/5">
                 <span className="text-charcoal-muted">RevPAR Index</span>
-                <span className="font-mono font-bold text-accent">$842.00</span>
+                <span className="font-mono font-bold text-accent">{currencySymbol}842.00</span>
               </div>
               <div className="flex justify-between py-2">
                 <span className="text-charcoal-muted">Guest Satisfaction</span>

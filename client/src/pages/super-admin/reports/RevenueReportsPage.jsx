@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { SimpleAreaChart } from '../../../components/data-display/SimpleChart';
 import { monthlyRevenueData } from '../../../data/mockAnalytics';
 import { useToast } from '../../../context/ToastContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   DollarSign,
   TrendingUp,
@@ -18,6 +19,24 @@ import {
 export const RevenueReportsPage = () => {
   const { showToast } = useToast();
   const [selectedPeriod, setSelectedPeriod] = useState('Annual');
+  const [backendStats, setBackendStats] = useState(null);
+
+  // Dedicated Super Admin Revenue Analytics fetch with in-memory caching
+  useEffect(() => {
+    let isMounted = true;
+    const fetchRevStats = async () => {
+      try {
+        const stats = await hotelApi.getSuperAdminStats();
+        if (isMounted && stats) {
+          setBackendStats(stats);
+        }
+      } catch (err) {
+        console.warn('[RevenueReportsPage] Using local fallback stats:', err);
+      }
+    };
+    fetchRevStats();
+    return () => { isMounted = false; };
+  }, []);
 
   const handleExportCSV = () => {
     const headers = ['Revenue Stream', 'Category', 'Fiscal Period', 'Gross Invoiced', 'Realized Settlements', 'Variance (%)'];

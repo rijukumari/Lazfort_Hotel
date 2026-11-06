@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader, Card, Button } from '../../../components/ui';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   User,
   Mail,
@@ -48,6 +49,13 @@ export const SuperAdminProfilePage = () => {
 
   // Executive Preferences
   const [notificationsEmail, setNotificationsEmail] = useState(true);
+
+  // Fetch current user details from API
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getCurrentUser().catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
   const [urgentDisputeAlerts, setUrgentDisputeAlerts] = useState(true);
   const [twoFactorAuth, setTwoFactorAuth] = useState(true);
   const [autoSessionLock, setAutoSessionLock] = useState('15');

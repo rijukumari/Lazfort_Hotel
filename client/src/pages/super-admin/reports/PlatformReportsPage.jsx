@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { SimpleAreaChart } from '../../../components/data-display/SimpleChart';
 import { monthlyRevenueData, roomCategoryDistribution } from '../../../data/mockAnalytics';
 import { useToast } from '../../../context/ToastContext';
+import { useERP } from '../../../context/ERPContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   Building2,
   Users,
@@ -18,7 +20,26 @@ import {
 
 export const PlatformReportsPage = () => {
   const { showToast } = useToast();
+  const { hotels } = useERP();
   const [dateRange, setDateRange] = useState('30d');
+  const [analyticsStats, setAnalyticsStats] = useState(null);
+  const [chartData, setChartData] = useState(monthlyRevenueData);
+
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getSuperAdminStats().then(res => {
+      if (isMounted && res?.status === 'success' && res.metrics) {
+        setAnalyticsStats(res.metrics);
+        if (Array.isArray(res.monthlyRevenue) && res.monthlyRevenue.length > 0) {
+          setChartData(res.monthlyRevenue);
+        }
+      }
+    }).catch(err => {
+      console.warn('[PlatformReportsPage] Analytics API error:', err.message);
+    });
+
+    return () => { isMounted = false; };
+  }, [dateRange]);
 
   const handleExportCSV = () => {
     const headers = ['Property', 'Region', 'Suites', 'Occupancy (%)', 'Gross Revenue (USD)', 'ADR'];
@@ -83,7 +104,7 @@ export const PlatformReportsPage = () => {
       <StatsGrid cols={5}>
         <StatCard
           title="Connected Hotels"
-          value="18"
+          value={analyticsStats ? analyticsStats.totalHotels : (hotels?.length || 18)}
           change="+16.6%"
           isPositive={true}
           period="portfolio resorts"
@@ -91,7 +112,7 @@ export const PlatformReportsPage = () => {
         />
         <StatCard
           title="Active Operator Users"
-          value="184"
+          value={analyticsStats ? analyticsStats.totalUsers : 184}
           change="+8.2%"
           isPositive={true}
           period="staff credentials"
@@ -99,7 +120,7 @@ export const PlatformReportsPage = () => {
         />
         <StatCard
           title="Active Subscriptions"
-          value="16"
+          value={analyticsStats ? analyticsStats.activeSubscriptions || 16 : 16}
           change="+100%"
           isPositive={true}
           period="enterprise billing"
@@ -107,7 +128,11 @@ export const PlatformReportsPage = () => {
         />
         <StatCard
           title="Portfolio Gross Rev"
-          value="$5,470,000"
+          value={analyticsStats ? (
+            typeof analyticsStats.totalRevenue === 'number'
+              ? `$${(analyticsStats.totalRevenue).toLocaleString()}`
+              : `$${analyticsStats.totalRevenue}`
+          ) : "$5,470,000"}
           change="+18.4%"
           isPositive={true}
           period="30-day realized"
@@ -115,7 +140,7 @@ export const PlatformReportsPage = () => {
         />
         <StatCard
           title="Active Global Bookings"
-          value="3,842"
+          value={analyticsStats ? analyticsStats.totalBookings : 3842}
           change="+12.6%"
           isPositive={true}
           period="across all properties"
@@ -151,7 +176,7 @@ export const PlatformReportsPage = () => {
 
           <div className="py-2">
             <SimpleAreaChart
-              data={monthlyRevenueData}
+              data={chartData}
               height={260}
               valuePrefix="$"
               color="#C6A66B"

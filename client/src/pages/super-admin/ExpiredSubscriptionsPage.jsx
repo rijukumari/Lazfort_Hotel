@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/ui';
 import { mockExpiredSubscriptions } from '../../data/mockSubscriptions';
@@ -7,6 +7,7 @@ import { SearchFilter } from '../../components/subscription/SearchFilter';
 import { SubscriptionNavTabs } from '../../components/subscription/SubscriptionNavTabs';
 import { StatCard, StatsGrid } from '../../components/ui/StatCard';
 import { useToast } from '../../context/ToastContext';
+import { hotelApi } from '../../services/hotelApi';
 import {
   Clock,
   RotateCw,
@@ -19,6 +20,23 @@ export const ExpiredSubscriptionsPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [expiredSubs, setExpiredSubs] = useState(mockExpiredSubscriptions);
+
+  // Fetch expired subscriptions from Laravel MySQL backend with caching
+  useEffect(() => {
+    let isMounted = true;
+    const fetchExpiredSubs = async () => {
+      try {
+        const subs = await hotelApi.getSubscriptions('expired');
+        if (isMounted && Array.isArray(subs) && subs.length > 0) {
+          setExpiredSubs(subs);
+        }
+      } catch (err) {
+        console.warn('[ExpiredSubscriptionsPage] Backend unavailable, using fallback', err);
+      }
+    };
+    fetchExpiredSubs();
+    return () => { isMounted = false; };
+  }, []);
 
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState('');

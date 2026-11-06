@@ -28,7 +28,17 @@ import {
   mockRestaurantBills,
 } from '../data/mockRestaurantData';
 import { useAuth } from './AuthContext';
-import { hotelApi } from '../services/hotelApi';
+import { hotelApi, invalidateApiCache } from '../services/hotelApi';
+import { DEFAULT_CURRENCIES, getCurrencySymbol } from '../data/mockCurrencies';
+import {
+  initialPaymentTransactions,
+  initialRefundRequests,
+  initialBillingInvoices,
+  initialAnnouncements,
+  initialSupportTickets,
+  initialComplaints,
+  initialContactRequests,
+} from '../data/mockSuperAdminModules';
 
 const STORAGE_KEY = 'lazfort_erp_database_v1';
 
@@ -139,24 +149,31 @@ export const ERPProvider = ({ children }) => {
   const [staff, setStaff] = useState(() => loadInitialData('staff', mockStaff));
   const [subscriptionPlans, setSubscriptionPlans] = useState(() => loadInitialData('plans', mockSubscriptionPlans));
   const [planFeatures, setPlanFeatures] = useState(() => loadInitialData('features', mockPlanFeatures));
+  const [currencies, setCurrencies] = useState(() => loadInitialData('currencies', DEFAULT_CURRENCIES));
+  const [refundRequests, setRefundRequests] = useState(() => loadInitialData('refund_requests', initialRefundRequests));
+  const [announcements, setAnnouncements] = useState(() => loadInitialData('announcements', initialAnnouncements));
+  const [supportTickets, setSupportTickets] = useState(() => loadInitialData('support_tickets', initialSupportTickets));
+  const [complaints, setComplaints] = useState(() => loadInitialData('complaints', initialComplaints));
+  const [contactRequests, setContactRequests] = useState(() => loadInitialData('contact_requests', initialContactRequests));
+  const [platformSettings, setPlatformSettings] = useState(() => loadInitialData('platform_settings', {}));
 
-  // Initial fetch from Laravel MySQL backend on mount
+  // Initial fetch from Laravel MySQL backend on mount: only essential session items (currencies & active hotel context)
   useEffect(() => {
     let isMounted = true;
     const fetchBackendData = async () => {
       try {
-        const [apiHotels, apiRooms, apiBookings, apiGuests, apiPayments, apiInvoices, apiStaff, apiHousekeeping] = await Promise.allSettled([
+        const [apiCurrencies, apiHotels] = await Promise.allSettled([
+          hotelApi.getCurrencies(),
           hotelApi.getHotels(),
-          hotelApi.getRooms(),
-          hotelApi.getBookings(),
-          hotelApi.getGuests(),
-          hotelApi.getPayments(),
-          hotelApi.getInvoices(),
-          hotelApi.getStaff(),
-          hotelApi.getHousekeepingTasks(),
         ]);
 
         if (!isMounted) return;
+
+        // If backend returned currencies, sync them
+        if (apiCurrencies.status === 'fulfilled' && Array.isArray(apiCurrencies.value) && apiCurrencies.value.length > 0) {
+          setCurrencies(apiCurrencies.value);
+          localStorage.setItem(`${STORAGE_KEY}_currencies`, JSON.stringify(apiCurrencies.value));
+        }
 
         // If backend returned hotels, sync them
         if (apiHotels.status === 'fulfilled' && Array.isArray(apiHotels.value) && apiHotels.value.length > 0) {
@@ -164,94 +181,18 @@ export const ERPProvider = ({ children }) => {
             ...h,
             totalRooms: h.total_rooms || h.totalRooms || 0,
             subscriptionPlan: h.subscription_plan || h.subscriptionPlan || 'Enterprise Luxury',
-          })));
-        }
-
-        // If backend returned invoices, sync them
-        if (apiInvoices.status === 'fulfilled' && Array.isArray(apiInvoices.value) && apiInvoices.value.length > 0) {
-          setInvoices(apiInvoices.value.map(inv => ({
-            ...inv,
-            invoiceNumber: inv.invoice_number || inv.invoiceNumber,
-            totalAmount: inv.total_amount || inv.totalAmount,
-            amountPaid: inv.amount_paid || inv.amountPaid,
-            guestName: inv.guest_name || inv.guestName,
-          })));
-        }
-
-        // If backend returned staff, sync them
-        if (apiStaff.status === 'fulfilled' && Array.isArray(apiStaff.value) && apiStaff.value.length > 0) {
-          setStaff(apiStaff.value.map(s => ({
-            ...s,
-            employeeCode: s.employee_code || s.employeeCode,
-            joiningDate: s.joining_date || s.joiningDate,
-          })));
-        }
-
-        // If backend returned rooms, sync them
-        if (apiRooms.status === 'fulfilled' && Array.isArray(apiRooms.value) && apiRooms.value.length > 0) {
-          setRooms(apiRooms.value.map(r => ({
-            ...r,
-            roomNumber: r.room_number || r.roomNumber,
-            pricePerNight: r.price || r.pricePerNight,
-          })));
-        } else if (apiRooms.status === 'fulfilled' && Array.isArray(apiRooms.value) && apiRooms.value.length === 0) {
-          // If database is empty, seed initial data to MySQL
-          hotelApi.seedInitialData({
-            hotels: mockHotels,
-            rooms: mockRooms,
-            bookings: mockBookings,
-            guests: mockGuests,
-            payments: initialPayments,
-            invoices: mockInvoices,
-          }).catch(() => {});
-        }
-
-        // If backend returned bookings, sync them
-        if (apiBookings.status === 'fulfilled' && Array.isArray(apiBookings.value) && apiBookings.value.length > 0) {
-          setBookings(apiBookings.value.map(b => ({
-            ...b,
-            bookingCode: b.booking_code || b.bookingCode,
-            guestName: b.guest_name || b.guestName,
-            guestEmail: b.guest_email || b.guestEmail,
-            guestPhone: b.guest_phone || b.guestPhone,
-            roomNumber: b.room_number || b.roomNumber,
-            roomType: b.room_type || b.roomType,
-            checkInDate: b.check_in_date || b.checkInDate,
-            checkOutDate: b.check_out_date || b.checkOutDate,
-            totalAmount: b.total_amount || b.totalAmount,
-            paidAmount: b.paid_amount || b.paidAmount,
-            paymentStatus: b.payment_status || b.paymentStatus,
-          })));
-        }
-
-        // If backend returned guests, sync them
-        if (apiGuests.status === 'fulfilled' && Array.isArray(apiGuests.value) && apiGuests.value.length > 0) {
-          setGuests(apiGuests.value.map(g => ({
-            ...g,
-            vipTier: g.vip_tier || g.vipTier,
-            totalStays: g.total_stays || g.totalStays,
-            totalSpent: g.total_spent || g.totalSpent,
-          })));
-        }
-
-        // If backend returned payments, sync them
-        if (apiPayments.status === 'fulfilled' && Array.isArray(apiPayments.value) && apiPayments.value.length > 0) {
-          setPayments(apiPayments.value.map(p => ({
-            ...p,
-            transactionRef: p.transaction_ref || p.transactionRef,
-            guestName: p.guest_name || p.guestName,
-            roomNumber: p.room_number || p.roomNumber,
-            paymentMethod: p.payment_method || p.paymentMethod,
-            date: p.payment_date || p.date,
+            currencyCode: h.currency_code || h.currencyCode || 'USD',
           })));
         }
       } catch (err) {
-        console.info('[Hotel ERP] Running in offline / local cache mode:', err.message);
+        console.warn('ERPContext initial sync deferred:', err);
       }
     };
 
     fetchBackendData();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Auto-sync state to localStorage
@@ -375,6 +316,98 @@ export const ERPProvider = ({ children }) => {
       ipAddress: '127.0.0.1 (Internal Gateway)',
     };
     setAuditLogs(prev => [newLog, ...prev]);
+
+    // Persist to Laravel REST API + MySQL database
+    hotelApi.createAuditLog({
+      action,
+      module,
+      targetId: recordId,
+      description,
+      performedBy: user?.name || 'Super Administrator',
+    }).catch(() => {});
+  };
+
+  // =========================================================================
+  // CURRENCIES MANAGEMENT (CRUD & RESOLVER)
+  // =========================================================================
+  const addCurrency = async (currencyData) => {
+    const code = (currencyData.currency_code || currencyData.currencyCode || '').toUpperCase().trim();
+    const newCurr = {
+      ...currencyData,
+      currency_code: code,
+      currency_name: currencyData.currency_name || currencyData.currencyName,
+      currency_symbol: currencyData.currency_symbol || currencyData.currencySymbol,
+      id: currencyData.id || Date.now(),
+      is_default: false,
+      is_active: true,
+    };
+
+    setCurrencies(prev => {
+      const exists = prev.some(c => c.currency_code?.toUpperCase() === code);
+      if (exists) return prev;
+      const updated = [...prev, newCurr];
+      localStorage.setItem(`${STORAGE_KEY}_currencies`, JSON.stringify(updated));
+      return updated;
+    });
+
+    try {
+      const res = await hotelApi.createCurrency(newCurr);
+      if (res && res.id) {
+        setCurrencies(prev => prev.map(c => c.currency_code === code ? res : c));
+      }
+    } catch (err) {
+      console.warn('Could not persist currency to MySQL:', err.message);
+    }
+
+    logAudit('CREATE', 'Currencies', code, `Added custom currency ${newCurr.currency_name} (${code} - ${newCurr.currency_symbol})`);
+    return { success: true, currency: newCurr };
+  };
+
+  const updateCurrency = async (id, data) => {
+    setCurrencies(prev => {
+      const updated = prev.map(c => (c.id === id || c.currency_code === id ? { ...c, ...data } : c));
+      localStorage.setItem(`${STORAGE_KEY}_currencies`, JSON.stringify(updated));
+      return updated;
+    });
+    try {
+      await hotelApi.updateCurrency(id, data);
+    } catch (err) {
+      console.warn('Could not update currency in MySQL:', err.message);
+    }
+    logAudit('UPDATE', 'Currencies', id, `Updated currency details for ${id}`);
+    return { success: true };
+  };
+
+  const deleteCurrency = async (id) => {
+    setCurrencies(prev => {
+      const updated = prev.filter(c => c.id !== id && c.currency_code !== id);
+      localStorage.setItem(`${STORAGE_KEY}_currencies`, JSON.stringify(updated));
+      return updated;
+    });
+    try {
+      await hotelApi.deleteCurrency(id);
+    } catch (err) {
+      console.warn('Could not delete currency in MySQL:', err.message);
+    }
+    logAudit('DELETE', 'Currencies', id, `Removed custom currency ${id}`);
+    return { success: true };
+  };
+
+  /**
+   * Helper to resolve the active hotel's currency symbol dynamically
+   * Priority: passed hotelId -> logged-in user's hotelId -> active property -> fallback USD ($)
+   */
+  const getHotelCurrencySymbol = (hotelId) => {
+    const targetHotelId = hotelId || user?.hotelId || 'hotel-001';
+    const targetHotel = hotels.find(h => h.id === targetHotelId);
+    const code = targetHotel?.currencyCode || targetHotel?.currency_code || 'USD';
+    return getCurrencySymbol(code, currencies);
+  };
+
+  const getHotelCurrencyCode = (hotelId) => {
+    const targetHotelId = hotelId || user?.hotelId || 'hotel-001';
+    const targetHotel = hotels.find(h => h.id === targetHotelId);
+    return targetHotel?.currencyCode || targetHotel?.currency_code || 'USD';
   };
 
   // =========================================================================
@@ -396,6 +429,7 @@ export const ERPProvider = ({ children }) => {
         location: newHotel.location,
         total_rooms: Number(newHotel.totalRooms || 0),
         subscription_plan: newHotel.subscriptionPlan || 'Palace Enterprise',
+        currency_code: newHotel.currencyCode || 'USD',
         status: newHotel.status || 'active',
         brand: newHotel.brand || 'Lazfort Sovereign Portfolio',
         phone: newHotel.adminContact || newHotel.phone || '+1 (800) 555-0199',
@@ -407,6 +441,7 @@ export const ERPProvider = ({ children }) => {
     }
 
     logAudit('CREATE', 'Platform Setting', newHotel.id, `Onboarded new luxury property: ${newHotel.name}`);
+    invalidateApiCache('/super-admin/dashboard-stats');
     return { success: true, message: `Successfully onboarded ${newHotel.name}`, hotel: newHotel };
   };
 
@@ -422,7 +457,12 @@ export const ERPProvider = ({ children }) => {
     setHotels(prev =>
       prev.map(h => (h.id === hotelId ? { ...h, ...data } : h))
     );
-    hotelApi.updateHotel(hotelId, data).catch(() => {});
+    hotelApi.updateHotel(hotelId, {
+      ...data,
+      ...(data.currencyCode ? { currency_code: data.currencyCode } : {}),
+      ...(data.totalRooms ? { total_rooms: data.totalRooms } : {}),
+      ...(data.subscriptionPlan ? { subscription_plan: data.subscriptionPlan } : {}),
+    }).catch(() => {});
     logAudit('UPDATE', 'Platform Setting', hotelId, `Updated property details for ${data?.name || hotelId}`);
   };
 
@@ -430,6 +470,7 @@ export const ERPProvider = ({ children }) => {
     setHotels(prev => prev.filter(h => h.id !== hotelId));
     hotelApi.deleteHotel(hotelId).catch(() => {});
     logAudit('DELETE', 'Platform Setting', hotelId, `Removed hotel property ${hotelId}`);
+    invalidateApiCache('/super-admin/dashboard-stats');
     return { success: true };
   };
 
@@ -1865,7 +1906,7 @@ export const ERPProvider = ({ children }) => {
     return { success: true };
   };
 
-  const addSubscriptionPlan = (data) => {
+  const addSubscriptionPlan = async (data) => {
     const newPlan = {
       ...data,
       id: data.id || `plan-${Date.now()}`,
@@ -1873,18 +1914,42 @@ export const ERPProvider = ({ children }) => {
     };
     setSubscriptionPlans(prev => [newPlan, ...prev]);
     logAudit('CREATE', 'Platform Management', newPlan.id, `Created subscription plan ${newPlan.name} (${newPlan.tierCode}).`);
+
+    try {
+      await hotelApi.createSubscriptionPlan(newPlan);
+    } catch (e) {
+      console.warn('Could not persist plan to MySQL backend:', e.message);
+    }
     return { success: true, plan: newPlan };
   };
 
-  const updateSubscriptionPlan = (planId, data) => {
+  const updateSubscriptionPlan = async (planId, data) => {
     setSubscriptionPlans(prev =>
       prev.map(p => (p.id === planId ? { ...p, ...data } : p))
     );
     logAudit('UPDATE', 'Platform Management', planId, `Updated subscription plan ${data?.name || planId}.`);
+
+    try {
+      await hotelApi.updateSubscriptionPlan(planId, data);
+    } catch (e) {
+      console.warn('Could not persist plan update to MySQL backend:', e.message);
+    }
     return { success: true };
   };
 
-  const addPlanFeature = (data) => {
+  const deleteSubscriptionPlan = async (planId) => {
+    setSubscriptionPlans(prev => prev.filter(p => p.id !== planId));
+    logAudit('DELETE', 'Platform Management', planId, `Removed subscription tier ${planId}`);
+
+    try {
+      await hotelApi.deleteSubscriptionPlan(planId);
+    } catch (e) {
+      console.warn('Could not delete plan from MySQL backend:', e.message);
+    }
+    return { success: true };
+  };
+
+  const addPlanFeature = async (data) => {
     const newFeature = {
       ...data,
       id: data.id || `feat-${Date.now()}`,
@@ -1892,6 +1957,12 @@ export const ERPProvider = ({ children }) => {
     };
     setPlanFeatures(prev => [newFeature, ...prev]);
     logAudit('CREATE', 'Platform Management', newFeature.id, `Created feature ${newFeature.name} (${newFeature.code}).`);
+
+    try {
+      await hotelApi.createPlanFeature(newFeature);
+    } catch (e) {
+      console.warn('Could not persist feature to MySQL:', e.message);
+    }
     return { success: true, feature: newFeature };
   };
 
@@ -1900,6 +1971,175 @@ export const ERPProvider = ({ children }) => {
       prev.map(f => (f.id === featureId ? { ...f, ...data } : f))
     );
     logAudit('UPDATE', 'Platform Management', featureId, `Updated feature ${data?.name || featureId}.`);
+    return { success: true };
+  };
+
+  const deletePlanFeature = (featureId) => {
+    setPlanFeatures(prev => prev.filter(f => f.id !== featureId));
+    logAudit('DELETE', 'Platform Management', featureId, `Removed plan feature ${featureId}`);
+    return { success: true };
+  };
+
+  // Super Admin: Refunds Workflow
+  const addRefundRequest = async (data) => {
+    const newRef = {
+      ...data,
+      id: data.id || `ref-${Date.now()}`,
+      requestId: data.requestId || `REF-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+      status: data.status || 'pending',
+      requestDate: data.requestDate || new Date().toISOString().replace('T', ' ').slice(0, 16),
+    };
+    setRefundRequests(prev => [newRef, ...prev]);
+    logAudit('CREATE', 'Billing & Refunds', newRef.requestId, `Logged refund request for ${newRef.guestName} ($${newRef.requestedAmount}).`);
+
+    try {
+      await hotelApi.createRefundRequest(newRef);
+    } catch (e) {
+      console.warn('Could not persist refund request to MySQL:', e.message);
+    }
+    return { success: true, refund: newRef };
+  };
+
+  const updateRefundRequestStatus = async (refundId, status) => {
+    setRefundRequests(prev =>
+      prev.map(r => (r.id === refundId || r.requestId === refundId ? { ...r, status, reviewedDate: new Date().toISOString() } : r))
+    );
+    logAudit('UPDATE', 'Billing & Refunds', refundId, `Refund request ${refundId} marked as ${status}.`);
+
+    try {
+      await hotelApi.updateRefundRequest(refundId, { status });
+    } catch (e) {
+      console.warn('Could not update refund status in MySQL:', e.message);
+    }
+    return { success: true };
+  };
+
+  // Super Admin: Announcements Workflow
+  const addAnnouncement = async (data) => {
+    const newAnn = {
+      ...data,
+      id: data.id || `ann-${Date.now()}`,
+      createdDate: new Date().toISOString().split('T')[0],
+      status: data.status || 'Published',
+    };
+    setAnnouncements(prev => [newAnn, ...prev]);
+    logAudit('PUBLISH', 'Platform Announcements', newAnn.id, `Published announcement: ${newAnn.title}`);
+
+    try {
+      await hotelApi.createAnnouncement(newAnn);
+    } catch (e) {
+      console.warn('Could not persist announcement to MySQL:', e.message);
+    }
+    return { success: true, announcement: newAnn };
+  };
+
+  const deleteAnnouncement = async (annId) => {
+    setAnnouncements(prev => prev.filter(a => a.id !== annId));
+    logAudit('DELETE', 'Platform Announcements', annId, `Removed announcement ${annId}`);
+
+    try {
+      await hotelApi.deleteAnnouncement(annId);
+    } catch (e) {
+      console.warn('Could not delete announcement from MySQL:', e.message);
+    }
+    return { success: true };
+  };
+
+  // Super Admin: Support Tickets & Complaints
+  const addSupportTicket = async (data) => {
+    const newTkt = {
+      ...data,
+      id: data.id || `tkt-${Date.now()}`,
+      ticketId: data.ticketId || `TKT-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+      createdDate: new Date().toISOString().replace('T', ' ').slice(0, 16),
+      status: data.status || 'open',
+    };
+    setSupportTickets(prev => [newTkt, ...prev]);
+    logAudit('CREATE', 'Support Tickets', newTkt.ticketId, `Raised ticket: ${newTkt.subject}`);
+
+    try {
+      await hotelApi.createSupportTicket(newTkt);
+    } catch (e) {
+      console.warn('Could not persist support ticket to MySQL:', e.message);
+    }
+    return { success: true, ticket: newTkt };
+  };
+
+  const updateSupportTicketStatus = async (ticketId, status) => {
+    setSupportTickets(prev =>
+      prev.map(t => (t.id === ticketId || t.ticketId === ticketId ? { ...t, status } : t))
+    );
+    logAudit('UPDATE', 'Support Tickets', ticketId, `Support ticket status updated to ${status}`);
+
+    try {
+      await hotelApi.updateSupportTicket(ticketId, { status });
+    } catch (e) {
+      console.warn('Could not update support ticket in MySQL:', e.message);
+    }
+    return { success: true };
+  };
+
+  const addComplaint = async (data) => {
+    const newCmp = {
+      ...data,
+      id: data.id || `cmp-${Date.now()}`,
+      complaintId: data.complaintId || `CMP-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+      submittedDate: new Date().toISOString().replace('T', ' ').slice(0, 16),
+      status: data.status || 'under_review',
+    };
+    setComplaints(prev => [newCmp, ...prev]);
+    logAudit('CREATE', 'Customer Complaints', newCmp.complaintId, `Registered complaint: ${newCmp.title}`);
+
+    try {
+      await hotelApi.createComplaint(newCmp);
+    } catch (e) {
+      console.warn('Could not persist complaint to MySQL:', e.message);
+    }
+    return { success: true, complaint: newCmp };
+  };
+
+  const updateComplaintStatus = async (complaintId, status) => {
+    setComplaints(prev =>
+      prev.map(c => (c.id === complaintId || c.complaintId === complaintId ? { ...c, status } : c))
+    );
+    logAudit('UPDATE', 'Customer Complaints', complaintId, `Complaint status updated to ${status}`);
+
+    try {
+      await hotelApi.updateComplaint(complaintId, { status });
+    } catch (e) {
+      console.warn('Could not update complaint in MySQL:', e.message);
+    }
+    return { success: true };
+  };
+
+  const addContactRequest = async (data) => {
+    const newReq = {
+      ...data,
+      id: data.id || `cnt-${Date.now()}`,
+      requestId: data.requestId || `REQ-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+      receivedDate: new Date().toISOString().replace('T', ' ').slice(0, 16),
+      status: 'new',
+    };
+    setContactRequests(prev => [newReq, ...prev]);
+
+    try {
+      await hotelApi.createContactRequest(newReq);
+    } catch (e) {
+      console.warn('Could not persist contact request to MySQL:', e.message);
+    }
+    return { success: true, request: newReq };
+  };
+
+  const updateContactRequestStatus = async (requestId, status) => {
+    setContactRequests(prev =>
+      prev.map(r => (r.id === requestId || r.requestId === requestId ? { ...r, status } : r))
+    );
+
+    try {
+      await hotelApi.updateContactRequest(requestId, { status });
+    } catch (e) {
+      console.warn('Could not update contact request in MySQL:', e.message);
+    }
     return { success: true };
   };
 
@@ -2313,18 +2553,6 @@ export const ERPProvider = ({ children }) => {
 
     logAudit('POST_CHARGE', 'Restaurant Billing', bill.billNumber, `Posted bill ${bill.billNumber} ($${bill.grandTotal.toLocaleString()}) to Suite ${effectiveRoomNumber} folio.`);
     return { success: true, message: `Bill #${bill.billNumber} ($${bill.grandTotal.toLocaleString()}) successfully posted to Suite ${effectiveRoomNumber} folio!` };
-  };
-
-  const deleteSubscriptionPlan = (planId) => {
-    setSubscriptionPlans(prev => prev.filter(p => p.id !== planId));
-    logAudit('DELETE', 'Platform Management', planId, `Removed subscription tier ${planId}`);
-    return { success: true };
-  };
-
-  const deletePlanFeature = (featureId) => {
-    setPlanFeatures(prev => prev.filter(f => f.id !== featureId));
-    logAudit('DELETE', 'Platform Management', featureId, `Removed plan feature ${featureId}`);
-    return { success: true };
   };
 
   // =========================================================================
@@ -2903,6 +3131,22 @@ export const ERPProvider = ({ children }) => {
         addPlanFeature,
         updatePlanFeature,
         deletePlanFeature,
+        refundRequests,
+        addRefundRequest,
+        updateRefundRequestStatus,
+        announcements,
+        addAnnouncement,
+        deleteAnnouncement,
+        supportTickets,
+        addSupportTicket,
+        updateSupportTicketStatus,
+        complaints,
+        addComplaint,
+        updateComplaintStatus,
+        contactRequests,
+        addContactRequest,
+        updateContactRequestStatus,
+        platformSettings,
         updateInventoryItem,
         deleteInventoryItem,
         cleaningTasks,
@@ -2986,6 +3230,12 @@ export const ERPProvider = ({ children }) => {
         deleteJournalEntry,
         payrollRuns,
         auditLogs,
+        currencies,
+        addCurrency,
+        updateCurrency,
+        deleteCurrency,
+        getHotelCurrencySymbol,
+        getHotelCurrencyCode,
         addRoom,
         updateRoomStatus,
         transferSuite,

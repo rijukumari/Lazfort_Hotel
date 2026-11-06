@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader, Button, StatusBadge, ConfirmDialog, EmptyState } from '../../components/ui';
 import { PlanCard } from '../../components/subscription/PlanCard';
@@ -7,6 +7,7 @@ import { SubscriptionNavTabs } from '../../components/subscription/SubscriptionN
 import { useToast } from '../../context/ToastContext';
 import { useERP } from '../../context/ERPContext';
 import { mockSubscriptionPlans } from '../../data/mockSubscriptions';
+import { hotelApi } from '../../services/hotelApi';
 import {
   Plus,
   LayoutGrid,
@@ -40,6 +41,13 @@ export const SubscriptionPlansPage = () => {
   const [sortBy, setSortBy] = useState('default');
   const [planToToggle, setPlanToToggle] = useState(null);
   const [deletePlanId, setDeletePlanId] = useState(null);
+
+  // Trigger getSubscriptionPlans with caching
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getSubscriptionPlans().catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   // Filtered & Sorted Plans
   const filteredPlans = useMemo(() => {

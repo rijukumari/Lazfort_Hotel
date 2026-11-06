@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
@@ -7,6 +7,7 @@ import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { useSuperAdminUsers } from '../../../context/SuperAdminUserContext';
 import { useToast } from '../../../context/ToastContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   UserX,
   CheckCircle,
@@ -26,6 +27,13 @@ export const SuspendedUsersPage = () => {
   const [viewingUser, setViewingUser] = useState(null);
   const [reactivateTarget, setReactivateTarget] = useState(null);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
+
+  // Fetch users from API with in-memory caching
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getUsers().catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   // Filtered to suspended
   const suspendedUsers = useMemo(() => (users || []).filter(u => u.status === 'suspended'), [users]);

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { Modal } from '../../../components/ui/Modal';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { useToast } from '../../../context/ToastContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   Sliders,
   Sparkles,
@@ -77,6 +78,20 @@ export const GlobalSettingsPage = () => {
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Fetch settings from API on mount
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getPlatformSettings()
+      .then(res => {
+        if (isMounted && res && Object.keys(res).length > 0) {
+          if (res.platformName) setPlatformName(res.platformName);
+          if (res.supportEmail) setSupportEmail(res.supportEmail);
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
+
   const handleSave = async () => {
     setConfirmSaveOpen(false);
     if (!platformName.trim() || !supportEmail.trim()) {
@@ -106,6 +121,7 @@ export const GlobalSettingsPage = () => {
         lastUpdated: new Date().toISOString(),
       };
       localStorage.setItem('lazfort_platform_global_settings', JSON.stringify(payload));
+      hotelApi.savePlatformSettings(payload).catch(() => {});
       setInitialLoadedSettings(payload);
       showToast('Platform Settings Saved', 'Global enterprise preferences committed and saved into database.', 'success');
     } catch {

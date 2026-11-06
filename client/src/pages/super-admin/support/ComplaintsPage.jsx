@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
@@ -8,6 +8,8 @@ import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { initialComplaints } from '../../../data/mockSuperAdminModules';
 import { useToast } from '../../../context/ToastContext';
+import { useERP } from '../../../context/ERPContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   AlertTriangle,
   Clock,
@@ -27,6 +29,7 @@ import {
 export const ComplaintsPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { complaints: erpComplaints = [], updateComplaintStatus } = useERP();
   const [complaints, setComplaints] = useState(() => {
     try {
       const stored = localStorage.getItem('lazfort_complaints');
@@ -36,6 +39,17 @@ export const ComplaintsPage = () => {
     }
     return initialComplaints || [];
   });
+
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getComplaints().then(data => {
+      if (isMounted && Array.isArray(data) && data.length > 0) {
+        setComplaints(data);
+      }
+    }).catch(() => {});
+
+    return () => { isMounted = false; };
+  }, []);
 
   const persistComplaints = (list) => {
     setComplaints(list);

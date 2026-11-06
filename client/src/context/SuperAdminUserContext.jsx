@@ -19,27 +19,21 @@ export const SuperAdminUserProvider = ({ children }) => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Initial fetch from MySQL Backend
-  useEffect(() => {
-    let isMounted = true;
-    const fetchBackendUsers = async () => {
-      try {
-        setIsLoading(true);
-        const backendUsers = await hotelApi.getUsers();
-        if (isMounted && Array.isArray(backendUsers) && backendUsers.length > 0) {
-          setUsers(backendUsers);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(backendUsers));
-        }
-      } catch (err) {
-        console.warn('[SuperAdminUserContext] Using local users store:', err.message);
-      } finally {
-        if (isMounted) setIsLoading(false);
+  // Fetch users on demand when component mounts or needs it
+  const refreshUsers = async () => {
+    try {
+      setIsLoading(true);
+      const backendUsers = await hotelApi.getUsers();
+      if (Array.isArray(backendUsers) && backendUsers.length > 0) {
+        setUsers(backendUsers);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(backendUsers));
       }
-    };
-
-    fetchBackendUsers();
-    return () => { isMounted = false; };
-  }, []);
+    } catch (err) {
+      console.warn('[SuperAdminUserContext] Using local users store:', err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
@@ -123,6 +117,7 @@ export const SuperAdminUserProvider = ({ children }) => {
       value={{
         users,
         isLoading,
+        refreshUsers,
         addUser,
         updateUser,
         suspendUser,

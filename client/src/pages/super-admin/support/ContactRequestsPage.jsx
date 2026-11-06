@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
@@ -6,6 +6,8 @@ import { Modal } from '../../../components/ui/Modal';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { initialContactRequests } from '../../../data/mockSuperAdminModules';
 import { useToast } from '../../../context/ToastContext';
+import { useERP } from '../../../context/ERPContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   Mail,
   Phone,
@@ -25,6 +27,7 @@ import {
 
 export const ContactRequestsPage = () => {
   const { showToast } = useToast();
+  const { contactRequests: erpContactRequests = [], updateContactRequestStatus } = useERP();
   const [requests, setRequests] = useState(() => {
     try {
       const stored = localStorage.getItem('lazfort_contact_requests');
@@ -32,6 +35,17 @@ export const ContactRequestsPage = () => {
     } catch {}
     return initialContactRequests || [];
   });
+
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getContactRequests().then(data => {
+      if (isMounted && Array.isArray(data) && data.length > 0) {
+        setRequests(data);
+      }
+    }).catch(() => {});
+
+    return () => { isMounted = false; };
+  }, []);
 
   const persistRequests = (list) => {
     setRequests(list);

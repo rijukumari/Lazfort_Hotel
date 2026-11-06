@@ -1,8 +1,11 @@
 import React from 'react';
 import { StatusBadge } from '../ui/StatusBadge';
 import { MapPin, Star, Building2, TrendingUp, ArrowUpRight, Edit } from 'lucide-react';
+import { useERP } from '../../context/ERPContext';
 
 export const HotelCard = ({ hotel, onSelect, onEdit }) => {
+  const { getHotelCurrencySymbol } = useERP();
+  const currencySymbol = getHotelCurrencySymbol(hotel.id);
   return (
     <div className="card-luxury-3d overflow-hidden group flex flex-col">
       {/* Top golden shimmer border */}
@@ -64,7 +67,7 @@ export const HotelCard = ({ hotel, onSelect, onEdit }) => {
           <div className="space-y-0.5">
             <span className="text-[10px] uppercase tracking-wider text-charcoal-muted font-mono block">Monthly Run Rate</span>
             <span className="text-base font-serif font-bold text-accent">
-              ${(hotel.revenueThisMonth / 1000).toFixed(0)}k / month
+              {currencySymbol}{(hotel.revenueThisMonth / 1000).toFixed(0)}k / month
             </span>
           </div>
           <div className="flex items-center gap-2">

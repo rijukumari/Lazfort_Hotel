@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
@@ -8,6 +8,7 @@ import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { useSuperAdminUsers } from '../../../context/SuperAdminUserContext';
 import { useToast } from '../../../context/ToastContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   Users,
   UserCheck,
@@ -44,6 +45,13 @@ export const AllUsersPage = () => {
   const [suspendingUser, setSuspendingUser] = useState(null);
   const [suspensionReasonInput, setSuspensionReasonInput] = useState('');
   const [deletingUserId, setDeletingUserId] = useState(null);
+
+  // Fetch users from Laravel backend on mount
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getUsers().catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   // Add Form state
   const [formName, setFormName] = useState('');

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
@@ -6,6 +6,8 @@ import { DataTable } from '../../../components/data-display/DataTable';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { initialBillingInvoices } from '../../../data/mockSuperAdminModules';
 import { useToast } from '../../../context/ToastContext';
+import { useERP } from '../../../context/ERPContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   FileText,
   DollarSign,
@@ -25,9 +27,32 @@ import {
 export const BillingInvoicesPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [invoices] = useState(initialBillingInvoices || []);
+  const { invoices: erpInvoices = [] } = useERP();
+  const [invoices, setInvoices] = useState(initialBillingInvoices || []);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  useEffect(() => {
+    hotelApi.getInvoices().then(data => {
+      if (Array.isArray(data) && data.length > 0) {
+        const mapped = data.map((inv, idx) => ({
+          id: inv.id || `inv-${idx}`,
+          invoiceNumber: inv.invoice_number || inv.invoiceNumber || `INV-2026-${1000 + idx}`,
+          clientName: inv.guest_name || inv.guestName || 'Distinguished Guest',
+          hotelName: inv.hotel_name || 'Lazfort Grand Palace Monaco',
+          invoiceDate: inv.issue_date || inv.invoiceDate || new Date().toISOString().split('T')[0],
+          dueDate: inv.due_date || inv.dueDate || new Date(Date.now() + 86400000 * 14).toISOString().split('T')[0],
+          subtotal: Number(inv.subtotal) || Number(inv.total_amount) || 0,
+          tax: Number(inv.tax_amount) || Math.round((Number(inv.total_amount) || 0) * 0.1),
+          totalAmount: Number(inv.total_amount) || Number(inv.totalAmount) || 0,
+          paidAmount: Number(inv.amount_paid) || Number(inv.paidAmount) || 0,
+          balanceDue: Math.max(0, (Number(inv.total_amount) || 0) - (Number(inv.amount_paid) || 0)),
+          status: inv.status || 'paid',
+        }));
+        setInvoices([...mapped, ...initialBillingInvoices]);
+      }
+    }).catch(() => {});
+  }, [erpInvoices.length]);
 
   // Metrics
   const totalBilled = useMemo(() => invoices.reduce((acc, inv) => acc + (inv.totalAmount || 0), 0), [invoices]);
