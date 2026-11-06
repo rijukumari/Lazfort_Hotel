@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { InvoiceStatusBadge } from './InvoiceStatusBadge';
+import { printElement } from '../../utils/printSystem';
 
 export const InvoiceDetailsModal = ({
   isOpen,
@@ -23,10 +24,25 @@ export const InvoiceDetailsModal = ({
 }) => {
   const { showToast } = useToast();
 
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen) onClose?.();
+    };
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen || !invoice) return null;
 
   const handlePrint = () => {
-    window.print();
+    printElement('printable-invoice-details', {
+      documentTitle: `Tax_Invoice_${invoice.invoiceNumber || 'Lazfort'}`
+    });
   };
 
   const handleSendEmail = () => {
@@ -38,17 +54,17 @@ export const InvoiceDetailsModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl bg-white dark:bg-primary-900 border border-accent/40 rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-primary-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-3xl bg-white dark:bg-[#101722] border border-border/80 dark:border-accent/40 rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header Bar */}
-        <div className="px-6 py-5 border-b border-border/80 dark:border-white/10 flex items-center justify-between bg-ivory/50 dark:bg-primary-800/40">
+        <div className="px-6 py-5 border-b border-border/80 dark:border-white/10 flex items-center justify-between bg-ivory/50 dark:bg-primary-900/60 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-accent/20 border border-accent/40 flex items-center justify-center text-accent shadow-gold">
+            <div className="w-10 h-10 rounded-2xl bg-accent/20 border border-accent/40 flex items-center justify-center text-accent shadow-gold shrink-0">
               <Sparkles className="w-5 h-5 text-accent animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-serif font-bold text-xl text-primary dark:text-white">
+                <h3 className="font-serif font-bold text-lg sm:text-xl text-primary dark:text-white">
                   Tax Invoice
                 </h3>
                 <span className="font-mono text-xs px-2 py-0.5 rounded-md bg-accent/15 text-accent border border-accent/30 font-bold">
@@ -86,7 +102,7 @@ export const InvoiceDetailsModal = ({
         </div>
 
         {/* Printable Invoice Sheet */}
-        <div className="overflow-y-auto p-6 sm:p-8 space-y-6 flex-1 bg-white dark:bg-primary-950/40 text-charcoal dark:text-gray-200">
+        <div id="printable-invoice-details" className="overflow-y-auto no-scrollbar p-6 sm:p-8 space-y-6 flex-1 bg-white dark:bg-[#101722] text-charcoal dark:text-gray-200">
           {/* Top Brand & Status Section */}
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-border/80 dark:border-white/10 pb-6">
             <div>
@@ -229,7 +245,7 @@ export const InvoiceDetailsModal = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="px-6 py-4 border-t border-border/80 dark:border-white/10 flex items-center justify-between bg-ivory/50 dark:bg-primary-800/40">
+        <div className="px-6 py-4 border-t border-border/80 dark:border-white/10 flex items-center justify-between bg-ivory/50 dark:bg-primary-900/60 shrink-0">
           <div>
             {onRecordPayment && (invoice.balance || 0) > 0 && (
               <button

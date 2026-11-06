@@ -72,26 +72,30 @@ export const HotelHomePage = () => {
           {/* Center Navigation Links */}
           <div className="hidden md:flex items-center gap-7 text-xs font-semibold uppercase tracking-wider text-charcoal-muted dark:text-gray-300">
             <button
+              type="button"
               onClick={() => navigate('/customer/discover/rooms')}
-              className="hover:text-accent transition-colors"
+              className="hover:text-accent transition-colors cursor-pointer"
             >
               Suites & Villas
             </button>
             <button
+              type="button"
               onClick={() => navigate('/customer/discover/rooms')}
-              className="hover:text-accent transition-colors"
+              className="hover:text-accent transition-colors cursor-pointer"
             >
               Search & Book
             </button>
             <button
+              type="button"
               onClick={() => navigate('/customer/amenities')}
-              className="hover:text-accent transition-colors"
+              className="hover:text-accent transition-colors cursor-pointer"
             >
               Hotel Facilities
             </button>
             <button
+              type="button"
               onClick={() => navigate('/customer/bookings')}
-              className="hover:text-accent transition-colors flex items-center gap-1.5"
+              className="hover:text-accent transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <span>My Bookings</span>
               <span className="w-1.5 h-1.5 rounded-full bg-accent" />
@@ -102,24 +106,27 @@ export const HotelHomePage = () => {
           <div className="flex items-center gap-3">
             {isAuthenticated ? (
               <button
+                type="button"
                 onClick={() => navigate(`/${role ? role.replace(/_/g, '-') : 'super-admin'}/dashboard`)}
-                className="px-4 py-2 rounded-2xl btn-secondary-3d text-xs font-semibold text-primary dark:text-white border border-accent/40 flex items-center gap-2 hover:border-accent"
+                className="px-4 py-2 rounded-2xl btn-secondary-3d text-xs font-semibold text-primary dark:text-white border border-accent/40 flex items-center gap-2 hover:border-accent cursor-pointer"
               >
                 <span>Console Dashboard</span>
                 <ArrowRight className="w-3.5 h-3.5 text-accent" />
               </button>
             ) : (
               <button
+                type="button"
                 onClick={() => navigate('/login')}
-                className="px-4 py-2 rounded-2xl btn-secondary-3d text-xs font-semibold text-charcoal dark:text-gray-200 hover:text-accent"
+                className="px-4 py-2 rounded-2xl btn-secondary-3d text-xs font-semibold text-charcoal dark:text-gray-200 hover:text-accent cursor-pointer"
               >
                 Sign In
               </button>
             )}
 
             <button
+              type="button"
               onClick={() => navigate('/customer/discover/rooms')}
-              className="px-5 py-2.5 rounded-2xl gold-gradient-bg text-primary-900 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold hidden sm:inline-flex items-center gap-1.5"
+              className="px-5 py-2.5 rounded-2xl gold-gradient-bg text-primary-900 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold hidden sm:inline-flex items-center gap-1.5 cursor-pointer"
             >
               <Crown className="w-3.5 h-3.5" />
               <span>Reserve Suite</span>
@@ -395,24 +402,27 @@ export const HotelHomePage = () => {
             <ul className="space-y-1.5 text-charcoal-muted dark:text-gray-400">
               <li>
                 <button
+                  type="button"
                   onClick={() => navigate('/customer/discover/rooms')}
-                  className="hover:text-accent transition-colors"
+                  className="hover:text-accent transition-colors cursor-pointer"
                 >
                   Suites & Penthouses
                 </button>
               </li>
               <li>
                 <button
+                  type="button"
                   onClick={() => navigate('/customer/bookings')}
-                  className="hover:text-accent transition-colors"
+                  className="hover:text-accent transition-colors cursor-pointer"
                 >
                   My Stays & Folios
                 </button>
               </li>
               <li>
                 <button
+                  type="button"
                   onClick={() => navigate('/login')}
-                  className="hover:text-accent transition-colors"
+                  className="hover:text-accent transition-colors cursor-pointer"
                 >
                   Staff & Admin Clearance Console
                 </button>
@@ -429,8 +439,9 @@ export const HotelHomePage = () => {
               service, and late check-out privileges.
             </p>
             <button
+              type="button"
               onClick={() => navigate('/customer/discover/rooms')}
-              className="w-full py-2.5 rounded-xl gold-gradient-bg text-primary-900 font-bold text-xs btn-3d shadow-gold"
+              className="w-full py-2.5 rounded-xl gold-gradient-bg text-primary-900 font-bold text-xs btn-3d shadow-gold cursor-pointer"
             >
               Book Direct Now
             </button>

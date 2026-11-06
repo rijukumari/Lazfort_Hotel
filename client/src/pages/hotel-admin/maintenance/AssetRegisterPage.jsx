@@ -288,14 +288,14 @@ export const AssetRegisterPage = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by asset name, tag number, location or vendor..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/60 text-xs focus:outline-none focus:border-accent text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 shadow-inner"
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border/80 dark:border-white/10 bg-ivory/60 dark:bg-primary-950/70 text-xs focus:outline-none focus:border-accent text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 shadow-inner"
             />
           </div>
 
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="w-full md:w-64 px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/60 text-xs focus:outline-none focus:border-accent text-primary dark:text-white"
+            className="w-full md:w-64 px-3.5 py-2.5 rounded-xl border border-border/80 dark:border-white/10 bg-ivory/60 dark:bg-primary-950/70 text-xs focus:outline-none focus:border-accent text-primary dark:text-white"
           >
             {CATEGORIES.map((c) => (
               <option key={c} value={c} className="bg-white dark:bg-primary-900 text-primary dark:text-white">
@@ -316,7 +316,7 @@ export const AssetRegisterPage = () => {
               className={`px-3 py-1 rounded-lg text-[11px] font-semibold transition-all border ${
                 conditionFilter === cond
                   ? 'gold-gradient-bg text-primary-950 font-bold border-accent shadow-sm'
-                  : 'bg-ivory/80 dark:bg-primary-950/40 border-border/80 dark:border-white/10 text-charcoal-muted dark:text-gray-300 hover:text-accent hover:border-accent/40'
+                  : 'filter-btn-inactive'
               }`}
             >
               {cond === 'all' ? 'All Conditions' : cond}
@@ -349,17 +349,17 @@ export const AssetRegisterPage = () => {
         {filteredAssets.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-border/80 dark:border-white/10 bg-ivory/80 dark:bg-primary-950/80 text-[11px] uppercase tracking-wider text-charcoal dark:text-gray-200 font-semibold">
+              <thead className="border-b border-border/80 dark:border-white/10 bg-ivory/80 dark:bg-primary-800/40 text-[11px] uppercase tracking-wider text-charcoal-muted dark:text-gray-300 font-semibold">
                 <tr>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Tag Ref</th>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Asset Name & Category</th>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Facility Location</th>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Purchase Cost</th>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Accumulated Depr</th>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Net Book Value</th>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Condition</th>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Warranty</th>
-                  <th className="py-3.5 px-4 text-right text-charcoal dark:text-gray-200">Actions</th>
+                  <th className="py-3.5 px-4 text-charcoal-muted dark:text-gray-300">Tag Ref</th>
+                  <th className="py-3.5 px-4 text-charcoal-muted dark:text-gray-300">Asset Name & Category</th>
+                  <th className="py-3.5 px-4 text-charcoal-muted dark:text-gray-300">Facility Location</th>
+                  <th className="py-3.5 px-4 text-charcoal-muted dark:text-gray-300">Purchase Cost</th>
+                  <th className="py-3.5 px-4 text-charcoal-muted dark:text-gray-300">Accumulated Depr</th>
+                  <th className="py-3.5 px-4 text-charcoal-muted dark:text-gray-300">Net Book Value</th>
+                  <th className="py-3.5 px-4 text-charcoal-muted dark:text-gray-300">Condition</th>
+                  <th className="py-3.5 px-4 text-charcoal-muted dark:text-gray-300">Warranty</th>
+                  <th className="py-3.5 px-4 text-right text-charcoal-muted dark:text-gray-300">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60 dark:divide-white/5">

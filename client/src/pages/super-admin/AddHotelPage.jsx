@@ -55,8 +55,7 @@ export const AddHotelPage = () => {
 
     setIsSubmitting(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const res = addHotel({
+      const res = await addHotel({
         name: formName.trim(),
         location: formLocation.trim(),
         totalRooms: Number(formRooms),
@@ -76,8 +75,8 @@ export const AddHotelPage = () => {
         'success'
       );
       navigate('/super-admin/hotels');
-    } catch {
-      showToast('Error', 'Failed to onboard property.', 'error');
+    } catch (err) {
+      showToast('Error', err?.message || 'Failed to onboard property.', 'error');
     } finally {
       setIsSubmitting(false);
     }

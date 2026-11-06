@@ -28,6 +28,7 @@ import {
   mockRestaurantBills,
 } from '../data/mockRestaurantData';
 import { useAuth } from './AuthContext';
+import { hotelApi } from '../services/hotelApi';
 
 const STORAGE_KEY = 'lazfort_erp_database_v1';
 
@@ -138,6 +139,120 @@ export const ERPProvider = ({ children }) => {
   const [staff, setStaff] = useState(() => loadInitialData('staff', mockStaff));
   const [subscriptionPlans, setSubscriptionPlans] = useState(() => loadInitialData('plans', mockSubscriptionPlans));
   const [planFeatures, setPlanFeatures] = useState(() => loadInitialData('features', mockPlanFeatures));
+
+  // Initial fetch from Laravel MySQL backend on mount
+  useEffect(() => {
+    let isMounted = true;
+    const fetchBackendData = async () => {
+      try {
+        const [apiHotels, apiRooms, apiBookings, apiGuests, apiPayments, apiInvoices, apiStaff, apiHousekeeping] = await Promise.allSettled([
+          hotelApi.getHotels(),
+          hotelApi.getRooms(),
+          hotelApi.getBookings(),
+          hotelApi.getGuests(),
+          hotelApi.getPayments(),
+          hotelApi.getInvoices(),
+          hotelApi.getStaff(),
+          hotelApi.getHousekeepingTasks(),
+        ]);
+
+        if (!isMounted) return;
+
+        // If backend returned hotels, sync them
+        if (apiHotels.status === 'fulfilled' && Array.isArray(apiHotels.value) && apiHotels.value.length > 0) {
+          setHotels(apiHotels.value.map(h => ({
+            ...h,
+            totalRooms: h.total_rooms || h.totalRooms || 0,
+            subscriptionPlan: h.subscription_plan || h.subscriptionPlan || 'Enterprise Luxury',
+          })));
+        }
+
+        // If backend returned invoices, sync them
+        if (apiInvoices.status === 'fulfilled' && Array.isArray(apiInvoices.value) && apiInvoices.value.length > 0) {
+          setInvoices(apiInvoices.value.map(inv => ({
+            ...inv,
+            invoiceNumber: inv.invoice_number || inv.invoiceNumber,
+            totalAmount: inv.total_amount || inv.totalAmount,
+            amountPaid: inv.amount_paid || inv.amountPaid,
+            guestName: inv.guest_name || inv.guestName,
+          })));
+        }
+
+        // If backend returned staff, sync them
+        if (apiStaff.status === 'fulfilled' && Array.isArray(apiStaff.value) && apiStaff.value.length > 0) {
+          setStaff(apiStaff.value.map(s => ({
+            ...s,
+            employeeCode: s.employee_code || s.employeeCode,
+            joiningDate: s.joining_date || s.joiningDate,
+          })));
+        }
+
+        // If backend returned rooms, sync them
+        if (apiRooms.status === 'fulfilled' && Array.isArray(apiRooms.value) && apiRooms.value.length > 0) {
+          setRooms(apiRooms.value.map(r => ({
+            ...r,
+            roomNumber: r.room_number || r.roomNumber,
+            pricePerNight: r.price || r.pricePerNight,
+          })));
+        } else if (apiRooms.status === 'fulfilled' && Array.isArray(apiRooms.value) && apiRooms.value.length === 0) {
+          // If database is empty, seed initial data to MySQL
+          hotelApi.seedInitialData({
+            hotels: mockHotels,
+            rooms: mockRooms,
+            bookings: mockBookings,
+            guests: mockGuests,
+            payments: initialPayments,
+            invoices: mockInvoices,
+          }).catch(() => {});
+        }
+
+        // If backend returned bookings, sync them
+        if (apiBookings.status === 'fulfilled' && Array.isArray(apiBookings.value) && apiBookings.value.length > 0) {
+          setBookings(apiBookings.value.map(b => ({
+            ...b,
+            bookingCode: b.booking_code || b.bookingCode,
+            guestName: b.guest_name || b.guestName,
+            guestEmail: b.guest_email || b.guestEmail,
+            guestPhone: b.guest_phone || b.guestPhone,
+            roomNumber: b.room_number || b.roomNumber,
+            roomType: b.room_type || b.roomType,
+            checkInDate: b.check_in_date || b.checkInDate,
+            checkOutDate: b.check_out_date || b.checkOutDate,
+            totalAmount: b.total_amount || b.totalAmount,
+            paidAmount: b.paid_amount || b.paidAmount,
+            paymentStatus: b.payment_status || b.paymentStatus,
+          })));
+        }
+
+        // If backend returned guests, sync them
+        if (apiGuests.status === 'fulfilled' && Array.isArray(apiGuests.value) && apiGuests.value.length > 0) {
+          setGuests(apiGuests.value.map(g => ({
+            ...g,
+            vipTier: g.vip_tier || g.vipTier,
+            totalStays: g.total_stays || g.totalStays,
+            totalSpent: g.total_spent || g.totalSpent,
+          })));
+        }
+
+        // If backend returned payments, sync them
+        if (apiPayments.status === 'fulfilled' && Array.isArray(apiPayments.value) && apiPayments.value.length > 0) {
+          setPayments(apiPayments.value.map(p => ({
+            ...p,
+            transactionRef: p.transaction_ref || p.transactionRef,
+            guestName: p.guest_name || p.guestName,
+            roomNumber: p.room_number || p.roomNumber,
+            paymentMethod: p.payment_method || p.paymentMethod,
+            date: p.payment_date || p.date,
+          })));
+        }
+      } catch (err) {
+        console.info('[Hotel ERP] Running in offline / local cache mode:', err.message);
+      }
+    };
+
+    fetchBackendData();
+    return () => { isMounted = false; };
+  }, []);
 
   // Auto-sync state to localStorage
   useEffect(() => {
@@ -265,13 +380,32 @@ export const ERPProvider = ({ children }) => {
   // =========================================================================
   // SUPER ADMIN: HOTEL PROPERTIES MANAGEMENT
   // =========================================================================
-  const addHotel = (hotelData) => {
+  const addHotel = async (hotelData) => {
     const newHotel = {
       ...hotelData,
-      id: `hotel-${Date.now().toString().slice(-6)}`,
+      id: hotelData.id || `hotel-${Date.now().toString().slice(-6)}`,
       createdAt: new Date().toISOString(),
     };
     setHotels(prev => [newHotel, ...prev]);
+
+    // Persist directly to Laravel REST API -> MySQL hotel_erp.hotels table
+    try {
+      await hotelApi.createHotel({
+        id: newHotel.id,
+        name: newHotel.name,
+        location: newHotel.location,
+        total_rooms: Number(newHotel.totalRooms || 0),
+        subscription_plan: newHotel.subscriptionPlan || 'Palace Enterprise',
+        status: newHotel.status || 'active',
+        brand: newHotel.brand || 'Lazfort Sovereign Portfolio',
+        phone: newHotel.adminContact || newHotel.phone || '+1 (800) 555-0199',
+        email: newHotel.adminEmail || newHotel.email || 'gm@resort.com',
+        image: newHotel.image,
+      });
+    } catch (err) {
+      console.warn('Could not persist hotel directly to MySQL backend:', err.message);
+    }
+
     logAudit('CREATE', 'Platform Setting', newHotel.id, `Onboarded new luxury property: ${newHotel.name}`);
     return { success: true, message: `Successfully onboarded ${newHotel.name}`, hotel: newHotel };
   };
@@ -280,6 +414,7 @@ export const ERPProvider = ({ children }) => {
     setHotels(prev =>
       prev.map(h => (h.id === hotelId ? { ...h, status } : h))
     );
+    hotelApi.updateHotel(hotelId, { status }).catch(() => {});
     logAudit('UPDATE', 'Platform Setting', hotelId, `Updated property status to ${status}`);
   };
 
@@ -287,7 +422,15 @@ export const ERPProvider = ({ children }) => {
     setHotels(prev =>
       prev.map(h => (h.id === hotelId ? { ...h, ...data } : h))
     );
+    hotelApi.updateHotel(hotelId, data).catch(() => {});
     logAudit('UPDATE', 'Platform Setting', hotelId, `Updated property details for ${data?.name || hotelId}`);
+  };
+
+  const deleteHotel = (hotelId) => {
+    setHotels(prev => prev.filter(h => h.id !== hotelId));
+    hotelApi.deleteHotel(hotelId).catch(() => {});
+    logAudit('DELETE', 'Platform Setting', hotelId, `Removed hotel property ${hotelId}`);
+    return { success: true };
   };
 
   // =========================================================================
@@ -410,6 +553,27 @@ export const ERPProvider = ({ children }) => {
     setBookings(prev => [newBooking, ...prev]);
     setFolios(prev => [newFolio, ...prev]);
 
+    // Persist to Laravel MySQL backend
+    hotelApi.createBooking({
+      id: newBooking.id,
+      booking_code: newBooking.bookingCode,
+      guest_name: newBooking.guestName,
+      guest_email: newBooking.guestEmail,
+      guest_phone: newBooking.guestPhone,
+      room_number: newBooking.roomNumber,
+      room_type: newBooking.roomType,
+      check_in_date: newBooking.checkIn || newBooking.checkInDate,
+      check_out_date: newBooking.checkOut || newBooking.checkOutDate,
+      adults: newBooking.adults || 1,
+      children: newBooking.children || 0,
+      total_amount: newBooking.totalAmount,
+      paid_amount: newBooking.paidAmount || 0,
+      status: newBooking.status,
+      payment_status: newBooking.paymentStatus,
+      booking_source: newBooking.bookingSource || 'Front Desk',
+      special_requests: newBooking.specialRequests,
+    }).catch(err => console.warn('Could not persist booking to MySQL backend:', err.message));
+
     logAudit(
       'CREATE',
       'Reservations',
@@ -459,6 +623,12 @@ export const ERPProvider = ({ children }) => {
       )
     );
 
+    // Sync cancellation to Laravel MySQL backend
+    hotelApi.updateBooking(bookingId, {
+      status: 'cancelled',
+      payment_status: booking.paymentStatus === 'paid' ? 'refunded' : booking.paymentStatus,
+    }).catch(err => console.warn('Could not update booking cancellation on backend:', err.message));
+
     setRooms(prev =>
       prev.map(r => (r.id === booking.roomId && (r.status === 'reserved' || r.status === 'occupied') ? { ...r, status: 'available' } : r))
     );
@@ -485,12 +655,14 @@ export const ERPProvider = ({ children }) => {
     if (!booking) return { success: false, message: 'Booking not found.' };
     setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'confirmed' } : b));
     setRooms(prev => prev.map(r => r.id === booking.roomId && r.status === 'available' ? { ...r, status: 'reserved' } : r));
+    hotelApi.updateBooking(bookingId, { status: 'confirmed' }).catch(() => {});
     logAudit('APPROVE', 'Reservations', booking.bookingCode, `Approved pending reservation for ${booking.guestName}`);
     return { success: true, message: `Reservation ${booking.bookingCode} confirmed successfully.` };
   };
 
   const updateBooking = (bookingId, updatedData) => {
     setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, ...updatedData } : b));
+    hotelApi.updateBooking(bookingId, updatedData).catch(() => {});
     logAudit('UPDATE', 'Reservations', bookingId, `Updated reservation details`);
     return { success: true, message: 'Reservation details updated successfully.' };
   };
@@ -498,6 +670,7 @@ export const ERPProvider = ({ children }) => {
   const deleteBooking = (bookingId) => {
     const booking = bookings.find(b => b.id === bookingId);
     setBookings(prev => prev.filter(b => b.id !== bookingId));
+    hotelApi.deleteBooking(bookingId).catch(() => {});
     if (booking) {
       setRooms(prev => prev.map(r => r.id === booking.roomId && r.status === 'reserved' ? { ...r, status: 'available' } : r));
       logAudit('DELETE', 'Reservations', booking.bookingCode, `Permanently deleted booking record.`);
@@ -632,11 +805,25 @@ export const ERPProvider = ({ children }) => {
         notes: 'Lazfort Luxury Hospitality Tax Settled in Full.',
       };
       setInvoices(prev => [newInvoice, ...prev]);
+      hotelApi.createInvoice({
+        id: newInvoice.id,
+        invoice_number: newInvoice.invoiceNumber,
+        booking_id: bookingId,
+        guest_name: newInvoice.guestName,
+        room_number: booking.roomNumber,
+        subtotal: newInvoice.subtotal,
+        tax_amount: newInvoice.taxAmount,
+        total_amount: newInvoice.totalAmount,
+        amount_paid: newInvoice.amountPaid,
+        status: 'paid',
+        items: newInvoice.items,
+      }).catch(() => {});
     }
 
     setBookings(prev =>
       prev.map(b => (b.id === bookingId ? { ...b, status: 'checked_out', paymentStatus: 'paid' } : b))
     );
+    hotelApi.updateBooking(bookingId, { status: 'checked_out', payment_status: 'paid' }).catch(() => {});
 
     setRooms(prev =>
       prev.map(r => (r.id === booking.roomId ? { ...r, status: 'cleaning', cleaningStatus: 'dirty' } : r))
@@ -738,6 +925,19 @@ export const ERPProvider = ({ children }) => {
       id: `pay-${Date.now()}`,
       folioId,
     };
+
+    // Persist payment to Laravel MySQL backend
+    hotelApi.createPayment({
+      id: newPaymentItem.id,
+      transaction_ref: payment.transactionReference || `TX-FOL-${Math.floor(10000 + Math.random() * 90000)}`,
+      booking_id: folio.bookingId,
+      guest_name: folio.guestName,
+      room_number: folio.roomNumber,
+      amount: payment.amount,
+      payment_method: payment.paymentMethod || 'Credit Card',
+      status: 'completed',
+      notes: payment.notes || 'Folio payment settlement',
+    }).catch(err => console.warn('Could not persist payment to MySQL:', err.message));
 
     const newTotalPaid = folio.totalPaid + payment.amount;
     const newBalanceDue = Math.max(0, folio.grandTotal - newTotalPaid);
@@ -887,6 +1087,19 @@ export const ERPProvider = ({ children }) => {
     };
     setPayments(prev => [newTx, ...prev]);
 
+    // Persist to Laravel MySQL backend
+    hotelApi.createPayment({
+      id: newTx.id,
+      transaction_ref: newTx.transactionRef,
+      booking_id: newTx.bookingCode,
+      guest_name: newTx.guestName,
+      amount: newTx.amount,
+      payment_method: newTx.paymentMethod,
+      status: newTx.status,
+      payment_date: newTx.date,
+      notes: newTx.notes,
+    }).catch(err => console.warn('Could not persist payment transaction to backend:', err.message));
+
     logAudit('REFUND', 'Finance', folioId, `Processed refund of $${refundAmount} for folio ${folioId}.`);
     return { success: true, message: `Refund of $${refundAmount.toLocaleString()} recorded.` };
   };
@@ -993,6 +1206,19 @@ export const ERPProvider = ({ children }) => {
       createdAt: new Date().toISOString(),
     };
     setPayments(prev => [newTx, ...prev]);
+
+    // Persist to Laravel MySQL backend
+    hotelApi.createPayment({
+      id: newTx.id,
+      transaction_ref: newTx.transactionRef,
+      booking_id: newTx.bookingCode,
+      guest_name: newTx.guestName,
+      amount: newTx.amount,
+      payment_method: newTx.paymentMethod,
+      status: newTx.status,
+      payment_date: newTx.date,
+      notes: newTx.notes,
+    }).catch(err => console.warn('Could not persist payment transaction to backend:', err.message));
 
     logAudit('PAYMENT', 'Invoices', invId, `Recorded payment of $${payAmount.toLocaleString()} against invoice ${updatedInv?.invoiceNumber || invId}`);
     return { success: true, message: `Payment of $${payAmount.toLocaleString()} recorded.` };
@@ -1285,6 +1511,19 @@ export const ERPProvider = ({ children }) => {
 
     setPayments(prev => [newTx, ...prev]);
 
+    // Persist to Laravel MySQL backend
+    hotelApi.createPayment({
+      id: newTx.id,
+      transaction_ref: newTx.transactionRef,
+      booking_id: newTx.bookingCode,
+      guest_name: newTx.guestName,
+      amount: newTx.amount,
+      payment_method: newTx.paymentMethod,
+      status: newTx.status,
+      payment_date: newTx.date,
+      notes: newTx.notes,
+    }).catch(err => console.warn('Could not persist payment transaction to backend:', err.message));
+
     if (newTx.folioId && newTx.status === 'paid') {
       settleFolioPayment(newTx.folioId, {
         amount: newTx.amount,
@@ -1441,11 +1680,25 @@ export const ERPProvider = ({ children }) => {
 
   const addRoom = (newRoom) => {
     setRooms(prev => [newRoom, ...prev]);
+    hotelApi.createRoom({
+      id: newRoom.id,
+      room_number: newRoom.roomNumber,
+      type: newRoom.type,
+      price: newRoom.price || newRoom.pricePerNight || 0,
+      floor: newRoom.floor || '1',
+      status: newRoom.status || 'available',
+      capacity: newRoom.capacity || 2,
+      bed_type: newRoom.bedType,
+      view: newRoom.view,
+      amenities: newRoom.amenities,
+      description: newRoom.description,
+    }).catch(err => console.warn('Could not persist room to MySQL:', err.message));
     logAudit('CREATE', 'Reservations', newRoom.roomNumber, `New suite ${newRoom.roomNumber} (${newRoom.type}) added to hotel portfolio.`);
   };
 
   const updateRoomStatus = (roomId, status) => {
     setRooms(prev => prev.map(r => (r.id === roomId ? { ...r, status } : r)));
+    hotelApi.updateRoom(roomId, { status }).catch(() => {});
     logAudit('UPDATE', 'Reservations', roomId, `Room status changed to ${status}.`);
   };
 
@@ -1525,6 +1778,16 @@ export const ERPProvider = ({ children }) => {
 
   const addGuest = (newGuest) => {
     setGuests(prev => [newGuest, ...prev]);
+    hotelApi.createGuest({
+      id: newGuest.id,
+      name: newGuest.name,
+      email: newGuest.email,
+      phone: newGuest.phone,
+      nationality: newGuest.nationality,
+      vip_tier: newGuest.vipTier || 'Standard',
+      status: newGuest.status || 'active',
+      address: newGuest.address,
+    }).catch(err => console.warn('Could not persist guest to backend:', err.message));
     logAudit('CREATE', 'Front Desk', newGuest.id, `Registered Guest ${newGuest.name} (${newGuest.vipTier} Tier).`);
   };
 
@@ -1539,6 +1802,7 @@ export const ERPProvider = ({ children }) => {
         return g;
       })
     );
+    hotelApi.updateGuest(guestId, { vip_tier: vipTier }).catch(() => {});
 
     logAudit('UPDATE', 'Platform Management', guestId, `Authorized Admin modified membership tier for ${targetGuestName || guestId} to ${vipTier}.`);
 
@@ -1552,6 +1816,7 @@ export const ERPProvider = ({ children }) => {
     setGuests(prev =>
       prev.map(g => (g.id === guestId ? { ...g, ...data } : g))
     );
+    hotelApi.updateGuest(guestId, data).catch(() => {});
     logAudit('UPDATE', 'Front Desk', guestId, `Updated profile for guest ${data?.name || guestId}`);
     return { success: true };
   };
@@ -1560,6 +1825,7 @@ export const ERPProvider = ({ children }) => {
     setRooms(prev =>
       prev.map(r => (r.id === roomId ? { ...r, ...data } : r))
     );
+    hotelApi.updateRoom(roomId, data).catch(() => {});
     logAudit('UPDATE', 'Reservations', roomId, `Updated details for suite ${data?.roomNumber || roomId}`);
     return { success: true };
   };
@@ -1573,6 +1839,19 @@ export const ERPProvider = ({ children }) => {
       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
     };
     setStaff(prev => [newStaff, ...prev]);
+    hotelApi.createStaff({
+      id: newStaff.id,
+      employee_code: newStaff.employeeCode,
+      name: newStaff.name,
+      email: newStaff.email,
+      phone: newStaff.phone,
+      role: newStaff.role,
+      department: newStaff.department,
+      shift: newStaff.shift || 'Morning',
+      status: newStaff.status || 'active',
+      salary: newStaff.salary || 0,
+      joining_date: newStaff.joiningDate,
+    }).catch(err => console.warn('Could not persist staff to backend:', err.message));
     logAudit('CREATE', 'HR', newStaff.id, `Hired staff member ${newStaff.name} (${newStaff.role}).`);
     return { success: true, staff: newStaff };
   };
@@ -1581,6 +1860,7 @@ export const ERPProvider = ({ children }) => {
     setStaff(prev =>
       prev.map(s => (s.id === staffId ? { ...s, ...data } : s))
     );
+    hotelApi.updateStaff(staffId, data).catch(() => {});
     logAudit('UPDATE', 'HR', staffId, `Updated details for staff member ${data?.name || staffId}`);
     return { success: true };
   };
@@ -1628,12 +1908,6 @@ export const ERPProvider = ({ children }) => {
       prev.map(item => (item.id === itemId ? { ...item, ...data } : item))
     );
     logAudit('UPDATE', 'Inventory', itemId, `Updated inventory item ${data?.name || itemId}.`);
-    return { success: true };
-  };
-
-  const deleteHotel = (hotelId) => {
-    setHotels(prev => prev.filter(h => h.id !== hotelId));
-    logAudit('DELETE', 'Platform Setting', hotelId, `Removed hotel property ${hotelId}`);
     return { success: true };
   };
 

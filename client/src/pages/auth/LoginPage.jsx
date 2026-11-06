@@ -37,21 +37,28 @@ export const LoginPage = () => {
     }
   };
 
-  const handleLogin = e => {
+  const handleLogin = async e => {
     e.preventDefault();
     setIsLoading(true);
 
-    setTimeout(() => {
-      login(selectedRole, email);
+    try {
+      await login(selectedRole, email, password);
       const roleConfig = availableRoles.find(r => r.role === selectedRole);
       showToast(
         'Welcome to Lazfort ERP',
         `Authenticated successfully as ${roleConfig?.label || 'Distinguished User'}.`,
         'success'
       );
-      setIsLoading(false);
       navigate(roleConfig?.defaultPath || '/hotel-admin/dashboard');
-    }, 600);
+    } catch (err) {
+      showToast(
+        'Authentication Error',
+        err?.data?.message || err.message || 'Clearance rejected. Please verify your credentials.',
+        'error'
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const roleIcons = {

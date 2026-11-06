@@ -88,12 +88,12 @@ export const CreateFolioModal = ({ isOpen, onClose, onSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl bg-white dark:bg-primary-900 border border-accent/40 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-xl bg-white dark:bg-[#101722] border border-border/80 dark:border-accent/40 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-border/80 dark:border-white/10 flex items-center justify-between bg-ivory/50 dark:bg-primary-800/40">
+        <div className="px-6 py-5 border-b border-border/80 dark:border-white/10 flex items-center justify-between bg-ivory/50 dark:bg-primary-800/40 sticky top-0 z-10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-accent/20 border border-accent/40 flex items-center justify-center text-accent shadow-gold">
+            <div className="w-10 h-10 rounded-2xl bg-accent/20 border border-accent/40 flex items-center justify-center text-accent shadow-gold shrink-0">
               <Plus className="w-5 h-5" />
             </div>
             <div>
@@ -107,14 +107,14 @@ export const CreateFolioModal = ({ isOpen, onClose, onSuccess }) => {
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-charcoal-muted hover:text-accent hover:bg-white dark:hover:bg-primary-800 transition-colors"
+            className="p-2 rounded-xl text-charcoal-muted hover:text-accent hover:bg-white dark:hover:bg-primary-800 transition-colors shrink-0 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto no-scrollbar">
           {/* Link to Existing Reservation Optional */}
           <div>
             <label className="block text-xs font-semibold text-primary dark:text-white mb-1.5">
@@ -123,7 +123,7 @@ export const CreateFolioModal = ({ isOpen, onClose, onSuccess }) => {
             <select
               value={formData.bookingId}
               onChange={(e) => handleBookingSelect(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/70 text-xs focus:outline-none focus:border-accent text-primary dark:text-white"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/70 text-xs focus:outline-none focus:border-accent text-primary dark:text-white"
             >
               <option value="" className="bg-white dark:bg-primary-900 text-primary dark:text-white">-- Manual Direct Folio Entry --</option>
               {bookings.map((b) => (
@@ -144,9 +144,8 @@ export const CreateFolioModal = ({ isOpen, onClose, onSuccess }) => {
                 value={formData.guestName}
                 onChange={(e) => setFormData({ ...formData, guestName: e.target.value })}
                 placeholder="e.g. Duke William Somerset"
-                className={`w-full px-3.5 py-2.5 rounded-xl border ${
-                  errors.guestName ? 'border-rose-500' : 'border-border dark:border-white/10'
-                } bg-white dark:bg-primary-950/70 text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent`}
+                className={`w-full px-3.5 py-2.5 rounded-xl border ${errors.guestName ? 'border-rose-500' : 'border-border dark:border-white/10'
+                  } bg-ivory/50 dark:bg-primary-950/70 text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent`}
               />
               {errors.guestName && <p className="text-[10px] text-rose-500 mt-1">{errors.guestName}</p>}
             </div>
@@ -160,9 +159,8 @@ export const CreateFolioModal = ({ isOpen, onClose, onSuccess }) => {
                 value={formData.roomNumber}
                 onChange={(e) => setFormData({ ...formData, roomNumber: e.target.value })}
                 placeholder="e.g. 101"
-                className={`w-full px-3.5 py-2.5 rounded-xl border ${
-                  errors.roomNumber ? 'border-rose-500' : 'border-border dark:border-white/10'
-                } bg-white dark:bg-primary-950/70 text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent font-mono`}
+                className={`w-full px-3.5 py-2.5 rounded-xl border ${errors.roomNumber ? 'border-rose-500' : 'border-border dark:border-white/10'
+                  } bg-ivory/50 dark:bg-primary-950/70 text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent font-mono`}
               />
               {errors.roomNumber && <p className="text-[10px] text-rose-500 mt-1">{errors.roomNumber}</p>}
             </div>
@@ -177,7 +175,7 @@ export const CreateFolioModal = ({ isOpen, onClose, onSuccess }) => {
                 type="date"
                 value={formData.checkIn}
                 onChange={(e) => setFormData({ ...formData, checkIn: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/70 text-primary dark:text-white text-xs focus:outline-none focus:border-accent"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/70 text-primary dark:text-white text-xs focus:outline-none focus:border-accent"
               />
             </div>
 
@@ -189,7 +187,7 @@ export const CreateFolioModal = ({ isOpen, onClose, onSuccess }) => {
                 type="date"
                 value={formData.checkOut}
                 onChange={(e) => setFormData({ ...formData, checkOut: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/70 text-primary dark:text-white text-xs focus:outline-none focus:border-accent"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/70 text-primary dark:text-white text-xs focus:outline-none focus:border-accent"
               />
             </div>
           </div>
@@ -203,28 +201,7 @@ export const CreateFolioModal = ({ isOpen, onClose, onSuccess }) => {
               step="0.01"
               value={formData.initialRoomRate}
               onChange={(e) => setFormData({ ...formData, initialRoomRate: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/70 text-primary dark:text-white text-xs focus:outline-none focus:border-accent font-mono"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-primary dark:text-white mb-1.5">
-              Folio Notes & Billing Preferences
-            </label>
-            <textarea
-              rows={2}
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Direct VIP Folio Initialization"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/70 text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent"
-            />
-          </div>
-            <input
-              type="number"
-              value={formData.initialRoomRate}
-              onChange={(e) => setFormData({ ...formData, initialRoomRate: e.target.value })}
-              placeholder="1850"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/50 text-xs focus:outline-none focus:border-accent font-mono"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/70 text-primary dark:text-white text-xs focus:outline-none focus:border-accent font-mono"
             />
           </div>
 
@@ -237,7 +214,7 @@ export const CreateFolioModal = ({ isOpen, onClose, onSuccess }) => {
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder="e.g. Master billing to corporate ledger, express checkout requested..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/50 text-xs focus:outline-none focus:border-accent"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border dark:border-white/10 bg-ivory/50 dark:bg-primary-950/70 text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 text-xs focus:outline-none focus:border-accent"
             />
           </div>
 

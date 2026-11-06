@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Receipt,
   Plus,
@@ -25,6 +26,7 @@ import {
 } from '../../../components/restaurant';
 
 export const RestaurantBillingPage = () => {
+  const navigate = useNavigate();
   const {
     restaurantBills = [],
     restaurantOrders = [],
@@ -143,11 +145,10 @@ export const RestaurantBillingPage = () => {
       render: b => (
         <div>
           <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-              b.paymentStatus === 'Paid'
+            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${b.paymentStatus === 'Paid'
                 ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                 : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
-            }`}
+              }`}
           >
             <span className={`w-1.5 h-1.5 rounded-full ${b.paymentStatus === 'Paid' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
             <span>{b.paymentStatus}</span>
@@ -187,11 +188,11 @@ export const RestaurantBillingPage = () => {
 
           <button
             onClick={() => {
-              setSelectedBill(b);
-              setOrderToBill(null);
-              setIsModalOpen(true);
+              navigate(`/hotel-admin/restaurant/billing/${b.id || b.billNumber}`, {
+                state: { bill: b }
+              });
             }}
-            className="p-1.5 rounded-lg hover:bg-ivory dark:hover:bg-white/5 text-charcoal-muted hover:text-accent transition-colors"
+            className="p-1.5 rounded-lg hover:bg-ivory dark:hover:bg-white/5 text-charcoal-muted hover:text-accent transition-colors cursor-pointer"
             title="View Invoice Dossier"
           >
             <Eye className="w-3.5 h-3.5" />
@@ -222,9 +223,9 @@ export const RestaurantBillingPage = () => {
         <button
           onClick={() => {
             const firstUnbilled = restaurantOrders.find(o => !restaurantBills.some(b => b.orderId === (o.orderNumber || o.id))) || restaurantOrders[0];
-            setSelectedBill(null);
-            setOrderToBill(firstUnbilled);
-            setIsModalOpen(true);
+            navigate('/hotel-admin/restaurant/billing/create', {
+              state: { order: firstUnbilled }
+            });
           }}
           className="px-4 py-2.5 rounded-xl bg-accent hover:opacity-95 text-white dark:text-primary-950 text-xs font-semibold shadow-gold flex items-center gap-2 transition-all cursor-pointer self-start sm:self-center shrink-0"
         >
@@ -295,19 +296,14 @@ export const RestaurantBillingPage = () => {
         emptyDescription="Generate a bill from active culinary orders or adjust your search parameters."
         emptyActionLabel="Generate Bill"
         onEmptyAction={() => {
-          setSelectedBill(null);
-          setOrderToBill(restaurantOrders[0]);
-          setIsModalOpen(true);
+          const firstUnbilled = restaurantOrders.find(o => !restaurantBills.some(b => b.orderId === (o.orderNumber || o.id))) || restaurantOrders[0];
+          navigate('/hotel-admin/restaurant/billing/create', {
+            state: { order: firstUnbilled }
+          });
         }}
       />
 
-      {/* Restaurant Bill Modal */}
-      <RestaurantBillModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        bill={selectedBill}
-        orderToBill={orderToBill}
-      />
+      {/* Modal removed in favor of dedicated standalone page /hotel-admin/restaurant/billing/create */}
     </div>
   );
 };

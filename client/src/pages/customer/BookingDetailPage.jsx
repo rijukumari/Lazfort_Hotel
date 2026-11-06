@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import { BookingStatusBadge, PaymentStatusBadge } from '../../components/booking/BookingStatusBadge';
 import { InvoiceModal } from '../../components/data-display/InvoiceModal';
 import { Modal } from '../../components/ui/Modal';
+import { printElement } from '../../utils/printSystem';
 import {
   ArrowLeft,
   Calendar,
@@ -84,7 +85,7 @@ export const BookingDetailPage = () => {
       </div>
 
       {/* Top Dossier Card */}
-      <div className="bg-white/90 dark:bg-surface-dark/95 backdrop-blur-xl p-6 sm:p-8 rounded-3xl border border-border dark:border-white/10 shadow-lg space-y-6">
+      <div id="printable-booking-dossier" className="bg-white/90 dark:bg-surface-dark/95 backdrop-blur-xl p-6 sm:p-8 rounded-3xl border border-border dark:border-white/10 shadow-lg space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-border/70 dark:border-white/10 gap-3">
           <div>
             <div className="flex items-center gap-2">
@@ -235,7 +236,7 @@ export const BookingDetailPage = () => {
             </button>
 
             <button
-              onClick={() => window.print()}
+              onClick={() => printElement('printable-booking-dossier', { documentTitle: `Dossier_${booking.bookingCode}` })}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl btn-secondary-3d text-xs font-semibold text-charcoal dark:text-gray-200"
             >
               <Printer className="w-4 h-4 text-accent" />

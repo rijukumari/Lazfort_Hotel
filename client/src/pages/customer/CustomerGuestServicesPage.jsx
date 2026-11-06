@@ -151,8 +151,9 @@ export const CustomerGuestServicesPage = () => {
       {/* Quick Navigation Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <button
+          type="button"
           onClick={() => navigate('/customer/dining')}
-          className="p-5 rounded-3xl bg-white/80 dark:bg-surface-dark/90 border border-border dark:border-white/10 shadow-sm hover:border-accent hover:shadow-gold transition-all text-left flex items-center gap-4 group"
+          className="p-5 rounded-3xl bg-white/80 dark:bg-surface-dark/90 border border-border dark:border-white/10 shadow-sm hover:border-accent hover:shadow-gold transition-all text-left flex items-center gap-4 group cursor-pointer"
         >
           <div className="w-12 h-12 rounded-2xl bg-accent/15 flex items-center justify-center text-accent group-hover:scale-110 transition-transform flex-shrink-0">
             <Utensils className="w-6 h-6" />
@@ -168,8 +169,9 @@ export const CustomerGuestServicesPage = () => {
         </button>
 
         <button
+          type="button"
           onClick={() => navigate('/customer/amenities')}
-          className="p-5 rounded-3xl bg-white/80 dark:bg-surface-dark/90 border border-border dark:border-white/10 shadow-sm hover:border-accent hover:shadow-gold transition-all text-left flex items-center gap-4 group"
+          className="p-5 rounded-3xl bg-white/80 dark:bg-surface-dark/90 border border-border dark:border-white/10 shadow-sm hover:border-accent hover:shadow-gold transition-all text-left flex items-center gap-4 group cursor-pointer"
         >
           <div className="w-12 h-12 rounded-2xl bg-accent/15 flex items-center justify-center text-accent group-hover:scale-110 transition-transform flex-shrink-0">
             <Waves className="w-6 h-6" />
@@ -185,8 +187,9 @@ export const CustomerGuestServicesPage = () => {
         </button>
 
         <button
+          type="button"
           onClick={() => navigate('/customer/my-suite')}
-          className="p-5 rounded-3xl bg-white/80 dark:bg-surface-dark/90 border border-border dark:border-white/10 shadow-sm hover:border-accent hover:shadow-gold transition-all text-left flex items-center gap-4 group"
+          className="p-5 rounded-3xl bg-white/80 dark:bg-surface-dark/90 border border-border dark:border-white/10 shadow-sm hover:border-accent hover:shadow-gold transition-all text-left flex items-center gap-4 group cursor-pointer"
         >
           <div className="w-12 h-12 rounded-2xl bg-accent/15 flex items-center justify-center text-accent group-hover:scale-110 transition-transform flex-shrink-0">
             <Key className="w-6 h-6" />

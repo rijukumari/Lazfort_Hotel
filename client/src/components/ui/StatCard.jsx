@@ -49,7 +49,9 @@ export const StatCard = ({
         
         {/* 3D Embossed Gold Icon Badge */}
         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent/25 via-accent/10 to-transparent border border-accent/40 flex items-center justify-center text-accent shadow-sm group-hover:scale-110 group-hover:border-accent group-hover:shadow-gold transition-all duration-300 flex-shrink-0">
-          {icon ? (
+          {typeof icon === 'function' ? (
+            React.createElement(icon, { className: 'w-5 h-5 text-accent group-hover:rotate-6 transition-transform' })
+          ) : React.isValidElement(icon) ? (
             icon
           ) : (
             <NavIcon name={iconName} className="w-5 h-5 text-accent group-hover:rotate-6 transition-transform" />

@@ -25,7 +25,7 @@ export const SignupPage = () => {
   const [termsAccepted, setTermsAccepted] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
     if (!name || !email || !password) {
       showToast('Validation Error', 'Please complete all required fields.', 'error');
@@ -38,17 +38,24 @@ export const SignupPage = () => {
 
     setIsLoading(true);
 
-    setTimeout(() => {
-      signup(name, email, role, hotelName);
+    try {
+      await signup(name, email, role, hotelName, password);
       const roleConfig = availableRoles.find(r => r.role === role);
       showToast(
         'Account Registered',
-        `Welcome to Lazfort ERP, ${name}! Your ${roleConfig?.label} workspace is ready.`,
+        `Welcome to Lazfort ERP, ${name}! Your profile has been stored in MySQL and your ${roleConfig?.label} workspace is ready.`,
         'success'
       );
-      setIsLoading(false);
       navigate(roleConfig?.defaultPath || '/hotel-admin/dashboard');
-    }, 600);
+    } catch (err) {
+      showToast(
+        'Registration Failed',
+        err?.data?.message || err.message || 'Unable to create account in database.',
+        'error'
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

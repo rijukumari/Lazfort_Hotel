@@ -262,38 +262,8 @@ export const MarketingPage = () => {
         />
       </div>
 
-      {/* Submenu Tabs */}
-      <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-white/70 dark:bg-[#0f1623]/80 backdrop-blur-xl border border-border/80 dark:border-white/10 overflow-x-auto shadow-sm">
-        {[
-          { id: 'offers', label: 'Offers & Discounts' },
-          { id: 'coupons', label: 'VIP Coupons' },
-          { id: 'packages', label: 'Hospitality Packages' },
-          { id: 'banners', label: 'Promotional Banners' },
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => handleTabChange(tab.id)}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-              activeTab === tab.id
-                ? 'bg-accent text-white dark:text-primary-950 shadow-gold'
-                : 'text-charcoal-muted hover:text-primary dark:hover:text-white hover:bg-ivory dark:hover:bg-white/5'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
       <DataTable
-        data={
-          activeTab === 'coupons'
-            ? offers.filter(o => o.category === 'Voucher Promo' || o.code.includes('VIP') || o.code.includes('SPA') || o.code.includes('WINE'))
-            : activeTab === 'packages'
-            ? offers.filter(o => o.category.includes('Package') || o.category.includes('Seasonal') || o.category.includes('Event'))
-            : activeTab === 'banners'
-            ? offers.filter(o => o.status === 'active')
-            : offers
-        }
+        data={offers}
         columns={columns}
         keyExtractor={item => item.id}
         searchPlaceholder="Search offers by campaign name, code, or suite category..."

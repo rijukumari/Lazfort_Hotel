@@ -97,6 +97,7 @@ export const ReceptionistDashboard = () => {
           </button>
           {item.status === 'confirmed' && (
             <button
+              type="button"
               onClick={() => handleFastCheckIn(item)}
               className="px-3 py-1.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-xl text-[11px] font-bold hover:bg-emerald-500/25 transition-all inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-95 shadow-sm"
             >
@@ -106,6 +107,7 @@ export const ReceptionistDashboard = () => {
           )}
           {item.status === 'checked_in' && (
             <button
+              type="button"
               onClick={() => handleFastCheckOut(item)}
               className="px-3 py-1.5 bg-white/80 dark:bg-primary-900/80 border border-border/80 dark:border-white/15 text-charcoal dark:text-gray-200 rounded-xl text-[11px] font-bold hover:border-accent hover:text-accent transition-all inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-95 shadow-sm"
             >
@@ -130,6 +132,7 @@ export const ReceptionistDashboard = () => {
         badge="Active Front Desk"
         actions={
           <button
+            type="button"
             onClick={() => navigate('/hotel-admin/bookings/new')}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl gold-gradient-bg text-primary-900 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold whitespace-nowrap shrink-0"
           >

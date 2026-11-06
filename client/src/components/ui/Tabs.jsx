@@ -19,10 +19,10 @@ export const Tabs = ({
               e.preventDefault();
               onChange(tab.id);
             }}
-            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-2xl transition-all whitespace-nowrap cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-2xl transition-all whitespace-nowrap cursor-pointer border ${
               isActive
-                ? 'gold-gradient-bg text-primary-950 font-bold shadow-sm'
-                : 'text-charcoal-muted hover:text-accent dark:hover:text-accent hover:bg-ivory dark:hover:bg-primary-800/40'
+                ? 'filter-btn-active'
+                : 'filter-btn-inactive'
             }`}
           >
             {Icon && <Icon className="w-4 h-4 shrink-0" />}
@@ -31,7 +31,7 @@ export const Tabs = ({
               <span
                 className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
                   isActive
-                    ? 'bg-primary-950/20 text-primary-950'
+                    ? 'bg-white/20 dark:bg-white/15 text-white dark:text-gray-100'
                     : 'bg-charcoal/10 dark:bg-white/10 text-charcoal-muted'
                 }`}
               >

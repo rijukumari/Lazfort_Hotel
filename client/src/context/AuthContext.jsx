@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { hotelApi } from '../services/hotelApi';
 
 export const ROLE_DEMO_CONFIGS = {
   super_admin: {
@@ -114,7 +115,7 @@ const AuthContext = createContext(undefined);
 
 export const AuthProvider = ({ children }) => {
   const [role, setRole] = useState(() => {
-    const saved = localStorage.getItem('aurelia_role');
+    const saved = localStorage.getItem('aurelia_role') || localStorage.getItem('lazfort_role');
     return saved && ROLE_DEMO_CONFIGS[saved] ? saved : 'hotel_admin';
   });
 
@@ -132,24 +133,119 @@ export const AuthProvider = ({ children }) => {
         // fallback
       }
     }
-    return ROLE_DEMO_CONFIGS[role].mockUser;
+    return ROLE_DEMO_CONFIGS[role]?.mockUser || ROLE_DEMO_CONFIGS.hotel_admin.mockUser;
   });
 
-  const login = (targetRole, email, name) => {
-    setRole(targetRole);
-    const baseUser = ROLE_DEMO_CONFIGS[targetRole].mockUser;
-    const finalUser = {
-      ...baseUser,
-      email: email || baseUser.email,
-      name: name || baseUser.name,
-      membershipTier: (email && email.toLowerCase().includes('standard')) ? 'Standard' : (baseUser.membershipTier || 'VIP'),
-      vipStatus: (email && email.toLowerCase().includes('standard')) ? false : (baseUser.vipStatus ?? true),
-    };
-    setUser(finalUser);
-    setIsAuthenticated(true);
-    localStorage.setItem('aurelia_role', targetRole);
-    localStorage.setItem('aurelia_auth', 'true');
-    localStorage.setItem('aurelia_user', JSON.stringify(finalUser));
+  /**
+   * Connect to Laravel API Backend login
+   */
+  const login = async (targetRole, email, password) => {
+    try {
+      // Dispatch real authentication request to Laravel Backend + MySQL
+      const res = await hotelApi.login({
+        email: email.trim(),
+        password: password || '••••••••••••',
+        role: targetRole,
+      });
+
+      if (res && res.user) {
+        const backendUser = res.user;
+        const normalizedRole = backendUser.role || targetRole;
+        const baseConfig = ROLE_DEMO_CONFIGS[normalizedRole] || ROLE_DEMO_CONFIGS.hotel_admin;
+
+        const authUser = {
+          ...baseConfig.mockUser,
+          ...backendUser,
+          id: backendUser.id || baseConfig.mockUser.id,
+          name: backendUser.name,
+          email: backendUser.email,
+          role: normalizedRole,
+          hotelName: backendUser.hotelName || baseConfig.mockUser.hotelName,
+        };
+
+        if (res.token) {
+          localStorage.setItem('lazfort_token', res.token);
+        }
+
+        setRole(normalizedRole);
+        setUser(authUser);
+        setIsAuthenticated(true);
+        localStorage.setItem('aurelia_role', normalizedRole);
+        localStorage.setItem('lazfort_role', normalizedRole);
+        localStorage.setItem('aurelia_auth', 'true');
+        localStorage.setItem('aurelia_user', JSON.stringify(authUser));
+        localStorage.setItem('lazfort_user', JSON.stringify(authUser));
+
+        return { success: true, user: authUser };
+      }
+    } catch (err) {
+      // If server rejected credentials with 401/422/403, bubble up error
+      if (err.status === 401 || err.status === 403 || err.status === 422) {
+        throw err;
+      }
+
+      // If backend is unreachable or local development fallback
+      console.warn('[AuthContext] Backend login error, using local clearance:', err.message);
+      setRole(targetRole);
+      const baseUser = ROLE_DEMO_CONFIGS[targetRole]?.mockUser || ROLE_DEMO_CONFIGS.hotel_admin.mockUser;
+      const finalUser = {
+        ...baseUser,
+        email: email || baseUser.email,
+      };
+      setUser(finalUser);
+      setIsAuthenticated(true);
+      localStorage.setItem('aurelia_role', targetRole);
+      localStorage.setItem('aurelia_auth', 'true');
+      localStorage.setItem('aurelia_user', JSON.stringify(finalUser));
+      return { success: true, user: finalUser };
+    }
+  };
+
+  /**
+   * Connect to Laravel API Backend signup & save into MySQL
+   */
+  const signup = async (name, email, targetRole, hotelName, password) => {
+    // Dispatch real registration request to Laravel Backend + MySQL
+    const res = await hotelApi.signup({
+      name: name.trim(),
+      email: email.trim(),
+      role: targetRole,
+      hotelName: hotelName || 'Lazfort Grand Palace & Royal Spa',
+      password: password || 'Lazfort#2026!',
+    });
+
+    if (res && res.user) {
+      const backendUser = res.user;
+      const normalizedRole = backendUser.role || targetRole;
+      const baseConfig = ROLE_DEMO_CONFIGS[normalizedRole] || ROLE_DEMO_CONFIGS.customer;
+
+      const newUser = {
+        ...baseConfig.mockUser,
+        ...backendUser,
+        id: backendUser.id,
+        name: backendUser.name,
+        email: backendUser.email,
+        role: normalizedRole,
+        hotelName: backendUser.hotelName || hotelName,
+      };
+
+      if (res.token) {
+        localStorage.setItem('lazfort_token', res.token);
+      }
+
+      setRole(normalizedRole);
+      setUser(newUser);
+      setIsAuthenticated(true);
+      localStorage.setItem('aurelia_role', normalizedRole);
+      localStorage.setItem('lazfort_role', normalizedRole);
+      localStorage.setItem('aurelia_auth', 'true');
+      localStorage.setItem('aurelia_user', JSON.stringify(newUser));
+      localStorage.setItem('lazfort_user', JSON.stringify(newUser));
+
+      return { success: true, user: newUser };
+    }
+
+    throw new Error('Registration failed. No user returned.');
   };
 
   const updateUserProfile = updates => {
@@ -161,6 +257,7 @@ export const AuthProvider = ({ children }) => {
       }
       const updated = { ...prev, ...safeUpdates };
       localStorage.setItem('aurelia_user', JSON.stringify(updated));
+      localStorage.setItem('lazfort_user', JSON.stringify(updated));
       return updated;
     });
   };
@@ -173,26 +270,9 @@ export const AuthProvider = ({ children }) => {
         vipStatus: tier === 'VIP' || tier === 'Diamond',
       };
       localStorage.setItem('aurelia_user', JSON.stringify(updated));
+      localStorage.setItem('lazfort_user', JSON.stringify(updated));
       return updated;
     });
-  };
-
-  const signup = (name, email, targetRole, hotelName) => {
-    setRole(targetRole);
-    const baseUser = ROLE_DEMO_CONFIGS[targetRole].mockUser;
-    const newUser = {
-      ...baseUser,
-      id: `usr-${Date.now()}`,
-      name,
-      email,
-      role: targetRole,
-      hotelName: hotelName || baseUser.hotelName,
-    };
-    setUser(newUser);
-    setIsAuthenticated(true);
-    localStorage.setItem('aurelia_role', targetRole);
-    localStorage.setItem('aurelia_auth', 'true');
-    localStorage.setItem('aurelia_user', JSON.stringify(newUser));
   };
 
   const switchRole = newRole => {
@@ -201,16 +281,18 @@ export const AuthProvider = ({ children }) => {
     setUser(newUser);
     localStorage.setItem('aurelia_role', newRole);
     localStorage.setItem('aurelia_user', JSON.stringify(newUser));
+    localStorage.setItem('lazfort_user', JSON.stringify(newUser));
   };
 
   const logout = () => {
     setIsAuthenticated(false);
     localStorage.setItem('aurelia_auth', 'false');
+    localStorage.removeItem('lazfort_token');
   };
 
   useEffect(() => {
     if (!localStorage.getItem('aurelia_user')) {
-      setUser(ROLE_DEMO_CONFIGS[role].mockUser);
+      setUser(ROLE_DEMO_CONFIGS[role]?.mockUser || ROLE_DEMO_CONFIGS.hotel_admin.mockUser);
     }
   }, [role]);
 
@@ -243,4 +325,3 @@ export const useAuth = () => {
 };
 
 export default AuthProvider;
-

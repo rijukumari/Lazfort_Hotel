@@ -138,7 +138,7 @@ export const AssetDetailsModal = ({
               <p className="text-xl font-serif font-bold text-rose-600 dark:text-rose-400">
                 -${Math.round(accumulatedDepreciation).toLocaleString()}
               </p>
-              <div className="mt-1.5 w-full bg-border dark:bg-white/10 rounded-full h-1.5 overflow-hidden">
+              <div className="mt-1.5 w-full bg-border/60 dark:bg-black/50 rounded-full h-1.5 overflow-hidden border border-border/40 dark:border-white/10">
                 <div
                   className="bg-rose-500 h-1.5 rounded-full transition-all duration-500"
                   style={{ width: `${depreciationPercent}%` }}

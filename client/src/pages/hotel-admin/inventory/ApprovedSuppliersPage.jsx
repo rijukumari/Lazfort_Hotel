@@ -146,8 +146,9 @@ export const ApprovedSuppliersPage = () => {
       key: 'contactPerson',
       header: 'Contact Person',
       sortable: true,
+      className: 'whitespace-nowrap',
       render: row => (
-        <span className="text-xs text-charcoal dark:text-gray-200 font-medium">
+        <span className="text-xs text-charcoal dark:text-gray-200 font-medium whitespace-nowrap">
           {row.contactPerson || 'Account Director'}
         </span>
       ),
@@ -156,31 +157,35 @@ export const ApprovedSuppliersPage = () => {
       key: 'email',
       header: 'Email',
       sortable: true,
+      className: 'whitespace-nowrap',
       render: row => (
         <a
           href={`mailto:${row.email}`}
-          className="text-xs text-accent hover:underline flex items-center gap-1 font-mono"
+          className="text-xs text-accent hover:underline flex items-center gap-1 font-mono whitespace-nowrap"
         >
           <Mail className="w-3 h-3 shrink-0" />
-          <span className="truncate max-w-[140px]">{row.email}</span>
+          <span className="truncate max-w-[170px]">{row.email}</span>
         </a>
       ),
     },
     {
       key: 'phone',
       header: 'Phone',
+      className: 'whitespace-nowrap',
+      headerClassName: 'whitespace-nowrap min-w-[170px]',
       render: row => (
-        <span className="text-xs text-charcoal-muted font-mono flex items-center gap-1">
-          <Phone className="w-3 h-3 text-accent shrink-0" />
-          <span>{row.phone || 'N/A'}</span>
+        <span className="text-xs text-charcoal-muted font-mono flex items-center gap-1.5 whitespace-nowrap shrink-0 min-w-[160px]">
+          <Phone className="w-3.5 h-3.5 text-accent shrink-0" />
+          <span className="whitespace-nowrap">{row.phone || 'N/A'}</span>
         </span>
       ),
     },
     {
       key: 'address',
       header: 'Address',
+      className: 'whitespace-nowrap',
       render: row => (
-        <span className="text-xs text-charcoal-muted truncate max-w-[150px] block" title={row.address}>
+        <span className="text-xs text-charcoal-muted truncate max-w-[180px] block" title={row.address}>
           {row.address || 'Monaco / European Union'}
         </span>
       ),
@@ -243,8 +248,8 @@ export const ApprovedSuppliersPage = () => {
                 );
               }}
               className={`p-1.5 rounded-lg transition-colors ${isActive
-                  ? 'text-emerald-600 hover:bg-rose-500/10 hover:text-rose-600'
-                  : 'text-charcoal-muted hover:text-emerald-500 hover:bg-emerald-500/10'
+                ? 'text-emerald-600 hover:bg-rose-500/10 hover:text-rose-600'
+                : 'text-charcoal-muted hover:text-emerald-500 hover:bg-emerald-500/10'
                 }`}
               title={isActive ? 'Deactivate supplier' : 'Approve / Activate supplier'}
             >

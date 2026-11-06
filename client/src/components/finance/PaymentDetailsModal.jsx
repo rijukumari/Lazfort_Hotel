@@ -3,15 +3,29 @@ import { X, CreditCard, DollarSign, Printer, CheckCircle2, RotateCcw, Calendar, 
 import { PaymentStatusBadge } from './PaymentStatusBadge';
 
 export const PaymentDetailsModal = ({ isOpen, onClose, payment = null, onRefund }) => {
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen) onClose?.();
+    };
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen || !payment) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-white dark:bg-primary-900 border border-accent/40 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-primary-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg bg-white dark:bg-[#101722] border border-border/80 dark:border-accent/40 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-border/80 dark:border-white/10 flex items-center justify-between bg-ivory/50 dark:bg-primary-800/40">
+        <div className="px-6 py-5 border-b border-border/80 dark:border-white/10 flex items-center justify-between bg-ivory/50 dark:bg-primary-900/60 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-accent/20 border border-accent/40 flex items-center justify-center text-accent shadow-gold">
+            <div className="w-10 h-10 rounded-2xl bg-accent/20 border border-accent/40 flex items-center justify-center text-accent shadow-gold shrink-0">
               <CreditCard className="w-5 h-5" />
             </div>
             <div>
@@ -30,14 +44,14 @@ export const PaymentDetailsModal = ({ isOpen, onClose, payment = null, onRefund 
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-charcoal-muted hover:text-accent hover:bg-white dark:hover:bg-primary-800 transition-colors"
+            className="p-2 rounded-xl text-charcoal-muted hover:text-accent hover:bg-white dark:hover:bg-primary-800 transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 space-y-5">
+        <div className="p-6 space-y-5 overflow-y-auto no-scrollbar flex-1">
           <div className="p-4 rounded-2xl bg-ivory/30 dark:bg-primary-950/40 border border-border/80 dark:border-white/10 flex items-center justify-between">
             <div>
               <p className="text-xs text-charcoal-muted dark:text-gray-400">Settled Amount</p>
@@ -75,7 +89,7 @@ export const PaymentDetailsModal = ({ isOpen, onClose, payment = null, onRefund 
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-border/80 dark:border-white/10 flex items-center justify-between bg-ivory/50 dark:bg-primary-800/40">
+        <div className="px-6 py-4 border-t border-border/80 dark:border-white/10 flex items-center justify-between bg-ivory/50 dark:bg-primary-900/60 shrink-0">
           <div>
             {onRefund && payment.status === 'paid' && (
               <button

@@ -131,8 +131,9 @@ export const CustomerDashboard = () => {
       {/* Unified Customer Navigation Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         <button
+          type="button"
           onClick={() => navigate('/customer/book')}
-          className="p-3.5 rounded-2xl bg-white/80 dark:bg-surface-dark/90 border border-border dark:border-white/10 shadow-sm hover:border-accent hover:shadow-gold transition-all text-left flex flex-col justify-between group"
+          className="p-3.5 rounded-2xl bg-white/80 dark:bg-surface-dark/90 border border-border dark:border-white/10 shadow-sm hover:border-accent hover:shadow-gold transition-all text-left flex flex-col justify-between group cursor-pointer"
         >
           <div className="w-8 h-8 rounded-xl bg-accent/15 flex items-center justify-center text-accent group-hover:scale-110 transition-transform mb-2">
             <BedDouble className="w-4 h-4" />
@@ -144,8 +145,9 @@ export const CustomerDashboard = () => {
         </button>
 
         <button
+          type="button"
           onClick={() => navigate('/customer/rooms')}
-          className="p-3.5 rounded-2xl bg-white/80 dark:bg-surface-dark/90 border border-border dark:border-white/10 shadow-sm hover:border-accent hover:shadow-gold transition-all text-left flex flex-col justify-between group"
+          className="p-3.5 rounded-2xl bg-white/80 dark:bg-surface-dark/90 border border-border dark:border-white/10 shadow-sm hover:border-accent hover:shadow-gold transition-all text-left flex flex-col justify-between group cursor-pointer"
         >
           <div className="w-8 h-8 rounded-xl bg-accent/15 flex items-center justify-center text-accent group-hover:scale-110 transition-transform mb-2">
             <Sparkles className="w-4 h-4" />
@@ -157,8 +159,9 @@ export const CustomerDashboard = () => {
         </button>
 
         <button
+          type="button"
           onClick={() => navigate('/customer/bookings')}
-          className="p-3.5 rounded-2xl bg-white/80 dark:bg-surface-dark/90 border border-border dark:border-white/10 shadow-sm hover:border-accent hover:shadow-gold transition-all text-left flex flex-col justify-between group"
+          className="p-3.5 rounded-2xl bg-white/80 dark:bg-surface-dark/90 border border-border dark:border-white/10 shadow-sm hover:border-accent hover:shadow-gold transition-all text-left flex flex-col justify-between group cursor-pointer"
         >
           <div className="w-8 h-8 rounded-xl bg-accent/15 flex items-center justify-center text-accent group-hover:scale-110 transition-transform mb-2">
             <Calendar className="w-4 h-4" />
@@ -170,8 +173,9 @@ export const CustomerDashboard = () => {
         </button>
 
         <button
+          type="button"
           onClick={() => navigate('/customer/payments')}
-          className="p-3.5 rounded-2xl bg-white/80 dark:bg-surface-dark/90 border border-border dark:border-white/10 shadow-sm hover:border-accent hover:shadow-gold transition-all text-left flex flex-col justify-between group"
+          className="p-3.5 rounded-2xl bg-white/80 dark:bg-surface-dark/90 border border-border dark:border-white/10 shadow-sm hover:border-accent hover:shadow-gold transition-all text-left flex flex-col justify-between group cursor-pointer"
         >
           <div className="w-8 h-8 rounded-xl bg-accent/15 flex items-center justify-center text-accent group-hover:scale-110 transition-transform mb-2">
             <Receipt className="w-4 h-4" />
@@ -183,8 +187,9 @@ export const CustomerDashboard = () => {
         </button>
 
         <button
+          type="button"
           onClick={() => navigate('/customer/guest-services')}
-          className="p-3.5 rounded-2xl bg-white/80 dark:bg-surface-dark/90 border border-border dark:border-white/10 shadow-sm hover:border-accent hover:shadow-gold transition-all text-left flex flex-col justify-between group"
+          className="p-3.5 rounded-2xl bg-white/80 dark:bg-surface-dark/90 border border-border dark:border-white/10 shadow-sm hover:border-accent hover:shadow-gold transition-all text-left flex flex-col justify-between group cursor-pointer"
         >
           <div className="w-8 h-8 rounded-xl bg-accent/15 flex items-center justify-center text-accent group-hover:scale-110 transition-transform mb-2">
             <HeartHandshake className="w-4 h-4" />
@@ -196,8 +201,9 @@ export const CustomerDashboard = () => {
         </button>
 
         <button
+          type="button"
           onClick={() => navigate('/customer/profile')}
-          className="p-3.5 rounded-2xl bg-white/80 dark:bg-surface-dark/90 border border-border dark:border-white/10 shadow-sm hover:border-accent hover:shadow-gold transition-all text-left flex flex-col justify-between group"
+          className="p-3.5 rounded-2xl bg-white/80 dark:bg-surface-dark/90 border border-border dark:border-white/10 shadow-sm hover:border-accent hover:shadow-gold transition-all text-left flex flex-col justify-between group cursor-pointer"
         >
           <div className="w-8 h-8 rounded-xl bg-accent/15 flex items-center justify-center text-accent group-hover:scale-110 transition-transform mb-2">
             <User className="w-4 h-4" />
@@ -209,8 +215,9 @@ export const CustomerDashboard = () => {
         </button>
 
         <button
+          type="button"
           onClick={() => navigate('/customer/vip-benefits')}
-          className={`p-3.5 rounded-2xl border shadow-sm transition-all text-left flex flex-col justify-between group ${isVip
+          className={`p-3.5 rounded-2xl border shadow-sm transition-all text-left flex flex-col justify-between group cursor-pointer ${isVip
             ? 'bg-gradient-to-tr from-accent/20 to-accent/5 border-accent/40 shadow-gold'
             : 'bg-white/80 dark:bg-surface-dark/90 border-border dark:border-white/10'
             }`}

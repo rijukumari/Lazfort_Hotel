@@ -230,7 +230,7 @@ export const RevenueAnalyticsPage = () => {
                 <span className="font-bold text-primary dark:text-white">Suite & Villa Accommodations</span>
                 <span className="font-mono font-bold text-accent">${roomRevenue.toLocaleString()} ({Math.round((roomRevenue / totalConsolidatedRevenue) * 100)}%)</span>
               </div>
-              <div className="h-2 w-full bg-ivory dark:bg-primary-950 rounded-full overflow-hidden">
+              <div className="h-2 w-full bg-border/60 dark:bg-black/50 rounded-full overflow-hidden border border-border/40 dark:border-white/10">
                 <div className="h-full bg-accent rounded-full" style={{ width: `${Math.round((roomRevenue / totalConsolidatedRevenue) * 100)}%` }} />
               </div>
             </div>
@@ -241,7 +241,7 @@ export const RevenueAnalyticsPage = () => {
                 <span className="font-bold text-primary dark:text-white">Michelin Dining & Private Room Service</span>
                 <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">${diningRevenue.toLocaleString()} ({Math.round((diningRevenue / totalConsolidatedRevenue) * 100)}%)</span>
               </div>
-              <div className="h-2 w-full bg-ivory dark:bg-primary-950 rounded-full overflow-hidden">
+              <div className="h-2 w-full bg-border/60 dark:bg-black/50 rounded-full overflow-hidden border border-border/40 dark:border-white/10">
                 <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.round((diningRevenue / totalConsolidatedRevenue) * 100)}%` }} />
               </div>
             </div>
@@ -252,7 +252,7 @@ export const RevenueAnalyticsPage = () => {
                 <span className="font-bold text-primary dark:text-white">Wellness Spa, Chauffeur & Helipad Concierge</span>
                 <span className="font-mono font-bold text-indigo-500">${ancillaryRevenue.toLocaleString()} ({Math.round((ancillaryRevenue / totalConsolidatedRevenue) * 100)}%)</span>
               </div>
-              <div className="h-2 w-full bg-ivory dark:bg-primary-950 rounded-full overflow-hidden">
+              <div className="h-2 w-full bg-border/60 dark:bg-black/50 rounded-full overflow-hidden border border-border/40 dark:border-white/10">
                 <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${Math.round((ancillaryRevenue / totalConsolidatedRevenue) * 100)}%` }} />
               </div>
             </div>

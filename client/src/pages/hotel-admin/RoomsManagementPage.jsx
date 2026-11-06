@@ -124,8 +124,8 @@ export const RoomsManagementPage = () => {
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-2 rounded-xl transition-all duration-200 ${viewMode === 'grid'
-                    ? 'gold-gradient-bg text-primary-900 font-bold shadow-sm'
-                    : 'text-charcoal-muted hover:text-accent dark:hover:text-accent'
+                  ? 'filter-btn-active'
+                  : 'text-charcoal-muted hover:text-accent dark:hover:text-accent'
                   }`}
                 title="Grid View"
               >
@@ -134,8 +134,8 @@ export const RoomsManagementPage = () => {
               <button
                 onClick={() => setViewMode('table')}
                 className={`p-2 rounded-xl transition-all duration-200 ${viewMode === 'table'
-                    ? 'gold-gradient-bg text-primary-900 font-bold shadow-sm'
-                    : 'text-charcoal-muted hover:text-accent dark:hover:text-accent'
+                  ? 'filter-btn-active'
+                  : 'text-charcoal-muted hover:text-accent dark:hover:text-accent'
                   }`}
                 title="Table View"
               >

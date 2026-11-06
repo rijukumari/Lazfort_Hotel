@@ -258,7 +258,7 @@ export const PayrollRunsPage = () => {
       </StatsGrid>
 
       {/* Filter and Period Selector Bar */}
-      <div className="p-5 rounded-2xl glass-card border border-primary-500/15 flex flex-wrap items-center justify-between gap-4">
+      <div className="p-5 rounded-2xl bg-surface-light dark:bg-secondary/40 border border-transparent flex flex-wrap items-center justify-between gap-4 shadow-xl dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.85)]">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 text-xs font-semibold text-charcoal-muted uppercase tracking-wider">
             <Calendar className="w-4 h-4 text-accent" />
@@ -268,7 +268,7 @@ export const PayrollRunsPage = () => {
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-white dark:bg-charcoal border border-primary-500/20 text-xs text-primary dark:text-white font-medium focus:outline-none focus:border-accent"
+            className="px-3 py-2 rounded-xl bg-ivory/50 dark:bg-primary-950/60 border border-border/60 dark:border-white/10 text-xs text-primary dark:text-white font-medium focus:outline-none focus:border-accent shadow-sm"
           >
             <option value="ALL">All Months</option>
             <option value="January">January</option>
@@ -288,7 +288,7 @@ export const PayrollRunsPage = () => {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-white dark:bg-charcoal border border-primary-500/20 text-xs text-primary dark:text-white font-medium focus:outline-none focus:border-accent"
+            className="px-3 py-2 rounded-xl bg-ivory/50 dark:bg-primary-950/60 border border-border/60 dark:border-white/10 text-xs text-primary dark:text-white font-medium focus:outline-none focus:border-accent shadow-sm"
           >
             <option value="ALL">All Years</option>
             <option value="2026">2026</option>
@@ -298,7 +298,7 @@ export const PayrollRunsPage = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-white dark:bg-charcoal border border-primary-500/20 text-xs text-primary dark:text-white font-medium focus:outline-none focus:border-accent"
+            className="px-3 py-2 rounded-xl bg-ivory/50 dark:bg-primary-950/60 border border-border/60 dark:border-white/10 text-xs text-primary dark:text-white font-medium focus:outline-none focus:border-accent shadow-sm"
           >
             <option value="ALL">All Statuses</option>
             <option value="draft">Draft</option>
@@ -321,8 +321,8 @@ export const PayrollRunsPage = () => {
       </div>
 
       {/* Payroll Runs Table */}
-      <div className="rounded-2xl glass-card border border-primary-500/15 overflow-hidden shadow-luxury">
-        <div className="p-5 border-b border-white/10 flex items-center justify-between">
+      <div className="rounded-2xl bg-surface-light dark:bg-secondary/40 border border-transparent overflow-hidden shadow-2xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.85)]">
+        <div className="p-5 border-b border-border/40 dark:border-white/5 flex items-center justify-between">
           <div>
             <h3 className="font-serif font-bold text-base text-primary dark:text-white">
               Payroll Run Registers
@@ -339,7 +339,7 @@ export const PayrollRunsPage = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-white/10 bg-white/5 text-[11px] font-semibold text-charcoal-muted uppercase tracking-wider">
+              <tr className="border-b border-border/40 dark:border-white/10 bg-ivory/40 dark:bg-black/40 text-[11px] font-semibold text-charcoal-muted uppercase tracking-wider">
                 <th className="py-3.5 px-4">Run ID</th>
                 <th className="py-3.5 px-4">Payroll Month</th>
                 <th className="py-3.5 px-4">Employees</th>

@@ -221,11 +221,12 @@ export const HotelFacilitiesPage = () => {
           { id: 'entertainment', label: 'Private Cinema' },
         ].map(cat => (
           <button
+            type="button"
             key={cat.id}
             onClick={() => setSelectedCategory(cat.id)}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-semibold transition-all whitespace-nowrap ${selectedCategory === cat.id
-              ? 'gold-gradient-bg text-primary-900 font-bold shadow-gold scale-105'
-              : 'btn-secondary-3d text-charcoal-muted dark:text-gray-300 hover:text-accent'
+            className={`px-4 py-2.5 rounded-2xl text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${selectedCategory === cat.id
+              ? 'filter-btn-active'
+              : 'filter-btn-inactive'
               }`}
           >
             {cat.label}

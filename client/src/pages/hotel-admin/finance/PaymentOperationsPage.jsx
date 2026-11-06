@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   CreditCard,
   Plus,
@@ -13,7 +14,9 @@ import {
   Clock,
   XCircle,
   ShieldCheck,
-  Terminal
+  Terminal,
+  ArrowRight,
+  ArrowLeft
 } from 'lucide-react';
 import { useERP } from '../../../context/ERPContext';
 import { useToast } from '../../../context/ToastContext';
@@ -37,7 +40,8 @@ const CHANNELS = [
 ];
 
 export const PaymentOperationsPage = () => {
-  const { payments = [], deletePayment } = useERP();
+  const navigate = useNavigate();
+  const { payments = [], deletePayment, processPayment } = useERP();
   const { showToast } = useToast();
 
   // Search & Filters
@@ -45,7 +49,8 @@ export const PaymentOperationsPage = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [channelFilter, setChannelFilter] = useState('All Channels');
 
-  // Modals
+  // Dedicated Page View: 'list' | 'process'
+  const [pageView, setPageView] = useState('list');
   const [isProcessModalOpen, setIsProcessModalOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -53,6 +58,41 @@ export const PaymentOperationsPage = () => {
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  // Form State for Process Payment
+  const [processForm, setProcessForm] = useState({
+    guestName: '',
+    roomNumber: '101',
+    amount: '1500',
+    method: 'Centurion Black Card',
+    currency: 'USD',
+    reference: '',
+    notes: 'Direct Front Desk Luxury Counter Settlement',
+  });
+
+  const handleProcessSubmit = (e) => {
+    e.preventDefault();
+    if (!processForm.guestName.trim()) {
+      showToast('Validation Error', 'Guest name is required.', 'error');
+      return;
+    }
+
+    if (processPayment) {
+      processPayment({
+        guestName: processForm.guestName.trim(),
+        roomNumber: processForm.roomNumber,
+        amount: Number(processForm.amount) || 0,
+        paymentMethod: processForm.method,
+        currency: processForm.currency,
+        reference: processForm.reference || `TX-HOTEL-${Date.now()}`,
+        status: 'settled',
+        date: new Date().toISOString().split('T')[0],
+      });
+    }
+
+    showToast('Payment Settled', `Transaction for $${processForm.amount} authorized and settled.`, 'success');
+    setPageView('list');
+  };
 
   // Filtered Payments
   const filteredPayments = useMemo(() => {
@@ -123,6 +163,141 @@ export const PaymentOperationsPage = () => {
     showToast('Transactions Exported', 'Merchant clearing export generated.', 'success');
   };
 
+  // Dedicated Page View: Process Payment on Same Page
+  if (pageView === 'process') {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-300 max-w-3xl">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setPageView('list')}
+            className="p-2.5 rounded-xl border border-border/80 dark:border-white/10 hover:border-accent bg-white dark:bg-primary-900 text-primary dark:text-white transition-all shadow-sm flex items-center gap-2 text-xs font-semibold cursor-pointer"
+          >
+            <ArrowRight className="w-4 h-4 text-accent rotate-180" />
+            <span>Back to Payment Operations</span>
+          </button>
+        </div>
+
+        <div className="p-6 sm:p-8 rounded-3xl bg-surface-light dark:bg-secondary/40 border border-transparent shadow-2xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.85)] space-y-6">
+          <div className="flex items-center gap-3.5 border-b border-border/40 dark:border-white/10 pb-5">
+            <div className="w-12 h-12 rounded-2xl bg-accent/20 border border-accent/40 flex items-center justify-center text-accent shadow-gold shrink-0">
+              <CreditCard className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="font-serif font-bold text-2xl text-primary dark:text-white">
+                Process Sovereign Payment
+              </h2>
+              <p className="text-xs text-charcoal-muted dark:text-gray-400">
+                Authorize direct gateway remittance, virtual terminal swipe or luxury bank wire
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleProcessSubmit} className="space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-primary dark:text-white mb-1.5">
+                  Client / Guest Name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Duke Alexander of Wellington"
+                  value={processForm.guestName}
+                  onChange={e => setProcessForm({ ...processForm, guestName: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/50 dark:bg-primary-950/60 border border-border/60 dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none shadow-inner"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-primary dark:text-white mb-1.5">
+                  Chamber / Suite Number
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 501 (Royal Penthouse)"
+                  value={processForm.roomNumber}
+                  onChange={e => setProcessForm({ ...processForm, roomNumber: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/50 dark:bg-primary-950/60 border border-border/60 dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none shadow-inner"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-primary dark:text-white mb-1.5">
+                  Authorized Settlement Amount ($ USD) <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  step="0.01"
+                  value={processForm.amount}
+                  onChange={e => setProcessForm({ ...processForm, amount: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/50 dark:bg-primary-950/60 border border-border/60 dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none font-mono font-bold shadow-inner"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-primary dark:text-white mb-1.5">
+                  Payment Method & Gateway
+                </label>
+                <select
+                  value={processForm.method}
+                  onChange={e => setProcessForm({ ...processForm, method: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/50 dark:bg-primary-950/60 border border-border/60 dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none cursor-pointer shadow-sm"
+                >
+                  {CHANNELS.filter(c => c !== 'All Channels').map(c => (
+                    <option key={c} value={c} className="bg-white dark:bg-primary-900 text-primary dark:text-white">{c}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-primary dark:text-white mb-1.5">
+                Bank / Authorization Reference (Optional)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. AUTH-UBS-98328-LUX"
+                value={processForm.reference}
+                onChange={e => setProcessForm({ ...processForm, reference: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/50 dark:bg-primary-950/60 border border-border/60 dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none font-mono shadow-inner"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-primary dark:text-white mb-1.5">
+                Transaction Audit Notes
+              </label>
+              <textarea
+                rows={2}
+                value={processForm.notes}
+                onChange={e => setProcessForm({ ...processForm, notes: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/50 dark:bg-primary-950/60 border border-border/60 dark:border-white/15 focus:border-accent text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none shadow-inner resize-none"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-border/40 dark:border-white/10">
+              <button
+                type="button"
+                onClick={() => setPageView('list')}
+                className="px-5 py-2.5 rounded-xl border border-border/80 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-primary-800 text-xs font-semibold text-charcoal-muted transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2.5 rounded-xl gold-gradient-bg text-primary-900 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold cursor-pointer"
+              >
+                Authorize & Settle Payment
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
@@ -141,21 +316,23 @@ export const PaymentOperationsPage = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           <button
+            type="button"
             onClick={handleExportCSV}
-            className="px-4 py-2.5 rounded-xl border border-border dark:border-white/10 text-xs font-semibold text-charcoal dark:text-gray-300 hover:bg-ivory dark:hover:bg-primary-800 transition-colors flex items-center gap-2"
+            className="px-4 py-2.5 rounded-xl border border-border dark:border-white/10 text-xs font-semibold text-charcoal dark:text-gray-300 hover:bg-ivory dark:hover:bg-primary-800 transition-colors flex items-center justify-center gap-2 whitespace-nowrap shrink-0"
           >
-            <Download className="w-4 h-4 text-accent" />
-            <span>Export Transactions</span>
+            <Download className="w-4 h-4 text-accent shrink-0" />
+            <span className="whitespace-nowrap">Export Transactions</span>
           </button>
 
           <button
-            onClick={() => setIsProcessModalOpen(true)}
-            className="px-5 py-2.5 rounded-xl gold-gradient-bg text-primary-900 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold flex items-center gap-2"
+            type="button"
+            onClick={() => setPageView('process')}
+            className="px-5 py-2.5 rounded-xl gold-gradient-bg text-primary-900 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
           >
-            <Terminal className="w-4 h-4" />
-            <span>Process Payment</span>
+            <Terminal className="w-4 h-4 shrink-0" />
+            <span className="whitespace-nowrap">Process Payment</span>
           </button>
         </div>
       </div>
@@ -164,7 +341,7 @@ export const PaymentOperationsPage = () => {
 
       {/* KPI Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl border border-border/80 dark:border-white/10 bg-white dark:bg-primary-900 shadow-sm flex items-center justify-between">
+        <div className="p-4 rounded-2xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-xl dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.85)] flex items-center justify-between">
           <div>
             <p className="text-xs text-charcoal-muted dark:text-gray-400">Total Volume Processed</p>
             <p className="text-2xl font-serif font-bold text-primary dark:text-white mt-0.5">
@@ -177,7 +354,7 @@ export const PaymentOperationsPage = () => {
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 shadow-sm flex items-center justify-between">
+        <div className="p-4 rounded-2xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-xl dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.85)] flex items-center justify-between">
           <div>
             <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Settled / Captured</p>
             <p className="text-2xl font-serif font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
@@ -190,7 +367,7 @@ export const PaymentOperationsPage = () => {
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/5 shadow-sm flex items-center justify-between">
+        <div className="p-4 rounded-2xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-xl dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.85)] flex items-center justify-between">
           <div>
             <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">Pending Authorizations</p>
             <p className="text-2xl font-serif font-bold text-amber-600 dark:text-amber-400 mt-0.5">
@@ -203,7 +380,7 @@ export const PaymentOperationsPage = () => {
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl border border-purple-500/30 bg-purple-500/5 shadow-sm flex items-center justify-between">
+        <div className="p-4 rounded-2xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-xl dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.85)] flex items-center justify-between">
           <div>
             <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">Refunded Volume</p>
             <p className="text-2xl font-serif font-bold text-purple-600 dark:text-purple-400 mt-0.5">
@@ -218,7 +395,7 @@ export const PaymentOperationsPage = () => {
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="p-4 rounded-2xl border border-border/80 dark:border-white/10 bg-white dark:bg-primary-900 shadow-sm space-y-3">
+      <div className="p-4 rounded-2xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-xl dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.85)] space-y-3">
         <div className="flex flex-col md:flex-row items-center gap-3">
           <div className="relative flex-1 w-full">
             <Search className="w-4 h-4 text-charcoal-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -227,14 +404,14 @@ export const PaymentOperationsPage = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by ref ID (e.g. TX-98421), cardholder, or booking code..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border/80 dark:border-white/10 bg-ivory/50 dark:bg-primary-950/60 text-xs focus:outline-none focus:border-accent text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500"
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border/60 dark:border-white/10 bg-ivory/50 dark:bg-primary-950/60 text-xs focus:outline-none focus:border-accent text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 shadow-inner"
             />
           </div>
 
           <select
             value={channelFilter}
             onChange={(e) => setChannelFilter(e.target.value)}
-            className="w-full md:w-64 px-3.5 py-2.5 rounded-xl border border-border/80 dark:border-white/10 bg-ivory/50 dark:bg-primary-950/60 text-xs focus:outline-none focus:border-accent text-primary dark:text-white"
+            className="w-full md:w-64 px-3.5 py-2.5 rounded-xl border border-border/60 dark:border-white/10 bg-ivory/50 dark:bg-primary-950/60 text-xs focus:outline-none focus:border-accent text-primary dark:text-white cursor-pointer shadow-sm"
           >
             {CHANNELS.map((ch) => (
               <option key={ch} value={ch} className="bg-white dark:bg-primary-900 text-primary dark:text-white">
@@ -245,17 +422,18 @@ export const PaymentOperationsPage = () => {
         </div>
 
         {/* Status Filter Buttons */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border/60 dark:border-white/5 text-xs">
+        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border/40 dark:border-white/5 text-xs">
           <span className="text-charcoal-muted dark:text-gray-400 font-semibold mr-1">Status:</span>
           {['all', 'paid', 'pending', 'refunded', 'failed'].map((st) => (
             <button
               key={st}
               type="button"
               onClick={() => setStatusFilter(st)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-all border ${statusFilter === st
-                  ? 'gold-gradient-bg text-primary-950 font-bold border-accent shadow-sm'
-                  : 'bg-ivory/80 dark:bg-primary-950/40 border-border/80 dark:border-white/10 text-charcoal-muted dark:text-gray-300 hover:text-accent hover:border-accent/50'
-                }`}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-all border ${
+                statusFilter === st
+                  ? 'filter-btn-active'
+                  : 'filter-btn-inactive'
+              }`}
             >
               {st === 'all' ? 'All Payments' : st}
             </button>
@@ -264,8 +442,8 @@ export const PaymentOperationsPage = () => {
       </div>
 
       {/* Transactions Data Table */}
-      <div className="rounded-3xl border border-border/80 dark:border-white/10 bg-white dark:bg-primary-900 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-border/80 dark:border-white/10 flex items-center justify-between bg-ivory/30 dark:bg-primary-800/40">
+      <div className="rounded-3xl border border-transparent bg-surface-light dark:bg-secondary/40 shadow-2xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.85)] overflow-hidden">
+        <div className="px-6 py-4 border-b border-border/40 dark:border-white/5 flex items-center justify-between bg-ivory/30 dark:bg-primary-950/30">
           <p className="text-xs font-semibold text-charcoal-muted dark:text-gray-400">
             Showing <span className="font-mono font-bold text-accent">{filteredPayments.length}</span> of {payments.length} Transactions
           </p>
@@ -287,16 +465,16 @@ export const PaymentOperationsPage = () => {
         {filteredPayments.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-border/80 dark:border-white/10 bg-ivory/80 dark:bg-primary-950/80 text-[11px] uppercase tracking-wider text-charcoal dark:text-gray-200 font-semibold">
+              <thead className="border-b border-border/80 dark:border-white/10 bg-ivory/80 dark:bg-primary-800/40 text-[11px] uppercase tracking-wider text-charcoal-muted dark:text-gray-300 font-semibold">
                 <tr>
-                  <th className="py-3.5 px-4 font-semibold text-charcoal dark:text-gray-200">Transaction Ref</th>
-                  <th className="py-3.5 px-4 font-semibold text-charcoal dark:text-gray-200">Guest / Cardholder</th>
-                  <th className="py-3.5 px-4 font-semibold text-charcoal dark:text-gray-200">Folio / Code</th>
-                  <th className="py-3.5 px-4 font-semibold text-charcoal dark:text-gray-200">Payment Channel</th>
-                  <th className="py-3.5 px-4 text-right font-semibold text-charcoal dark:text-gray-200">Amount ($)</th>
-                  <th className="py-3.5 px-4 font-semibold text-charcoal dark:text-gray-200">Date</th>
-                  <th className="py-3.5 px-4 text-center font-semibold text-charcoal dark:text-gray-200">Status</th>
-                  <th className="py-3.5 px-4 text-right font-semibold text-charcoal dark:text-gray-200">Actions</th>
+                  <th className="py-3.5 px-4 font-semibold text-charcoal-muted dark:text-gray-300">Transaction Ref</th>
+                  <th className="py-3.5 px-4 font-semibold text-charcoal-muted dark:text-gray-300">Guest / Cardholder</th>
+                  <th className="py-3.5 px-4 font-semibold text-charcoal-muted dark:text-gray-300">Folio / Code</th>
+                  <th className="py-3.5 px-4 font-semibold text-charcoal-muted dark:text-gray-300">Payment Channel</th>
+                  <th className="py-3.5 px-4 text-right font-semibold text-charcoal-muted dark:text-gray-300">Amount ($)</th>
+                  <th className="py-3.5 px-4 font-semibold text-charcoal-muted dark:text-gray-300">Date</th>
+                  <th className="py-3.5 px-4 text-center font-semibold text-charcoal-muted dark:text-gray-300">Status</th>
+                  <th className="py-3.5 px-4 text-right font-semibold text-charcoal-muted dark:text-gray-300">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60 dark:divide-white/5">
@@ -336,11 +514,9 @@ export const PaymentOperationsPage = () => {
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
-                          onClick={() => {
-                            setSelectedPayment(p);
-                            setIsDetailsModalOpen(true);
-                          }}
-                          className="p-1.5 rounded-lg text-accent hover:bg-accent/15 transition-colors"
+                          type="button"
+                          onClick={() => navigate(`/hotel-admin/finance/payments/receipt/${p.id || p.transactionRef}`)}
+                          className="p-1.5 rounded-lg text-accent hover:bg-accent/15 transition-colors cursor-pointer"
                           title="View Authorization Details"
                         >
                           <Eye className="w-4 h-4" />

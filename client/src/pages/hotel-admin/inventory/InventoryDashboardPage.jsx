@@ -184,7 +184,7 @@ export const InventoryDashboardPage = () => {
                       {count} items ({pct}%)
                     </span>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-ivory dark:bg-white/5 overflow-hidden border border-border/40 dark:border-white/5">
+                  <div className="h-2 w-full rounded-full bg-border/60 dark:bg-black/50 overflow-hidden border border-border/60 dark:border-white/10">
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-accent to-accent/70 transition-all duration-500"
                       style={{ width: `${pct}%` }}

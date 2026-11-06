@@ -43,8 +43,7 @@ export const AddUserPage = () => {
 
     setIsSubmitting(true);
     try {
-      await new Promise(r => setTimeout(r, 450));
-      addUser({
+      await addUser({
         name: formName.trim(),
         email: formEmail.trim(),
         phone: formPhone.trim(),
@@ -54,7 +53,7 @@ export const AddUserPage = () => {
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
       });
 
-      showToast('User Provisioned', `New user "${formName}" has been created and granted ${formRole} credentials.`, 'success');
+      showToast('User Provisioned', `New user "${formName}" has been created and saved to MySQL database with ${formRole} credentials.`, 'success');
       navigate('/super-admin/users');
     } catch {
       showToast('Error', 'Failed to provision user.', 'error');

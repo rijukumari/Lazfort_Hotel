@@ -2,6 +2,7 @@ import React from 'react';
 import { Modal } from '../ui/Modal';
 import { Printer, Download, Sparkles } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
+import { printElement } from '../../utils/printSystem';
 
 export const InvoiceModal = ({ isOpen, onClose, booking }) => {
   const { showToast } = useToast();
@@ -9,7 +10,9 @@ export const InvoiceModal = ({ isOpen, onClose, booking }) => {
   if (!booking) return null;
 
   const handlePrint = () => {
-    window.print();
+    printElement('printable-invoice-modal', {
+      documentTitle: `Invoice_${booking.bookingCode || 'Folio'}`
+    });
   };
 
   const handleDownload = () => {
@@ -22,7 +25,7 @@ export const InvoiceModal = ({ isOpen, onClose, booking }) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} maxWidth="2xl" title="Luxury Guest Invoice">
-      <div className="space-y-6 print:p-0">
+      <div id="printable-invoice-modal" className="space-y-6 print:p-0">
         {/* Invoice Header */}
         <div className="flex items-start justify-between pb-6 border-b border-border dark:border-border-dark">
           <div>

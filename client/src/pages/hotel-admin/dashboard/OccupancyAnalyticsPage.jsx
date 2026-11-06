@@ -169,7 +169,7 @@ export const OccupancyAnalyticsPage = () => {
               <button
                 onClick={() => setTimeHorizon('daily')}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                  timeHorizon === 'daily' ? 'bg-accent text-primary dark:text-white shadow-sm' : 'text-charcoal-muted hover:text-primary dark:hover:text-white'
+                  timeHorizon === 'daily' ? 'filter-btn-active' : 'text-charcoal-muted hover:text-primary dark:hover:text-white'
                 }`}
               >
                 Intraday
@@ -177,7 +177,7 @@ export const OccupancyAnalyticsPage = () => {
               <button
                 onClick={() => setTimeHorizon('weekly')}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                  timeHorizon === 'weekly' ? 'bg-accent text-primary dark:text-white shadow-sm' : 'text-charcoal-muted hover:text-primary dark:hover:text-white'
+                  timeHorizon === 'weekly' ? 'filter-btn-active' : 'text-charcoal-muted hover:text-primary dark:hover:text-white'
                 }`}
               >
                 Weekly Pace
@@ -185,7 +185,7 @@ export const OccupancyAnalyticsPage = () => {
               <button
                 onClick={() => setTimeHorizon('monthly')}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                  timeHorizon === 'monthly' ? 'bg-accent text-primary dark:text-white shadow-sm' : 'text-charcoal-muted hover:text-primary dark:hover:text-white'
+                  timeHorizon === 'monthly' ? 'filter-btn-active' : 'text-charcoal-muted hover:text-primary dark:hover:text-white'
                 }`}
               >
                 Monthly Season
@@ -246,9 +246,9 @@ export const OccupancyAnalyticsPage = () => {
                   <span className="font-bold text-primary dark:text-white">{cat.name}</span>
                   <span className="font-mono font-bold text-accent">{cat.rate}% Occupied</span>
                 </div>
-                <div className="h-2 w-full bg-ivory dark:bg-primary-950/80 rounded-full overflow-hidden border border-border/40 dark:border-white/10">
+                <div className="h-2 w-full bg-border/60 dark:bg-black/50 rounded-full overflow-hidden border border-border/60 dark:border-white/10">
                   <div
-                    className="h-full bg-gradient-to-r from-accent/70 to-accent rounded-full transition-all duration-500 shadow-sm"
+                    className="h-full bg-gradient-to-r from-accent to-accent-light rounded-full transition-all duration-500 shadow-gold"
                     style={{ width: `${cat.rate}%` }}
                   />
                 </div>

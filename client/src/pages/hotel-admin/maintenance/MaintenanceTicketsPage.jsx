@@ -304,7 +304,7 @@ export const MaintenanceTicketsPage = () => {
                   value={createForm.title}
                   onChange={e => setCreateForm({ ...createForm, title: e.target.value })}
                   placeholder="e.g. Master Bath Thermal Radiator Pressure Calibration"
-                  className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/60 text-xs text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none focus:border-accent"
+                  className="w-full px-4 py-2.5 rounded-xl border border-border/80 dark:border-white/10 bg-ivory/60 dark:bg-primary-950/70 text-xs text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none focus:border-accent"
                 />
                 {createErrors.title && (
                   <p className="mt-1 text-[11px] text-rose-500">{createErrors.title}</p>
@@ -318,7 +318,7 @@ export const MaintenanceTicketsPage = () => {
                 <select
                   value={createForm.category}
                   onChange={e => setCreateForm({ ...createForm, category: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/60 text-xs text-primary dark:text-white focus:outline-none focus:border-accent"
+                  className="w-full px-4 py-2.5 rounded-xl border border-border/80 dark:border-white/10 bg-ivory/60 dark:bg-primary-950/70 text-xs text-primary dark:text-white focus:outline-none focus:border-accent"
                 >
                   {ISSUE_CATEGORIES.map(cat => (
                     <option key={cat} value={cat} className="bg-white dark:bg-primary-900 text-primary dark:text-white">{cat}</option>
@@ -337,7 +337,7 @@ export const MaintenanceTicketsPage = () => {
                   value={createForm.location}
                   onChange={e => setCreateForm({ ...createForm, location: e.target.value })}
                   placeholder="e.g. Presidential Suite 801"
-                  className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/60 text-xs text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none focus:border-accent"
+                  className="w-full px-4 py-2.5 rounded-xl border border-border/80 dark:border-white/10 bg-ivory/60 dark:bg-primary-950/70 text-xs text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none focus:border-accent"
                 />
               </div>
 
@@ -348,7 +348,7 @@ export const MaintenanceTicketsPage = () => {
                 <select
                   value={createForm.priority}
                   onChange={e => setCreateForm({ ...createForm, priority: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/60 text-xs text-primary dark:text-white focus:outline-none focus:border-accent"
+                  className="w-full px-4 py-2.5 rounded-xl border border-border/80 dark:border-white/10 bg-ivory/60 dark:bg-primary-950/70 text-xs text-primary dark:text-white focus:outline-none focus:border-accent"
                 >
                   <option value="low" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Low (Standard PM)</option>
                   <option value="medium" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Medium (Routine Service)</option>
@@ -364,7 +364,7 @@ export const MaintenanceTicketsPage = () => {
                 <select
                   value={createForm.assignedTechnician}
                   onChange={e => setCreateForm({ ...createForm, assignedTechnician: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/60 text-xs text-primary dark:text-white focus:outline-none focus:border-accent"
+                  className="w-full px-4 py-2.5 rounded-xl border border-border/80 dark:border-white/10 bg-ivory/60 dark:bg-primary-950/70 text-xs text-primary dark:text-white focus:outline-none focus:border-accent"
                 >
                   {TECHNICIANS.map(tech => (
                     <option key={tech} value={tech} className="bg-white dark:bg-primary-900 text-primary dark:text-white">{tech}</option>
@@ -382,7 +382,7 @@ export const MaintenanceTicketsPage = () => {
                 value={createForm.description}
                 onChange={e => setCreateForm({ ...createForm, description: e.target.value })}
                 placeholder="Specify precise diagnostic instructions, guest privacy constraints, or replacement parts..."
-                className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/60 text-xs text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none focus:border-accent"
+                className="w-full px-4 py-2.5 rounded-xl border border-border/80 dark:border-white/10 bg-ivory/60 dark:bg-primary-950/70 text-xs text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none focus:border-accent resize-none"
               />
             </div>
 
@@ -390,7 +390,7 @@ export const MaintenanceTicketsPage = () => {
               <button
                 type="button"
                 onClick={() => setPageView('list')}
-                className="px-5 py-2.5 rounded-xl border border-border dark:border-white/10 hover:bg-ivory dark:hover:bg-primary-800 text-xs font-semibold text-charcoal dark:text-gray-300 transition-all"
+                className="px-5 py-2.5 rounded-xl border border-border/80 dark:border-white/10 hover:bg-ivory dark:hover:bg-primary-800 text-xs font-semibold text-charcoal dark:text-gray-300 hover:text-primary dark:hover:text-white transition-all cursor-pointer"
               >
                 Cancel
               </button>
@@ -422,43 +422,49 @@ export const MaintenanceTicketsPage = () => {
           </button>
         </div>
 
-        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-primary-900 border border-accent/40 shadow-xl space-y-6">
-          <div className="flex items-center gap-3.5 border-b border-border/60 dark:border-white/10 pb-5">
-            <div className="w-12 h-12 rounded-2xl bg-accent/20 border border-accent/40 flex items-center justify-center text-accent shadow-gold">
+        <div className="p-6 sm:p-8 rounded-3xl bg-surface-light dark:bg-secondary/40 border border-transparent shadow-2xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.85)] space-y-6">
+          <div className="flex items-center gap-3.5 border-b border-border/40 dark:border-white/10 pb-5">
+            <div className="w-12 h-12 rounded-2xl bg-accent/20 border border-accent/40 flex items-center justify-center text-accent shadow-gold shrink-0">
               <Edit2 className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="font-serif font-bold text-2xl text-primary dark:text-white">
-                Update Work Order #{selectedTicket.id}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="font-serif font-bold text-2xl text-primary dark:text-white">
+                  Update Work Order
+                </h2>
+                <span className="font-mono text-sm font-bold text-accent bg-accent/15 px-2.5 py-0.5 rounded-lg">
+                  {selectedTicket.ticketNumber || selectedTicket.id}
+                </span>
+              </div>
               <p className="text-xs text-charcoal-muted dark:text-gray-400">
-                Modify status progression, assign technician, or log maintenance expenses.
+                {selectedTicket.location || 'Suite & Resort Facility'} • Assigned Technician Directives
               </p>
             </div>
           </div>
 
           <form onSubmit={handleUpdateSubmit} className="space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-xs font-semibold text-primary dark:text-white mb-1.5">
-                  Work Order Title
-                </label>
-                <input
-                  type="text"
-                  value={updateForm.title}
-                  onChange={e => setUpdateForm({ ...updateForm, title: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/60 text-xs text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none focus:border-accent"
-                />
-              </div>
+            <div className="space-y-1">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-charcoal dark:text-gray-300">
+                Work Order Title
+              </label>
+              <input
+                type="text"
+                required
+                value={updateForm.title}
+                onChange={e => setUpdateForm({ ...updateForm, title: e.target.value })}
+                className="w-full px-4 py-2.5 rounded-xl text-xs bg-ivory/50 dark:bg-primary-950/60 border border-border/60 dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none shadow-inner"
+              />
+            </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-primary dark:text-white mb-1.5">
-                  Resolution Status
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[11px] uppercase tracking-wider font-semibold text-charcoal dark:text-gray-300">
+                  Ticket Status
                 </label>
                 <select
                   value={updateForm.status}
                   onChange={e => setUpdateForm({ ...updateForm, status: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/60 text-xs text-primary dark:text-white focus:outline-none focus:border-accent"
+                  className="w-full px-4 py-2.5 rounded-xl text-xs bg-ivory/50 dark:bg-primary-950/60 border border-border/60 dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none cursor-pointer shadow-sm"
                 >
                   <option value="open" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Open</option>
                   <option value="assigned" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Assigned</option>
@@ -468,33 +474,33 @@ export const MaintenanceTicketsPage = () => {
                   <option value="cancelled" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Cancelled</option>
                 </select>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              <div>
-                <label className="block text-xs font-semibold text-primary dark:text-white mb-1.5">
-                  Priority
+              <div className="space-y-1">
+                <label className="text-[11px] uppercase tracking-wider font-semibold text-charcoal dark:text-gray-300">
+                  Priority Tier
                 </label>
                 <select
                   value={updateForm.priority}
                   onChange={e => setUpdateForm({ ...updateForm, priority: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/60 text-xs text-primary dark:text-white focus:outline-none focus:border-accent"
+                  className="w-full px-4 py-2.5 rounded-xl text-xs bg-ivory/50 dark:bg-primary-950/60 border border-border/60 dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none cursor-pointer shadow-sm"
                 >
-                  <option value="low" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Low</option>
-                  <option value="medium" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Medium</option>
-                  <option value="high" className="bg-white dark:bg-primary-900 text-primary dark:text-white">High</option>
-                  <option value="urgent" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Urgent</option>
+                  <option value="low" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Low Priority</option>
+                  <option value="medium" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Medium Priority</option>
+                  <option value="high" className="bg-white dark:bg-primary-900 text-primary dark:text-white">High Priority</option>
+                  <option value="critical" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Critical / VIP Emergency</option>
                 </select>
               </div>
+            </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-primary dark:text-white mb-1.5">
-                  Assigned Technician
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[11px] uppercase tracking-wider font-semibold text-charcoal dark:text-gray-300">
+                  Assigned Specialist
                 </label>
                 <select
                   value={updateForm.assignedStaffName}
                   onChange={e => setUpdateForm({ ...updateForm, assignedStaffName: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/60 text-xs text-primary dark:text-white focus:outline-none focus:border-accent"
+                  className="w-full px-4 py-2.5 rounded-xl text-xs bg-ivory/50 dark:bg-primary-950/60 border border-border/60 dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none cursor-pointer shadow-sm"
                 >
                   {TECHNICIANS.map(t => (
                     <option key={t} value={t} className="bg-white dark:bg-primary-900 text-primary dark:text-white">{t}</option>
@@ -502,24 +508,38 @@ export const MaintenanceTicketsPage = () => {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-primary dark:text-white mb-1.5">
-                  Parts & Labor Expense ($ USD)
+              <div className="space-y-1">
+                <label className="text-[11px] uppercase tracking-wider font-semibold text-charcoal dark:text-gray-300">
+                  Estimated / Incurred Cost ($)
                 </label>
                 <input
                   type="number"
+                  min="0"
                   value={updateForm.totalCost}
                   onChange={e => setUpdateForm({ ...updateForm, totalCost: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-white/10 bg-white dark:bg-primary-950/60 text-xs text-primary dark:text-white focus:outline-none focus:border-accent font-mono"
+                  className="w-full px-4 py-2.5 rounded-xl text-xs bg-ivory/50 dark:bg-primary-950/60 border border-border/60 dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none font-mono shadow-inner"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/60 dark:border-white/10">
+            <div className="space-y-1">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-charcoal dark:text-gray-300">
+                Append Technical Maintenance Note
+              </label>
+              <textarea
+                rows={3}
+                value={updateForm.newNote}
+                onChange={e => setUpdateForm({ ...updateForm, newNote: e.target.value })}
+                placeholder="e.g., Replacement gasket installed; system tested for 30 minutes at standard atmospheric pressure."
+                className="w-full px-4 py-2.5 rounded-xl text-xs bg-ivory/50 dark:bg-primary-950/60 border border-border/60 dark:border-white/15 focus:border-accent text-primary dark:text-white placeholder-charcoal-muted dark:placeholder-gray-500 focus:outline-none shadow-inner resize-none"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/40 dark:border-white/10">
               <button
                 type="button"
                 onClick={() => setPageView('list')}
-                className="px-5 py-2.5 rounded-xl border border-border dark:border-white/10 hover:bg-ivory dark:hover:bg-primary-800 text-xs font-semibold text-charcoal dark:text-gray-300 transition-all"
+                className="px-5 py-2.5 rounded-xl border border-border/80 dark:border-white/10 hover:bg-ivory dark:hover:bg-primary-800 text-xs font-semibold text-charcoal dark:text-gray-300 hover:text-primary dark:hover:text-white transition-all cursor-pointer"
               >
                 Cancel
               </button>
@@ -598,13 +618,13 @@ export const MaintenanceTicketsPage = () => {
               <button
                 type="button"
                 onClick={() => setPageView('list')}
-                className="px-5 py-2.5 rounded-xl border border-border/80 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-primary-800 text-xs font-semibold text-charcoal-muted transition-all"
+                className="px-5 py-2.5 rounded-xl border border-border/80 dark:border-white/10 hover:bg-ivory dark:hover:bg-primary-800 text-xs font-semibold text-charcoal dark:text-gray-300 hover:text-primary dark:hover:text-white transition-all cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-6 py-2.5 rounded-xl bg-accent hover:opacity-95 text-primary-950 text-xs font-bold shadow-gold flex items-center gap-2 transition-all cursor-pointer"
+                className="px-6 py-2.5 rounded-xl gold-gradient-bg text-primary-900 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold flex items-center gap-2 transition-all cursor-pointer"
               >
                 <Save className="w-4 h-4" />
                 <span>Confirm Technician Dispatch</span>
@@ -756,10 +776,11 @@ export const MaintenanceTicketsPage = () => {
               key={st}
               type="button"
               onClick={() => setStatusFilter(st)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${statusFilter === st
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
+                statusFilter === st
                   ? 'gold-gradient-bg text-primary-950 font-bold border-accent shadow-sm'
-                  : 'bg-ivory/80 dark:bg-primary-950/40 border-border/80 dark:border-white/10 text-charcoal-muted dark:text-gray-300 hover:text-accent hover:border-accent/40'
-                }`}
+                  : 'filter-btn-inactive'
+              }`}
             >
               {st === 'all'
                 ? 'All Statuses'
@@ -794,17 +815,17 @@ export const MaintenanceTicketsPage = () => {
         {filteredTickets.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-border/80 dark:border-white/10 bg-ivory/80 dark:bg-primary-950/80 text-[11px] uppercase tracking-wider text-charcoal dark:text-gray-300 font-semibold">
+              <thead className="border-b border-border/80 dark:border-white/10 bg-ivory/80 dark:bg-primary-800/40 text-[11px] uppercase tracking-wider text-charcoal-muted dark:text-gray-300 font-semibold">
                 <tr>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Ticket Ref</th>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Work Order & Description</th>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Category</th>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Location</th>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Priority</th>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Assigned Specialist</th>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Logged Date</th>
-                  <th className="py-3.5 px-4 text-charcoal dark:text-gray-200">Status</th>
-                  <th className="py-3.5 px-4 text-right text-charcoal dark:text-gray-200">Actions</th>
+                  <th className="py-3.5 px-4 text-charcoal-muted dark:text-gray-300">Ticket Ref</th>
+                  <th className="py-3.5 px-4 text-charcoal-muted dark:text-gray-300">Work Order & Description</th>
+                  <th className="py-3.5 px-4 text-charcoal-muted dark:text-gray-300">Category</th>
+                  <th className="py-3.5 px-4 text-charcoal-muted dark:text-gray-300">Location</th>
+                  <th className="py-3.5 px-4 text-charcoal-muted dark:text-gray-300">Priority</th>
+                  <th className="py-3.5 px-4 text-charcoal-muted dark:text-gray-300">Assigned Specialist</th>
+                  <th className="py-3.5 px-4 text-charcoal-muted dark:text-gray-300">Logged Date</th>
+                  <th className="py-3.5 px-4 text-charcoal-muted dark:text-gray-300">Status</th>
+                  <th className="py-3.5 px-4 text-right text-charcoal-muted dark:text-gray-300">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60 dark:divide-white/5">

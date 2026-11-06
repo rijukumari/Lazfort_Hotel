@@ -125,8 +125,9 @@ export const VIPBenefitsPage = () => {
         actions={
           <div className="flex items-center gap-2.5">
             <button
+              type="button"
               onClick={() => navigate('/customer/rooms')}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl gold-gradient-bg text-primary-900 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl gold-gradient-bg text-primary-900 text-xs font-bold uppercase tracking-wider btn-3d shadow-gold cursor-pointer"
             >
               <BedDouble className="w-4 h-4" />
               <span>Browse Available Rooms</span>

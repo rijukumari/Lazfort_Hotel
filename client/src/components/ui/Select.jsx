@@ -11,7 +11,7 @@ export const Select = ({
   return (
     <div className="relative w-full">
       <select
-        className={`w-full appearance-none px-3.5 py-2.5 pr-9 text-xs bg-white dark:bg-primary-900/60 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-accent/40 text-primary dark:text-white cursor-pointer transition-all ${
+        className={`w-full appearance-none px-3.5 py-2.5 pr-9 text-xs bg-white dark:bg-primary-950/70 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-accent/40 text-primary dark:text-white cursor-pointer transition-all ${
           error
             ? 'border-rose-500 focus:border-rose-500'
             : 'border-border/80 dark:border-white/10 focus:border-accent'

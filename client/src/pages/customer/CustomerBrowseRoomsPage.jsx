@@ -202,12 +202,13 @@ export const CustomerBrowseRoomsPage = () => {
             { id: 'executive', label: 'Executive Suites' },
           ].map(cat => (
             <button
+              type="button"
               key={cat.id}
               onClick={() => setSelectedType(cat.id)}
-              className={`px-4 py-2 rounded-2xl text-xs font-semibold transition-all duration-200 whitespace-nowrap ${
+              className={`px-4 py-2 rounded-2xl text-xs font-semibold transition-all duration-200 whitespace-nowrap cursor-pointer ${
                 selectedType === cat.id
-                  ? 'gold-gradient-bg text-primary-900 font-bold shadow-gold scale-105'
-                  : 'btn-secondary-3d text-charcoal-muted hover:text-accent dark:hover:text-accent'
+                  ? 'filter-btn-active'
+                  : 'filter-btn-inactive'
               }`}
             >
               {cat.label}

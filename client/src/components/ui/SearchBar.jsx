@@ -17,7 +17,7 @@ export const SearchBar = ({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="w-full pl-10 pr-9 py-2.5 text-xs bg-ivory/60 dark:bg-primary-900/40 border border-border/80 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-accent/40 text-primary dark:text-white placeholder:text-charcoal-muted"
+        className="w-full pl-10 pr-9 py-2.5 text-xs bg-white dark:bg-primary-950/70 border border-border/80 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-accent/40 text-primary dark:text-white placeholder:text-charcoal-muted dark:placeholder:text-gray-500"
         {...props}
       />
       {value && onClear && (

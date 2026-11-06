@@ -7,7 +7,7 @@ export function DataTable({
   keyExtractor = (item, index) => item.id || String(index),
   searchPlaceholder = 'Search records...',
   searchFilter,
-  showSearch = true,
+  showSearch = false,
   statusFilterKey,
   statusOptions = [],
   pageSize = 6,
@@ -95,22 +95,7 @@ export function DataTable({
       {(showSearch || statusOptions.length > 0 || actions) && (
         <div className="p-4 sm:p-5 border-b border-border/70 dark:border-white/10 flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between bg-ivory/50 dark:bg-black/20">
           <div className="flex flex-1 flex-col sm:flex-row gap-3 items-center">
-            {/* Search bar */}
-            {showSearch && (
-              <div className="relative w-full sm:w-80">
-                <Search className="w-4 h-4 text-accent absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={e => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  placeholder={searchPlaceholder}
-                  className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm bg-white dark:bg-primary-900/80 border border-border dark:border-white/15 rounded-2xl focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent text-charcoal dark:text-white placeholder:text-charcoal-muted/70 shadow-sm transition-all"
-                />
-              </div>
-            )}
+            {/* Search bar removed as requested */}
 
             {/* Status filter dropdown */}
           {statusOptions.length > 0 && (

@@ -40,6 +40,20 @@ export const UpdateTicketModal = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen) onClose?.();
+    };
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
     if (ticket) {
       setFormData({
         title: ticket.title || '',
@@ -62,7 +76,7 @@ export const UpdateTicketModal = ({
     let updatedNotes = ticket.notes || '';
     if (formData.newNote.trim()) {
       const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
-      updatedNotes = updatedNotes 
+      updatedNotes = updatedNotes
         ? `${updatedNotes}\n[${timestamp}]: ${formData.newNote.trim()}`
         : `[${timestamp}]: ${formData.newNote.trim()}`;
     }
@@ -86,12 +100,12 @@ export const UpdateTicketModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary/70 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-primary/70 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="card-luxury-3d w-full max-w-lg bg-white dark:bg-[#111827] border border-accent/40 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-6 py-4.5 border-b border-border dark:border-white/10 flex items-center justify-between bg-ivory/50 dark:bg-white/[0.02]">
+        <div className="px-6 py-4.5 border-b border-border dark:border-white/10 flex items-center justify-between bg-ivory/50 dark:bg-white/[0.02] sticky top-0 z-10 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center text-accent">
+            <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center text-accent shrink-0">
               <Edit2 className="w-5 h-5" />
             </div>
             <div>
@@ -108,13 +122,13 @@ export const UpdateTicketModal = ({
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-xl text-charcoal-muted hover:text-accent">
+          <button onClick={onClose} className="p-1.5 rounded-xl text-charcoal-muted hover:text-accent shrink-0 cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 flex-1">
+        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto no-scrollbar space-y-4 flex-1">
           <div className="space-y-1">
             <label className="text-[11px] uppercase tracking-wider font-semibold text-charcoal dark:text-gray-300">
               Work Order Title
@@ -124,7 +138,7 @@ export const UpdateTicketModal = ({
               required
               value={formData.title}
               onChange={e => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-white/70 dark:bg-black/30 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none"
+              className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/50 dark:bg-primary-950/60 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none"
             />
           </div>
 
@@ -136,10 +150,10 @@ export const UpdateTicketModal = ({
               <select
                 value={formData.status}
                 onChange={e => setFormData({ ...formData, status: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-white/70 dark:bg-black/30 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none cursor-pointer"
+                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/50 dark:bg-primary-950/60 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none cursor-pointer"
               >
                 {STATUS_OPTIONS.map(s => (
-                  <option key={s.value} value={s.value}>
+                  <option key={s.value} value={s.value} className="bg-white dark:bg-primary-900 text-primary dark:text-white">
                     {s.label}
                   </option>
                 ))}
@@ -153,12 +167,12 @@ export const UpdateTicketModal = ({
               <select
                 value={formData.priority}
                 onChange={e => setFormData({ ...formData, priority: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-white/70 dark:bg-black/30 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none cursor-pointer"
+                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/50 dark:bg-primary-950/60 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none cursor-pointer"
               >
-                <option value="low">Low Priority</option>
-                <option value="medium">Medium Priority</option>
-                <option value="high">High Priority</option>
-                <option value="critical">Critical (Blocks Room)</option>
+                <option value="low" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Low Priority</option>
+                <option value="medium" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Medium Priority</option>
+                <option value="high" className="bg-white dark:bg-primary-900 text-primary dark:text-white">High Priority</option>
+                <option value="critical" className="bg-white dark:bg-primary-900 text-primary dark:text-white">Critical (Blocks Room)</option>
               </select>
             </div>
           </div>
@@ -171,10 +185,10 @@ export const UpdateTicketModal = ({
               <select
                 value={formData.assignedStaffName}
                 onChange={e => setFormData({ ...formData, assignedStaffName: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-white/70 dark:bg-black/30 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none cursor-pointer"
+                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/50 dark:bg-primary-950/60 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white focus:outline-none cursor-pointer"
               >
                 {TECHNICIANS.map(t => (
-                  <option key={t} value={t}>
+                  <option key={t} value={t} className="bg-white dark:bg-primary-900 text-primary dark:text-white">
                     {t}
                   </option>
                 ))}
@@ -190,7 +204,7 @@ export const UpdateTicketModal = ({
                 min="0"
                 value={formData.totalCost}
                 onChange={e => setFormData({ ...formData, totalCost: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-white/70 dark:bg-black/30 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white font-mono focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-ivory/50 dark:bg-primary-950/60 border border-border dark:border-white/15 focus:border-accent text-primary dark:text-white font-mono focus:outline-none"
               />
             </div>
           </div>
