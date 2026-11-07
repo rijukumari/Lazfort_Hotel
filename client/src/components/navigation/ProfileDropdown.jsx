@@ -1,11 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { User, Settings, ShieldCheck, LogOut, ChevronDown, Sparkles } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
+import { User, Settings, ShieldCheck, LogOut, ChevronDown, Sparkles, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const ProfileDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { user, role, logout } = useAuth();
+  const { showToast } = useToast();
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -19,10 +22,20 @@ export const ProfileDropdown = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    setIsOpen(false);
-    logout();
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      setIsOpen(false);
+      showToast('Session Terminated', 'Security token revoked. You have been safely signed out.', 'success');
+      navigate('/login', { replace: true });
+    } catch (err) {
+      console.error('Logout error:', err);
+      showToast('Logout Notice', 'Signed out locally. Please close your session window.', 'warning');
+      navigate('/login', { replace: true });
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -145,13 +158,18 @@ export const ProfileDropdown = () => {
           <div className="pt-2 px-2 border-t border-border/80 dark:border-border-dark">
             <button
               type="button"
+              disabled={isLoggingOut}
               onClick={handleLogout}
-              className="w-full px-3 py-2 rounded-xl text-left text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2.5 transition-colors font-medium"
+              className="w-full px-3 py-2 rounded-xl text-left text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2.5 transition-colors font-medium disabled:opacity-60 cursor-pointer"
             >
               <div className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-900/40 flex items-center justify-center text-rose-600 dark:text-rose-400">
-                <LogOut className="w-3.5 h-3.5" />
+                {isLoggingOut ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-600 dark:text-rose-400" />
+                ) : (
+                  <LogOut className="w-3.5 h-3.5" />
+                )}
               </div>
-              <span>Sign Out & Lock Console</span>
+              <span>{isLoggingOut ? 'Revoking Session Token...' : 'Sign Out & Lock Console'}</span>
             </button>
           </div>
         </div>

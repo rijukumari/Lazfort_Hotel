@@ -27,7 +27,6 @@ export const NAVIGATION_CONFIG = {
           iconName: 'Building2',
           children: [
             { id: 'sa-hotels-all', label: 'All Hotels', path: '/super-admin/hotels' },
-            { id: 'sa-hotels-details', label: 'Hotel Details', path: '/super-admin/hotels/details' },
             { id: 'sa-hotels-approvals', label: 'Hotel Approvals', path: '/super-admin/hotels/approvals' },
             { id: 'sa-hotels-status', label: 'Hotel Status', path: '/super-admin/hotels/status' }
           ]

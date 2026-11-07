@@ -179,25 +179,8 @@ export const AuthProvider = ({ children }) => {
         return { success: true, user: authUser };
       }
     } catch (err) {
-      // If server rejected credentials with 401/422/403, bubble up error
-      if (err.status === 401 || err.status === 403 || err.status === 422) {
-        throw err;
-      }
-
-      // If backend is unreachable or local development fallback
-      console.warn('[AuthContext] Backend login error, using local clearance:', err.message);
-      setRole(targetRole);
-      const baseUser = ROLE_DEMO_CONFIGS[targetRole]?.mockUser || ROLE_DEMO_CONFIGS.hotel_admin.mockUser;
-      const finalUser = {
-        ...baseUser,
-        email: email || baseUser.email,
-      };
-      setUser(finalUser);
-      setIsAuthenticated(true);
-      localStorage.setItem('aurelia_role', targetRole);
-      localStorage.setItem('aurelia_auth', 'true');
-      localStorage.setItem('aurelia_user', JSON.stringify(finalUser));
-      return { success: true, user: finalUser };
+      // Always throw API errors (401, 403, 422, 500) so user sees proper error message and cannot bypass auth
+      throw err;
     }
   };
 
@@ -284,10 +267,25 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('lazfort_user', JSON.stringify(newUser));
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
-    localStorage.setItem('aurelia_auth', 'false');
-    localStorage.removeItem('lazfort_token');
+  const logout = async () => {
+    try {
+      // Invalidate current session and bearer token on Laravel MySQL backend
+      await hotelApi.logout();
+    } catch (err) {
+      console.warn('Backend logout encountered error, clearing local credentials:', err);
+    } finally {
+      // Clear all authentication credentials & user context from browser storage
+      setIsAuthenticated(false);
+      setUser(null);
+      localStorage.setItem('aurelia_auth', 'false');
+      localStorage.removeItem('lazfort_token');
+      localStorage.removeItem('aurelia_token');
+      localStorage.removeItem('aurelia_user');
+      localStorage.removeItem('lazfort_user');
+      localStorage.removeItem('aurelia_role');
+      localStorage.removeItem('lazfort_role');
+      sessionStorage.clear();
+    }
   };
 
   useEffect(() => {

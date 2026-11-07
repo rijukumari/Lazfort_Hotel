@@ -26,7 +26,7 @@ export const RevenueReportsPage = () => {
     let isMounted = true;
     const fetchRevStats = async () => {
       try {
-        const stats = await hotelApi.getSuperAdminStats();
+        const stats = await hotelApi.getRevenueReportsData();
         if (isMounted && stats) {
           setBackendStats(stats);
         }

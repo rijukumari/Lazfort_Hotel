@@ -32,10 +32,10 @@ export const ActiveUsersPage = () => {
   const [suspendingUser, setSuspendingUser] = useState(null);
   const [suspensionReason, setSuspensionReason] = useState('');
 
-  // Fetch users from API with in-memory caching
+  // Fetch active users from API with dedicated caching
   useEffect(() => {
     let isMounted = true;
-    hotelApi.getUsers().catch(() => {});
+    hotelApi.getActiveUsersData().catch(() => {});
     return () => { isMounted = false; };
   }, []);
 

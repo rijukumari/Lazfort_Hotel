@@ -69,6 +69,8 @@ async function apiRequest(endpoint, options = {}) {
 
       if (isGet) {
         requestCache.set(cacheKey, { timestamp: Date.now(), data });
+      } else if (endpoint.startsWith('/auth/')) {
+        // Keep read cache warm during auth requests to prevent cache dumps
       } else {
         requestCache.clear();
       }
@@ -112,6 +114,7 @@ export const hotelApi = {
   // Authentication
   login: (data) => apiRequest('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
   signup: (data) => apiRequest('/auth/signup', { method: 'POST', body: JSON.stringify(data) }),
+  logout: () => apiRequest('/auth/logout', { method: 'POST', skipCache: true }),
   getCurrentUser: () => apiRequest('/auth/me'),
 
   // Health & Diagnostics
@@ -244,6 +247,33 @@ export const hotelApi = {
   getHotelDetails: (id = '') => apiRequest(`/super-admin/hotels/details${id ? `/${id}` : ''}`),
   getHotelApprovals: () => apiRequest('/super-admin/hotels/approvals'),
   getHotelStatuses: () => apiRequest('/super-admin/hotels/status'),
+
+  // Dedicated Hotel Admin Management Submenus
+  getHotelAdminAddData: () => apiRequest('/super-admin/hotel-admins/add-data'),
+  getHotelAdminPermissionsData: () => apiRequest('/super-admin/hotel-admins/permissions-data'),
+
+  // Dedicated User Management Submenus
+  getUsersAllData: () => apiRequest('/super-admin/users/all-data'),
+  getActiveUsersData: () => apiRequest('/super-admin/users/active-data'),
+  getSuspendedUsersData: () => apiRequest('/super-admin/users/suspended-data'),
+
+  // Dedicated Platform Reports Submenus
+  getRevenueReportsData: () => apiRequest('/super-admin/reports/revenue-analytics'),
+
+  // Dedicated Front Desk Submenus
+  getCheckedInBookingsData: () => apiRequest('/front-desk/check-in-data'),
+  getCheckedOutBookingsData: () => apiRequest('/front-desk/check-out-data'),
+
+  // Notifications API
+  getNotifications: (role = '') => apiRequest(`/notifications${role ? `?role=${role}` : ''}`, { ttl: 30000 }),
+  markAllNotificationsRead: () => apiRequest('/notifications/mark-all-read', { method: 'POST' }),
+  markNotificationRead: (id) => apiRequest(`/notifications/${id}/read`, { method: 'POST' }),
+
+  // Universal Global Search API
+  globalSearch: (query, role = '') => apiRequest(`/global-search?q=${encodeURIComponent(query)}${role ? `&role=${encodeURIComponent(role)}` : ''}`, { skipCache: true }),
+
+  // Real MySQL Data Export
+  exportModuleData: (module) => apiRequest(`/export/${module}`, { skipCache: true }),
 };
 
 export default hotelApi;

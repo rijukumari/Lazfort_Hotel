@@ -27,10 +27,10 @@ export const AddUserPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Fetch users & hotels from API
+  // Fetch dedicated Add Admin dropdown & role data from API
   useEffect(() => {
     let isMounted = true;
-    hotelApi.getHotels().catch(() => {});
+    hotelApi.getHotelAdminAddData().catch(() => {});
     return () => { isMounted = false; };
   }, []);
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader, StatusBadge, Button } from '../../components/ui';
 import { DataTable } from '../../components/data-display/DataTable';
@@ -14,11 +14,19 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { useERP } from '../../context/ERPContext';
+import { hotelApi } from '../../services/hotelApi';
 
 export const CheckedInBookingsPage = () => {
   const navigate = useNavigate();
   const { bookings, folios = [], checkOutGuest } = useERP();
   const { showToast } = useToast();
+
+  // Trigger dedicated Check-In API on mount
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getCheckedInBookingsData().catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   const checkedInBookings = bookings.filter(b => b.status === 'checked_in');
 

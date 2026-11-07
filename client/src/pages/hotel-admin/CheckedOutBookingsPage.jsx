@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader, StatusBadge, Button, Modal } from '../../components/ui';
 import { DataTable } from '../../components/data-display/DataTable';
@@ -13,11 +13,19 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { useERP } from '../../context/ERPContext';
+import { hotelApi } from '../../services/hotelApi';
 
 export const CheckedOutBookingsPage = () => {
   const navigate = useNavigate();
   const { bookings, invoices = [], folios = [] } = useERP();
   const { showToast } = useToast();
+
+  // Trigger dedicated Check-Out API on mount
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getCheckedOutBookingsData().catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   const [receiptModal, setReceiptModal] = useState(null);
 

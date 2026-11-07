@@ -28,10 +28,10 @@ export const SuspendedUsersPage = () => {
   const [reactivateTarget, setReactivateTarget] = useState(null);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
 
-  // Fetch users from API with in-memory caching
+  // Fetch suspended users from API with dedicated caching
   useEffect(() => {
     let isMounted = true;
-    hotelApi.getUsers().catch(() => {});
+    hotelApi.getSuspendedUsersData().catch(() => {});
     return () => { isMounted = false; };
   }, []);
 

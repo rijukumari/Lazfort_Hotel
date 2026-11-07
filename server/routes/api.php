@@ -14,10 +14,12 @@ use App\Http\Controllers\Api\AuthController;
 |
 */
 
-// Authentication Routes (Signup, Login, Current User)
+// Authentication Routes (Signup, Login, Current User, Logout)
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/signup', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/logout', [AuthController::class, 'logout']);
+Route::post('/logout', [AuthController::class, 'logout']);
 Route::get('/auth/me', [AuthController::class, 'me']);
 
 // Diagnostic & Health
@@ -149,4 +151,33 @@ Route::post('/super-admin/platform-settings', [HotelErpController::class, 'saveP
 Route::get('/super-admin/hotels/details/{id?}', [HotelErpController::class, 'getHotelDetails']);
 Route::get('/super-admin/hotels/approvals', [HotelErpController::class, 'getHotelApprovals']);
 Route::get('/super-admin/hotels/status', [HotelErpController::class, 'getHotelStatuses']);
+
+// Hotel Admin Management Dedicated Endpoints
+Route::get('/super-admin/hotel-admins/add-data', [HotelErpController::class, 'getHotelAdminAddData']);
+Route::get('/super-admin/hotel-admins/permissions-data', [HotelErpController::class, 'getHotelAdminPermissionsData']);
+
+// User Management Submenus Dedicated Endpoints
+Route::get('/super-admin/users/all-data', [HotelErpController::class, 'getUsers']);
+Route::get('/super-admin/users/active-data', [HotelErpController::class, 'getActiveUsersData']);
+Route::get('/super-admin/users/suspended-data', [HotelErpController::class, 'getSuspendedUsersData']);
+
+// Platform Reports Submenus Dedicated Endpoints
+Route::get('/super-admin/reports/revenue-analytics', [HotelErpController::class, 'getRevenueReportsData']);
+
+// Front Desk Dedicated Endpoints
+Route::get('/front-desk/check-in-data', [HotelErpController::class, 'getCheckedInBookings']);
+Route::get('/front-desk/check-out-data', [HotelErpController::class, 'getCheckedOutBookings']);
+
+// Notifications Endpoints
+Route::get('/notifications', [HotelErpController::class, 'getNotifications']);
+Route::post('/notifications/mark-all-read', [HotelErpController::class, 'markAllNotificationsRead']);
+Route::post('/notifications/{id}/read', [HotelErpController::class, 'markNotificationRead']);
+
+// Universal Global Search Endpoint
+Route::get('/global-search', [HotelErpController::class, 'globalSearch']);
+
+// Real MySQL CSV Export Endpoint
+Route::get('/export/{module}', [HotelErpController::class, 'exportData']);
+
+
 

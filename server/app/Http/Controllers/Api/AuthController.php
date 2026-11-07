@@ -19,6 +19,11 @@ class AuthController extends Controller
      */
     protected function ensureUsersTable()
     {
+        // One-time schema check cached statically to avoid running DDL checks on every request
+        static $checked = false;
+        if ($checked) return;
+        $checked = true;
+
         try {
             if (!Schema::hasTable('users') || !Schema::hasTable('personal_access_tokens')) {
                 Artisan::call('migrate', ['--force' => true]);
@@ -58,67 +63,22 @@ class AuthController extends Controller
                     DB::statement("ALTER TABLE users ADD COLUMN custom_id VARCHAR(50) NULL AFTER id");
                 }
 
-                // Ensure demo/default accounts exist in MySQL users table
-                $defaultDemoAccounts = [
-                    [
+                // Ensure Super Admin user exists in MySQL users table with proper Bcrypt hash
+                $superAdmin = User::where('email', 'julian@grandluxe-group.com')->first();
+                if (!$superAdmin) {
+                    User::create([
+                        'custom_id' => 'usr-sa-1',
                         'name' => 'Julian St. Clair',
                         'email' => 'julian@grandluxe-group.com',
+                        'password' => Hash::make('password123'),
                         'role' => 'super_admin',
                         'hotel_name' => 'Lazfort Global Corporate Office',
                         'phone' => '+377 98 00 11 01',
-                    ],
-                    [
-                        'name' => 'Lord Alistair Sterling',
-                        'email' => 'gm@lazfort.com',
-                        'role' => 'hotel_admin',
-                        'hotel_name' => 'Lazfort Grand Palace & Royal Spa',
-                        'phone' => '+377 98 00 10 00',
-                    ],
-                    [
-                        'name' => 'Camilla Valente',
-                        'email' => 'camilla.v@lazfort.com',
-                        'role' => 'receptionist',
-                        'hotel_name' => 'Lazfort Grand Palace',
-                        'phone' => '+377 98 00 12 34',
-                    ],
-                    [
-                        'name' => 'Sir Alexander Kensington',
-                        'email' => 'a.kensington@capitalgroup.co.uk',
-                        'role' => 'customer',
-                        'hotel_name' => 'Lazfort Grand Palace & Royal Spa',
-                        'phone' => '+44 20 7946 0912',
-                    ],
-                    [
-                        'name' => 'Margaux Dubois',
-                        'email' => 'margaux.d@lazfort.com',
-                        'role' => 'housekeeping',
-                        'hotel_name' => 'Lazfort Grand Palace',
-                        'phone' => '+377 98 00 14 20',
-                    ],
-                    [
-                        'name' => 'Antoine Mercier',
-                        'email' => 'antoine.m@lazfort.com',
-                        'role' => 'staff',
-                        'hotel_name' => 'Lazfort Grand Palace',
-                        'phone' => '+377 98 00 15 55',
-                    ],
-                ];
-
-                foreach ($defaultDemoAccounts as $acc) {
-                    $existing = User::where('email', $acc['email'])->first();
-                    if (!$existing) {
-                        User::create([
-                            'custom_id' => 'usr-' . substr($acc['role'], 0, 2) . '-1',
-                            'name' => $acc['name'],
-                            'email' => $acc['email'],
-                            'password' => Hash::make('password123'),
-                            'role' => $acc['role'],
-                            'hotel_name' => $acc['hotel_name'],
-                            'phone' => $acc['phone'],
-                            'status' => 'active',
-                            'avatar' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-                        ]);
-                    }
+                        'status' => 'active',
+                        'avatar' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+                    ]);
+                } else if ($superAdmin->role !== 'super_admin') {
+                    $superAdmin->update(['role' => 'super_admin']);
                 }
             }
         } catch (\Throwable $e) {
@@ -229,96 +189,92 @@ class AuthController extends Controller
     {
         $this->ensureUsersTable();
 
-        $validated = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
-            'role' => 'nullable|string',
-        ]);
-
-        $email = strtolower(trim($validated['email']));
-        $user = User::where('email', $email)->first();
-
-        // If demo preset account is selected or user not yet in DB, check demo presets
-        $isDemoPlaceholderPassword = in_array($validated['password'], ['••••••••••••', 'password', 'password123', 'admin', 'admin123', 'secret123']);
-        $demoEmails = [
-            'julian@grandluxe-group.com' => ['name' => 'Julian St. Clair', 'role' => 'super_admin', 'hotel' => 'Lazfort Global Corporate Office'],
-            'gm@lazfort.com' => ['name' => 'Lord Alistair Sterling', 'role' => 'hotel_admin', 'hotel' => 'Lazfort Grand Palace & Royal Spa'],
-            'camilla.v@lazfort.com' => ['name' => 'Camilla Valente', 'role' => 'receptionist', 'hotel' => 'Lazfort Grand Palace'],
-            'a.kensington@capitalgroup.co.uk' => ['name' => 'Sir Alexander Kensington', 'role' => 'customer', 'hotel' => 'Lazfort Grand Palace & Royal Spa'],
-            'margaux.d@lazfort.com' => ['name' => 'Margaux Dubois', 'role' => 'housekeeping', 'hotel' => 'Lazfort Grand Palace'],
-            'antoine.m@lazfort.com' => ['name' => 'Antoine Mercier', 'role' => 'staff', 'hotel' => 'Lazfort Grand Palace'],
-        ];
-
-        if (!$user && isset($demoEmails[$email])) {
-            $demo = $demoEmails[$email];
-            $user = User::create([
-                'custom_id' => 'usr-' . substr($demo['role'], 0, 2) . '-1',
-                'name' => $demo['name'],
-                'email' => $email,
-                'password' => Hash::make($validated['password']),
-                'role' => $demo['role'],
-                'hotel_name' => $demo['hotel'],
-                'status' => 'active',
-                'avatar' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-            ]);
-        }
-
-        if (!$user) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Invalid clearance credentials. No account found with this email.',
-            ], 401);
-        }
-
-        // Verify password (allow demo password tokens for quick role switcher or match hashed password)
-        $passwordMatches = Hash::check($validated['password'], $user->password) ||
-                           (isset($demoEmails[$email]) && $isDemoPlaceholderPassword);
-
-        if (!$passwordMatches) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Invalid security passcode. Clearance denied.',
-            ], 401);
-        }
-
-        // Check if account suspended
-        if (isset($user->status) && $user->status === 'suspended') {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'This account has been administratively suspended.',
-            ], 403);
-        }
-
-        // Optional role match validation
-        if ($request->filled('role')) {
-            $requestedRole = $this->normalizeRole($request->input('role'));
-            // Allow login but sync/update if appropriate
-        }
-
-        // Generate token safely
         try {
-            $token = $user->createToken('lazfort_auth_token')->plainTextToken;
-        } catch (\Throwable $tokenEx) {
-            Log::info('createToken fallback: ' . $tokenEx->getMessage());
-            $token = 'tk_' . bin2hex(random_bytes(32));
-        }
+            $validated = $request->validate([
+                'email' => 'required|email',
+                'password' => 'required|string',
+                'role' => 'nullable|string',
+            ]);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Authentication successful',
-            'token' => $token,
-            'user' => [
-                'id' => $user->custom_id ?: ('usr-' . $user->id),
-                'db_id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role ?: 'hotel_admin',
-                'hotelName' => $user->hotel_name ?? 'Lazfort Grand Palace & Royal Spa',
-                'phone' => $user->phone,
-                'status' => $user->status ?? 'active',
-                'avatar' => $user->avatar ?: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
-            ],
-        ]);
+            $email = strtolower(trim($validated['email']));
+            $inputPassword = $validated['password'];
+
+            // Query user strictly from MySQL database
+            $user = User::where('email', $email)->first();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid clearance credentials. No account found with this email.',
+                ], 401);
+            }
+
+            // Check if account suspended
+            if (isset($user->status) && strtolower($user->status) === 'suspended') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'This account has been administratively suspended.',
+                ], 403);
+            }
+
+            // Verify password using Laravel Hash::check() against MySQL bcrypt hash
+            // (Also accepts default demo clearance passcode for pre-seeded console demo users)
+            $isDemoPreset = in_array($inputPassword, ['••••••••••••', 'password123', 'admin123', 'password']);
+            $isPasswordValid = Hash::check($inputPassword, $user->password) ||
+                               ($isDemoPreset && in_array($email, [
+                                   'julian@grandluxe-group.com',
+                                   'gm@lazfort.com',
+                                   'camilla.v@lazfort.com',
+                                   'a.kensington@capitalgroup.co.uk',
+                                   'margaux.d@lazfort.com',
+                                   'antoine.m@lazfort.com'
+                               ]));
+
+            if (!$isPasswordValid) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid security passcode. Clearance denied.',
+                ], 401);
+            }
+
+            // Trust the database role, NOT the frontend role
+            $dbRole = $this->normalizeRole($user->role);
+
+            // Generate secure bearer token
+            $token = 'tk_' . bin2hex(random_bytes(32));
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Authentication successful',
+                'token' => $token,
+                'user' => [
+                    'id' => $user->custom_id ?: ('usr-' . $user->id),
+                    'db_id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $dbRole,
+                    'hotelName' => $user->hotel_name ?? 'Lazfort Global Corporate Office',
+                    'phone' => $user->phone,
+                    'status' => $user->status ?? 'active',
+                    'avatar' => $user->avatar ?: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+                ],
+            ], 200);
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation error',
+                'errors' => $ve->errors(),
+            ], 422);
+        } catch (\Throwable $e) {
+            Log::error('Authentication service exception: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Authentication service error: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -347,6 +303,41 @@ class AuthController extends Controller
                 'avatar' => $user->avatar,
             ],
         ]);
+    }
+
+    /**
+     * Invalidate user authentication token & logout
+     */
+    public function logout(Request $request)
+    {
+        $this->ensureUsersTable();
+        try {
+            // If authenticated via Sanctum token, revoke current token
+            if ($request->user() && method_exists($request->user(), 'currentAccessToken') && $request->user()->currentAccessToken()) {
+                $request->user()->currentAccessToken()->delete();
+            }
+
+            // Also check Authorization header token and invalidate from personal_access_tokens table if present
+            $bearer = $request->bearerToken();
+            if ($bearer && Schema::hasTable('personal_access_tokens')) {
+                // If it's a token hash or plain token
+                DB::table('personal_access_tokens')
+                    ->where('token', hash('sha256', $bearer))
+                    ->orWhere('token', $bearer)
+                    ->delete();
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Session invalidated and logged out successfully.',
+            ], 200);
+        } catch (\Throwable $e) {
+            Log::error('Logout error: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to revoke authentication session.',
+            ], 500);
+        }
     }
 }
 

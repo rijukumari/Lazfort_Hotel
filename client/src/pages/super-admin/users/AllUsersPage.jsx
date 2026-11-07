@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
@@ -29,6 +29,7 @@ import {
 
 export const AllUsersPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { users, addUser, updateUser, suspendUser, reactivateUser, deleteUser } = useSuperAdminUsers();
   const { showToast } = useToast();
 
@@ -46,12 +47,18 @@ export const AllUsersPage = () => {
   const [suspensionReasonInput, setSuspensionReasonInput] = useState('');
   const [deletingUserId, setDeletingUserId] = useState(null);
 
-  // Fetch users from Laravel backend on mount
+  // Fetch users or permissions based on route with independent caching
   useEffect(() => {
     let isMounted = true;
-    hotelApi.getUsers().catch(() => {});
+    if (location.pathname.includes('/permissions')) {
+      hotelApi.getHotelAdminPermissionsData().catch(() => {});
+    } else if (location.pathname.startsWith('/super-admin/users')) {
+      hotelApi.getUsersAllData().catch(() => {});
+    } else {
+      hotelApi.getUsers().catch(() => {});
+    }
     return () => { isMounted = false; };
-  }, []);
+  }, [location.pathname]);
 
   // Add Form state
   const [formName, setFormName] = useState('');
