@@ -1,16 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader, Button, StatusBadge, ConfirmDialog } from '../../components/ui';
+import { PageHeader, Button, StatusBadge, ConfirmDialog, ViewToggle } from '../../components/ui';
 import { RoomCard } from '../../components/hotel/RoomCard';
 import { DataTable } from '../../components/data-display/DataTable';
-import { Plus, LayoutGrid, List, Layers, Edit, Eye, Trash2 } from 'lucide-react';
+import { Plus, Layers, Edit, Eye, Trash2 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { useERP } from '../../context/ERPContext';
 
 export const RoomsManagementPage = () => {
   const navigate = useNavigate();
   const { rooms, updateRoomStatus, deleteRoom } = useERP();
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('lazfort_view_rooms') || 'grid';
+    } catch {
+      return 'grid';
+    }
+  });
+
+  const handleViewChange = (mode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('lazfort_view_rooms', mode);
+    } catch {}
+  };
   const [deleteSuiteId, setDeleteSuiteId] = useState(null);
   const { showToast } = useToast();
 
@@ -120,28 +133,10 @@ export const RoomsManagementPage = () => {
         badge={`${rooms.length} Luxury Suites`}
         actions={
           <div className="flex items-center gap-3">
-            <div className="flex items-center bg-white/90 dark:bg-primary-900/90 border border-border/80 dark:border-accent/25 rounded-2xl p-1 shadow-sm">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-xl transition-all duration-200 ${viewMode === 'grid'
-                  ? 'filter-btn-active'
-                  : 'text-charcoal-muted hover:text-accent dark:hover:text-accent'
-                  }`}
-                title="Grid View"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('table')}
-                className={`p-2 rounded-xl transition-all duration-200 ${viewMode === 'table'
-                  ? 'filter-btn-active'
-                  : 'text-charcoal-muted hover:text-accent dark:hover:text-accent'
-                  }`}
-                title="Table View"
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
+            <ViewToggle
+              viewMode={viewMode === 'table' ? 'list' : 'grid'}
+              onViewChange={handleViewChange}
+            />
 
             <Button
               variant="outline"

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PageHeader, Card, Button } from '../../../components/ui';
 import { useToast } from '../../../context/ToastContext';
 import { useTheme } from '../../../context/ThemeContext';
+import { useERP } from '../../../context/ERPContext';
 import { hotelApi } from '../../../services/hotelApi';
 import {
   Sliders,
@@ -26,6 +27,7 @@ import {
 export const SuperAdminSystemPreferencesPage = () => {
   const { showToast } = useToast();
   const { theme, setTheme } = useTheme();
+  const { currencies, defaultBaseCurrency, setDefaultBaseCurrency } = useERP();
 
   const [settings, setSettings] = useState(() => {
     try {
@@ -206,14 +208,37 @@ export const SuperAdminSystemPreferencesPage = () => {
               </label>
               <select
                 value={settings.defaultCurrency}
-                onChange={(e) => updateSetting('defaultCurrency', e.target.value)}
+                onChange={(e) => {
+                  updateSetting('defaultCurrency', e.target.value);
+                  const codeMatch = e.target.value.match(/^[A-Z]{3}/);
+                  if (codeMatch && setDefaultBaseCurrency) {
+                    setDefaultBaseCurrency(codeMatch[0]);
+                  }
+                }}
                 className="w-full px-3.5 py-2.5 rounded-2xl border border-border dark:border-white/10 bg-ivory/80 dark:bg-primary-900/80 text-primary dark:text-white focus:outline-none focus:border-accent"
               >
-                <option value="USD ($)">USD ($) — Sovereign Dollar</option>
-                <option value="EUR (€)">EUR (€) — Euro Sovereign</option>
-                <option value="GBP (£)">GBP (£) — British Pound</option>
-                <option value="CHF (CHF)">CHF (CHF) — Swiss Franc</option>
-                <option value="AED (AED)">AED (AED) — Emirati Dirham</option>
+                {currencies && currencies.length > 0 ? (
+                  currencies.map((curr) => {
+                    const code = curr.currency_code || curr.code;
+                    const symbol = curr.currency_symbol || curr.symbol || '';
+                    const name = curr.currency_name || curr.name || code;
+                    const val = `${code} (${symbol})`;
+                    return (
+                      <option key={curr.id || code} value={val}>
+                        {code} ({symbol}) — {name}
+                      </option>
+                    );
+                  })
+                ) : (
+                  <>
+                    <option value="INR (₹)">INR (₹) — Indian Rupee</option>
+                    <option value="USD ($)">USD ($) — Sovereign Dollar</option>
+                    <option value="EUR (€)">EUR (€) — Euro Sovereign</option>
+                    <option value="GBP (£)">GBP (£) — British Pound</option>
+                    <option value="CHF (CHF)">CHF (CHF) — Swiss Franc</option>
+                    <option value="AED (AED)">AED (AED) — Emirati Dirham</option>
+                  </>
+                )}
               </select>
             </div>
 

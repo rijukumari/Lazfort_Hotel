@@ -237,8 +237,9 @@ export const HotelsListPage = () => {
               variant="gold"
               icon={Plus}
               onClick={() => navigate('/super-admin/hotels/add')}
+              className="btn-3d shadow-lg font-bold uppercase tracking-wider"
             >
-              Add Hotel
+              Register Hotel
             </Button>
           </div>
         }

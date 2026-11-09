@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { initialSuperAdminUsers } from '../data/mockSuperAdminModules';
-import { hotelApi } from '../services/hotelApi';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { hotelApi, invalidateApiCache } from '../services/hotelApi';
 
 const STORAGE_KEY = 'lazfort_superadmin_users_v1';
 
@@ -10,64 +9,146 @@ export const SuperAdminUserProvider = ({ children }) => {
   const [users, setUsers] = useState(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          const seen = new Set();
+          return parsed.filter(u => {
+            const key = u.db_id ? `db-${u.db_id}` : (u.id || u.email);
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+        }
+      }
     } catch {
       // fallback
     }
-    return initialSuperAdminUsers;
+    return [];
   });
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch users on demand when component mounts or needs it
-  const refreshUsers = async () => {
+  // Fetch users from backend MySQL database
+  const refreshUsers = useCallback(async () => {
     try {
       setIsLoading(true);
       const backendUsers = await hotelApi.getUsers();
-      if (Array.isArray(backendUsers) && backendUsers.length > 0) {
-        setUsers(backendUsers);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(backendUsers));
+      if (Array.isArray(backendUsers)) {
+        // Deduplicate users strictly by unique id, db_id, and email to ensure no duplicate keys
+        const seen = new Set();
+        const uniqueUsers = [];
+        for (const u of backendUsers) {
+          const key = String(u.id || u.db_id || u.email || Math.random());
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueUsers.push(u);
+          }
+        }
+        setUsers(uniqueUsers);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(uniqueUsers));
       }
     } catch (err) {
-      console.warn('[SuperAdminUserContext] Using local users store:', err.message);
+      if (!err?.message?.includes('Failed to fetch')) {
+        console.warn('[SuperAdminUserContext] Using local users store fallback:', err.message);
+      }
     } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  // Upload or change avatar for any user and persist to MySQL
+  const uploadUserAvatar = async (id, fileOrData) => {
+    try {
+      let res;
+      if (fileOrData instanceof File || fileOrData instanceof Blob) {
+        const formData = new FormData();
+        formData.append('avatar', fileOrData);
+        res = await hotelApi.uploadAvatar(id, formData);
+      } else {
+        res = await hotelApi.uploadAvatar(id, fileOrData);
+      }
+
+      if (res && res.avatar) {
+        setUsers(prev => prev.map(u => (u.id === id || String(u.db_id) === String(id) ? { ...u, avatar: res.avatar } : u)));
+        return res.avatar;
+      }
+    } catch (err) {
+      console.error('[SuperAdminUserContext] uploadUserAvatar error:', err);
+      throw err;
+    }
   };
 
+  // Automatically fetch from backend MySQL on initial mount
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    refreshUsers();
+  }, [refreshUsers]);
+
+  useEffect(() => {
+    if (users && users.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    }
   }, [users]);
 
   const addUser = async (userData) => {
+    const tempId = `usr-${Date.now().toString().slice(-4)}`;
+    const hotelVal = userData.hotel || (Array.isArray(userData.hotelAccess) ? userData.hotelAccess[0] : userData.hotelAccess) || 'All Properties';
+    const avatarFile = userData.avatarFile;
+    const cleanUserData = { ...userData };
+    delete cleanUserData.avatarFile;
+
     const newUserObj = {
-      ...userData,
-      id: `usr-${Date.now().toString().slice(-4)}`,
+      ...cleanUserData,
+      id: tempId,
+      hotel: hotelVal,
+      hotelAccess: Array.isArray(userData.hotelAccess) ? userData.hotelAccess : [hotelVal],
       registeredDate: new Date().toISOString().split('T')[0],
       lastLogin: 'Never (New Account)',
       status: userData.status || 'active',
+      avatar: userData.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
     };
 
     // Update state immediately for rapid responsive UI
     setUsers(prev => [newUserObj, ...prev]);
 
-    // Persist asynchronously directly to Laravel REST API + MySQL
+    // Persist directly to Laravel REST API + MySQL
     try {
-      const savedUser = await hotelApi.createUser(newUserObj);
+      invalidateApiCache('/users');
+      let savedUser;
+      if (avatarFile instanceof File || avatarFile instanceof Blob) {
+        const formData = new FormData();
+        Object.keys(newUserObj).forEach(k => {
+          if (newUserObj[k] !== undefined && newUserObj[k] !== null) {
+            formData.append(k, typeof newUserObj[k] === 'object' ? JSON.stringify(newUserObj[k]) : newUserObj[k]);
+          }
+        });
+        formData.append('avatar_file', avatarFile);
+        savedUser = await hotelApi.createUser(formData);
+      } else {
+        savedUser = await hotelApi.createUser(newUserObj);
+      }
+
       if (savedUser && savedUser.id) {
-        setUsers(prev => prev.map(u => u.id === newUserObj.id ? { ...u, ...savedUser } : u));
+        setUsers(prev => prev.map(u => (u.id === tempId ? { ...u, ...savedUser } : u)));
+        return savedUser;
       }
     } catch (err) {
       console.error('[SuperAdminUserContext] Error persisting user to MySQL:', err);
+      throw err;
     }
   };
 
   const updateUser = async (id, updates) => {
-    setUsers(prev => prev.map(u => (u.id === id ? { ...u, ...updates } : u)));
+    setUsers(prev => prev.map(u => (u.id === id || String(u.db_id) === String(id) ? { ...u, ...updates } : u)));
     try {
-      await hotelApi.updateUser(id, updates);
+      invalidateApiCache('/users');
+      const response = await hotelApi.updateUser(id, updates);
+      if (response && response.user) {
+        setUsers(prev => prev.map(u => (u.id === id || String(u.db_id) === String(id) ? { ...u, ...response.user } : u)));
+      }
     } catch (err) {
       console.warn('[SuperAdminUserContext] Update user sync error:', err.message);
+      throw err;
     }
   };
 
@@ -78,12 +159,14 @@ export const SuperAdminUserProvider = ({ children }) => {
       suspensionReason: reason,
     };
     setUsers(prev =>
-      prev.map(u => (u.id === id ? { ...u, ...updates } : u))
+      prev.map(u => (u.id === id || String(u.db_id) === String(id) ? { ...u, ...updates } : u))
     );
     try {
+      invalidateApiCache('/users');
       await hotelApi.updateUser(id, updates);
     } catch (err) {
       console.warn('[SuperAdminUserContext] Suspend user sync error:', err.message);
+      throw err;
     }
   };
 
@@ -94,21 +177,25 @@ export const SuperAdminUserProvider = ({ children }) => {
       suspensionReason: null,
     };
     setUsers(prev =>
-      prev.map(u => (u.id === id ? { ...u, ...updates } : u))
+      prev.map(u => (u.id === id || String(u.db_id) === String(id) ? { ...u, ...updates } : u))
     );
     try {
+      invalidateApiCache('/users');
       await hotelApi.updateUser(id, updates);
     } catch (err) {
       console.warn('[SuperAdminUserContext] Reactivate user sync error:', err.message);
+      throw err;
     }
   };
 
   const deleteUser = async (id) => {
-    setUsers(prev => prev.filter(u => u.id !== id));
+    setUsers(prev => prev.filter(u => u.id !== id && String(u.db_id) !== String(id)));
     try {
+      invalidateApiCache('/users');
       await hotelApi.deleteUser(id);
     } catch (err) {
       console.warn('[SuperAdminUserContext] Delete user sync error:', err.message);
+      throw err;
     }
   };
 
@@ -120,6 +207,7 @@ export const SuperAdminUserProvider = ({ children }) => {
         refreshUsers,
         addUser,
         updateUser,
+        uploadUserAvatar,
         suspendUser,
         reactivateUser,
         deleteUser,

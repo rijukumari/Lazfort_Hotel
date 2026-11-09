@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { mockSubscriptionPlans, mockActiveSubscriptions } from '../../data/mockSubscriptions';
+import { useERP } from '../../context/ERPContext';
+import { hotelApi } from '../../services/hotelApi';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import {
   ArrowLeft,
@@ -16,9 +17,96 @@ import {
 export const PlanDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { subscriptionPlans = [] } = useERP();
 
-  const plan = mockSubscriptionPlans.find(p => p.id === id) || mockSubscriptionPlans[0];
-  const subscribedHotels = mockActiveSubscriptions.filter(s => s.planName === plan.name);
+  const [plan, setPlan] = useState(null);
+  const [subscribedHotels, setSubscribedHotels] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchPlanData = async () => {
+      try {
+        setIsLoading(true);
+        // Find in context or fetch via API
+        let foundPlan = subscriptionPlans.find(p => String(p.id) === String(id));
+        if (!foundPlan) {
+          const apiPlans = await hotelApi.getSubscriptionPlans();
+          if (Array.isArray(apiPlans)) {
+            foundPlan = apiPlans.find(p => String(p.id) === String(id));
+          }
+        }
+
+        if (isMounted && foundPlan) {
+          // Normalize plan fields
+          const normalized = {
+            id: foundPlan.id,
+            name: foundPlan.name || 'Unnamed Plan',
+            tierCode: foundPlan.tierCode || foundPlan.tier_code || `TIER-${foundPlan.id}`,
+            description: foundPlan.description || 'Enterprise Hotel Management Tier',
+            monthlyPrice: Number(foundPlan.monthlyPrice || foundPlan.price || 0),
+            annualPrice: Number(foundPlan.annualPrice || (Number(foundPlan.price || 0) * 10)),
+            trialDays: foundPlan.trialDays || foundPlan.trial_days || 14,
+            roomLimit: foundPlan.roomLimit || (foundPlan.max_rooms ? `${foundPlan.max_rooms}` : 'Unlimited'),
+            userLimit: foundPlan.userLimit || (foundPlan.max_staff ? `${foundPlan.max_staff}` : 'Unlimited'),
+            status: foundPlan.status || 'active',
+            recommendedFor: foundPlan.recommendedFor || 'Luxury & Boutique Resorts',
+            includedModules: Array.isArray(foundPlan.includedModules) 
+              ? foundPlan.includedModules 
+              : (Array.isArray(foundPlan.features) ? foundPlan.features : [
+                  'Multi-Branch Management',
+                  'Front Desk & Folios',
+                  'Housekeeping Automation',
+                  'Financial Ledger & Invoicing',
+                  'AI Concierge & Analytics'
+                ])
+          };
+          setPlan(normalized);
+        }
+
+        // Fetch active subscriptions / hotels for this plan
+        const subs = await hotelApi.getHotels();
+        if (isMounted && Array.isArray(subs)) {
+          const filtered = subs
+            .filter(h => String(h.plan_id || h.planId) === String(id) || (foundPlan && h.subscription_plan === foundPlan.name))
+            .map(h => ({
+              id: h.id,
+              hotelName: h.name,
+              hotelLocation: h.address || h.city || 'Standard Property',
+              amount: Number(foundPlan?.monthlyPrice || foundPlan?.price || 0),
+              expiryDate: h.subscription_expires_at || 'Perpetual'
+            }));
+          setSubscribedHotels(filtered);
+        }
+      } catch (err) {
+        console.warn('Error loading plan details from MySQL:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    fetchPlanData();
+    return () => { isMounted = false; };
+  }, [id, subscriptionPlans]);
+
+  if (isLoading && !plan) {
+    return (
+      <div className="space-y-6 p-8 text-center text-xs text-charcoal-muted">
+        <p className="animate-pulse">Loading subscription tier details from database...</p>
+      </div>
+    );
+  }
+
+  if (!plan) {
+    return (
+      <div className="space-y-6 p-6">
+        <Link to="/super-admin/subscriptions/plans" className="text-xs text-charcoal-muted hover:text-accent">
+          ← Return to Subscription Plans
+        </Link>
+        <p className="text-sm">Subscription plan tier not found in database.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300 pb-20">

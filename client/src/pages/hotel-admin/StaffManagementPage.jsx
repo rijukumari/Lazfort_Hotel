@@ -4,7 +4,8 @@ import { PageHeader, StatusBadge, Button, ConfirmDialog } from '../../components
 import { useERP } from '../../context/ERPContext';
 import { mockStaff } from '../../data/mockStaff';
 import { DataTable } from '../../components/data-display/DataTable';
-import { Plus, Edit, Eye, Clock, Trash2 } from 'lucide-react';
+import { ViewToggle } from '../../components/ui/ViewToggle';
+import { Plus, Edit, Eye, Clock, Trash2, Mail, Phone, Calendar, Building2 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 
 export const StaffManagementPage = () => {
@@ -12,6 +13,20 @@ export const StaffManagementPage = () => {
   const { staff = mockStaff, deleteStaff } = useERP();
   const { showToast } = useToast();
   const [deleteStaffId, setDeleteStaffId] = useState(null);
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('lazfort_view_staff') || 'list';
+    } catch {
+      return 'list';
+    }
+  });
+
+  const handleViewChange = (mode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('lazfort_view_staff', mode);
+    } catch {}
+  };
 
   const handleConfirmDelete = () => {
     if (!deleteStaffId) return;
@@ -123,23 +138,104 @@ export const StaffManagementPage = () => {
         description="Hotel personnel directory, shift allocations, departmental clearances, and performance metrics."
         badge={`${staff.length} Active Staff`}
         actions={
-          <Button
-            variant="gold"
-            icon={Plus}
-            onClick={() => navigate('/hotel-admin/staff/add')}
-          >
-            Appoint Staff
-          </Button>
+          <div className="flex items-center gap-3">
+            <ViewToggle viewMode={viewMode} onViewChange={handleViewChange} />
+            <Button
+              variant="gold"
+              icon={Plus}
+              onClick={() => navigate('/hotel-admin/staff/add')}
+            >
+              Appoint Staff
+            </Button>
+          </div>
         }
       />
 
-      <DataTable
-        data={staff}
-        columns={columns}
-        keyExtractor={item => item.id}
-        searchPlaceholder="Search staff by name, role, or division..."
-        pageSize={8}
-      />
+      {viewMode === 'list' ? (
+        <DataTable
+          data={staff}
+          columns={columns}
+          keyExtractor={item => item.id}
+          searchPlaceholder="Search staff by name, role, or division..."
+          pageSize={8}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {staff.map(member => (
+            <div
+              key={member.id}
+              className="card-luxury p-5 rounded-2xl border border-border/80 dark:border-white/10 space-y-4 hover:border-accent/40 transition-all flex flex-col justify-between group"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <StatusBadge status={member.status || 'Active'} size="sm" />
+                  <span className="text-[11px] font-mono font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full border border-accent/20">
+                    {member.shift || 'General'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <img
+                    src={member.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
+                    alt={member.name}
+                    className="w-12 h-12 rounded-full object-cover ring-2 ring-accent/30"
+                  />
+                  <div>
+                    <h4 className="font-serif font-bold text-base text-primary dark:text-white leading-tight">
+                      {member.name}
+                    </h4>
+                    <p className="text-xs text-charcoal-muted">{member.role}</p>
+                    <span className="text-[11px] text-accent font-semibold">{member.department}</span>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-ivory dark:bg-black/30 border border-border/60 dark:border-white/5 space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between text-charcoal-muted">
+                    <span>Email:</span>
+                    <span className="font-mono text-primary dark:text-white truncate max-w-[170px]">{member.email}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-charcoal-muted">
+                    <span>Contact:</span>
+                    <span className="font-mono">{member.phone || 'N/A'}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-charcoal-muted">
+                    <span>Performance Rating:</span>
+                    <span className="font-semibold text-accent">★ {member.performanceRating || '4.9'} / 5.0</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-border/70 dark:border-white/10 flex items-center justify-between">
+                <span className="text-[11px] text-charcoal-muted font-mono">{member.id}</span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => navigate(`/hotel-admin/staff/details/${member.id}`)}
+                    className="p-1.5 rounded-xl border border-border dark:border-white/10 hover:border-accent hover:text-accent transition-colors"
+                    title="View Staff Profile"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => navigate(`/hotel-admin/staff/edit/${member.id}`)}
+                    className="p-1.5 rounded-xl border border-border dark:border-white/10 hover:border-accent hover:text-accent transition-colors"
+                    title="Edit Information"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setDeleteStaffId(member.id)}
+                    className="p-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-colors"
+                    title="Decommission Staff"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
 
       {/* Delete Confirmation */}
       {deleteStaffId && (

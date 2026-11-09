@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { initialSupportTickets } from '../../../data/mockSuperAdminModules';
 import { StatusBadge, Button, Card, FormField, Textarea, Select } from '../../../components/ui';
 import { useToast } from '../../../context/ToastContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   ArrowLeft,
   LifeBuoy,
@@ -21,12 +21,47 @@ export const SupportTicketDetailPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  const ticket = (initialSupportTickets || []).find(t => t.id === id || t.ticketId === id) || initialSupportTickets[0];
-
+  const [ticket, setTicket] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [replyText, setReplyText] = useState('');
-  const [assignedAgent, setAssignedAgent] = useState(ticket?.assignedAgent || 'Alexander Cross (Senior Fintech Engineer)');
-  const [ticketStatus, setTicketStatus] = useState(ticket?.status || 'in_progress');
+  const [assignedAgent, setAssignedAgent] = useState('Alexander Cross (Senior Fintech Engineer)');
+  const [ticketStatus, setTicketStatus] = useState('in_progress');
   const [isSending, setIsSending] = useState(false);
+  const [isUpdatingClearance, setIsUpdatingClearance] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchTicket = async () => {
+      try {
+        setIsLoading(true);
+        const data = await hotelApi.getSupportTickets();
+        if (isMounted && Array.isArray(data)) {
+          const matched = data.find(t => String(t.id) === String(id) || String(t.ticket_id || t.ticketId) === String(id));
+          if (matched) {
+            setTicket(matched);
+            setAssignedAgent(matched.assigned_agent || matched.assignedAgent || 'Alexander Cross (Senior Fintech Engineer)');
+            setTicketStatus(matched.status || 'in_progress');
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch ticket from MySQL:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    fetchTicket();
+    return () => { isMounted = false; };
+  }, [id]);
+
+  if (isLoading && !ticket) {
+    return (
+      <div className="space-y-6 p-8 text-center text-xs text-charcoal-muted">
+        <p className="animate-pulse">Loading support ticket details from database...</p>
+      </div>
+    );
+  }
 
   if (!ticket) {
     return (
@@ -39,22 +74,73 @@ export const SupportTicketDetailPage = () => {
     );
   }
 
+  const clientName = ticket.client_name || ticket.clientName || 'Guest';
+  const ticketId = ticket.ticket_id || ticket.ticketId || id;
+  const hotelName = ticket.hotel_name || ticket.hotelName || 'Property';
+  const createdAt = ticket.created_at || ticket.createdAt || new Date().toISOString().slice(0, 10);
+  const repliesList = Array.isArray(ticket.replies) ? ticket.replies : [];
+
   const handleSendReply = async (e) => {
     e.preventDefault();
     if (!replyText.trim()) return;
 
     setIsSending(true);
     try {
-      await new Promise(r => setTimeout(r, 450));
-      showToast('Dispatch Transmitted', `Official response sent to ${ticket.clientName}.`, 'success');
+      const newReply = {
+        sender: 'Super Admin Support Desk',
+        role: 'Platform Operations',
+        message: replyText.trim(),
+        timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
+      };
+      const updatedReplies = [...repliesList, newReply];
+      const newCount = (ticket.replies_count || ticket.repliesCount || 0) + 1;
+
+      await hotelApi.updateSupportTicket(ticket.id, {
+        status: ticketStatus,
+        replies: updatedReplies,
+        replies_count: newCount,
+      });
+
+      setTicket(prev => ({
+        ...prev,
+        status: ticketStatus,
+        replies: updatedReplies,
+        replies_count: newCount,
+        repliesCount: newCount,
+      }));
+
+      showToast('Dispatch Transmitted', `Official response sent to ${clientName}.`, 'success');
       setReplyText('');
+    } catch (err) {
+      console.error('Failed to submit reply:', err);
+      showToast('Dispatch Failed', err.message || 'Unable to submit reply to MySQL.', 'error');
     } finally {
       setIsSending(false);
     }
   };
 
-  const handleUpdateAssignment = () => {
-    showToast('Assignment Committed', `Ticket reassigned to ${assignedAgent}.`, 'success');
+  const handleUpdateAssignment = async () => {
+    setIsUpdatingClearance(true);
+    try {
+      await hotelApi.updateSupportTicket(ticket.id, {
+        assigned_agent: assignedAgent,
+        status: ticketStatus,
+      });
+
+      setTicket(prev => ({
+        ...prev,
+        assigned_agent: assignedAgent,
+        assignedAgent: assignedAgent,
+        status: ticketStatus,
+      }));
+
+      showToast('Assignment Committed', `Ticket reassigned to ${assignedAgent} and status updated to ${ticketStatus}.`, 'success');
+    } catch (err) {
+      console.error('Failed to update ticket clearance:', err);
+      showToast('Update Failed', err.message || 'Unable to update status in database.', 'error');
+    } finally {
+      setIsUpdatingClearance(false);
+    }
   };
 
   return (
@@ -70,12 +156,12 @@ export const SupportTicketDetailPage = () => {
           </Link>
           <div className="flex items-center gap-3 pt-1">
             <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-primary dark:text-white">
-              {ticket.ticketId}: {ticket.subject}
+              {ticketId}: {ticket.subject}
             </h1>
             <StatusBadge status={ticketStatus} />
           </div>
           <p className="text-xs text-charcoal-muted">
-            Originator: <strong className="text-primary dark:text-white">{ticket.clientName}</strong> • {ticket.hotelName} • Raised: {ticket.createdAt}
+            Originator: <strong className="text-primary dark:text-white">{clientName}</strong> • {hotelName} • Raised: {createdAt}
           </p>
         </div>
 
@@ -92,7 +178,7 @@ export const SupportTicketDetailPage = () => {
           <div className="bg-white/90 dark:bg-surface-dark/95 backdrop-blur-2xl rounded-3xl border border-accent/30 p-6 sm:p-8 shadow-xl space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-border/70 dark:border-white/10">
               <span className="text-xs font-mono font-bold text-accent">ORIGINAL CLIENT STATEMENT</span>
-              <span className="text-xs font-mono text-charcoal-muted">{ticket.createdAt}</span>
+              <span className="text-xs font-mono text-charcoal-muted">{createdAt}</span>
             </div>
 
             <div className="p-5 rounded-2xl bg-ivory/80 dark:bg-primary-950/60 border border-border/70 dark:border-white/10 text-xs sm:text-sm leading-relaxed text-charcoal dark:text-gray-200">
@@ -102,18 +188,26 @@ export const SupportTicketDetailPage = () => {
             {/* Conversation Timeline */}
             <div className="space-y-4 pt-4 border-t border-border/70 dark:border-white/10">
               <span className="text-[10px] font-mono uppercase tracking-widest text-accent font-bold block">
-                Executive Response Thread
+                Executive Response Thread ({repliesList.length})
               </span>
 
-              <div className="p-4 rounded-2xl bg-accent/10 border border-accent/25 space-y-2 text-xs">
-                <div className="flex items-center justify-between text-accent font-semibold text-[11px]">
-                  <span>Lazfort Platform SLA Escalation Desk</span>
-                  <span className="font-mono text-charcoal-muted">2026-10-28 16:10</span>
+              {repliesList.length > 0 ? (
+                repliesList.map((r, idx) => (
+                  <div key={idx} className="p-4 rounded-2xl bg-accent/10 border border-accent/25 space-y-2 text-xs">
+                    <div className="flex items-center justify-between text-accent font-semibold text-[11px]">
+                      <span>{r.sender || 'Executive Support Agent'} ({r.role || 'Staff'})</span>
+                      <span className="font-mono text-charcoal-muted">{r.timestamp || 'Recent'}</span>
+                    </div>
+                    <p className="text-charcoal dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
+                      {r.message}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="p-4 rounded-2xl bg-accent/5 border border-dashed border-accent/20 text-center text-xs text-charcoal-muted">
+                  No replies recorded yet. Use the form below to dispatch the initial resolution.
                 </div>
-                <p className="text-charcoal dark:text-gray-200 leading-relaxed">
-                  Ticket dispatched to Senior Platform Engineering. Rebalancing node caches and verifying ledger sync.
-                </p>
-              </div>
+              )}
             </div>
 
             {/* Reply Input Form */}
@@ -148,15 +242,15 @@ export const SupportTicketDetailPage = () => {
             <div className="space-y-3 text-xs">
               <div className="flex justify-between py-2 border-b border-border/60 dark:border-white/10">
                 <span className="text-charcoal-muted">Severity Priority:</span>
-                <span className="font-bold text-rose-600 dark:text-rose-400 capitalize">{ticket.priority} Severity</span>
+                <span className="font-bold text-rose-600 dark:text-rose-400 capitalize">{ticket.priority || 'Medium'} Severity</span>
               </div>
               <div className="flex justify-between py-2 border-b border-border/60 dark:border-white/10">
                 <span className="text-charcoal-muted">Department Category:</span>
-                <span className="font-semibold text-accent">{ticket.category}</span>
+                <span className="font-semibold text-accent">{ticket.category || 'General Operations'}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-border/60 dark:border-white/10">
                 <span className="text-charcoal-muted">Client Account:</span>
-                <span className="font-medium text-primary dark:text-white">{ticket.clientName}</span>
+                <span className="font-medium text-primary dark:text-white">{clientName}</span>
               </div>
             </div>
 
@@ -178,7 +272,12 @@ export const SupportTicketDetailPage = () => {
                 </Select>
               </FormField>
 
-              <Button variant="outline" className="w-full" onClick={handleUpdateAssignment}>
+              <Button
+                variant="outline"
+                className="w-full"
+                loading={isUpdatingClearance}
+                onClick={handleUpdateAssignment}
+              >
                 Update Clearance
               </Button>
             </div>

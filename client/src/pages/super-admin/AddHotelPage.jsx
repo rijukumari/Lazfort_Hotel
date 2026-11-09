@@ -20,18 +20,24 @@ import {
 
 export const AddHotelPage = () => {
   const navigate = useNavigate();
-  const { addHotel } = useERP();
+  const { addHotel, subscriptionPlans = [] } = useERP();
   const { showToast } = useToast();
 
+  // Active plans only for new subscriptions
+  const activePlans = subscriptionPlans.filter(p => p.status === 'active');
+
   // Form Fields matching screenshot
-  const [formName, setFormName] = useState('Lazfort Royal Mirage Dubai');
-  const [formLocation, setFormLocation] = useState('Palm Jumeirah, Dubai, UAE');
+  const [formName, setFormName] = useState('');
+  const [formLocation, setFormLocation] = useState('');
   const [formRooms, setFormRooms] = useState('80');
-  const [formPlan, setFormPlan] = useState('Palace Enterprise ($4,900/mo)');
+  const [formPlan, setFormPlan] = useState(() => {
+    return activePlans[0]?.name || 'Palace Enterprise';
+  });
   const [formCurrency, setFormCurrency] = useState('USD');
-  const [formAdminName, setFormAdminName] = useState('Baroness Camille Beaumont');
-  const [formAdminEmail, setFormAdminEmail] = useState('gm@resort.com');
-  const [formAdminContact, setFormAdminContact] = useState('+1 (800) 555-0199');
+  const [formAdminName, setFormAdminName] = useState('');
+  const [formAdminEmail, setFormAdminEmail] = useState('');
+  const [formAdminContact, setFormAdminContact] = useState('');
+  const [formAdminPassword, setFormAdminPassword] = useState('password123');
   const [formStatus, setFormStatus] = useState('active');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,6 +49,9 @@ export const AddHotelPage = () => {
     if (!formLocation.trim()) errs.location = 'Destination Location is required';
     if (!formRooms || isNaN(Number(formRooms)) || Number(formRooms) <= 0) {
       errs.rooms = 'Total Luxury Suites must be a positive integer';
+    }
+    if (!formAdminEmail.trim() || !/\S+@\S+\.\S+/.test(formAdminEmail)) {
+      errs.adminEmail = 'Valid owner/admin email is required for access';
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -64,8 +73,9 @@ export const AddHotelPage = () => {
         subscriptionPlan: formPlan.split(' (')[0],
         currencyCode: formCurrency,
         adminName: formAdminName.trim() || 'General Manager',
-        adminEmail: formAdminEmail.trim() || 'gm@resort.com',
+        adminEmail: formAdminEmail.trim(),
         adminContact: formAdminContact.trim() || '+1 (800) 555-0199',
+        adminPassword: formAdminPassword || 'password123',
         status: formStatus,
         occupancyRate: 88,
         revenueThisMonth: 185000,
@@ -74,7 +84,7 @@ export const AddHotelPage = () => {
 
       showToast(
         'Property Provisioned Successfully',
-        `Sovereign clearance granted for ${res.hotel?.name || formName}.`,
+        `Sovereign clearance granted for ${res.hotel?.name || formName}. Owner account created for ${formAdminEmail}.`,
         'success'
       );
       navigate('/super-admin/hotels');
@@ -243,9 +253,19 @@ export const AddHotelPage = () => {
                 onChange={e => setFormPlan(e.target.value)}
                 className="w-full px-4 py-3 text-sm bg-white dark:bg-primary-900/60 border border-border dark:border-white/10 rounded-2xl focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent text-charcoal dark:text-white transition-all appearance-none cursor-pointer"
               >
-                <option value="Palace Enterprise ($4,900/mo)">Palace Enterprise ($4,900/mo)</option>
-                <option value="Grand Luxury ($2,800/mo)">Grand Luxury ($2,800/mo)</option>
-                <option value="Boutique Heritage ($1,400/mo)">Boutique Heritage ($1,400/mo)</option>
+                {activePlans.length > 0 ? (
+                  activePlans.map(p => (
+                    <option key={p.id} value={p.name}>
+                      {p.name} (${Number(p.monthlyPrice || p.price || 0).toLocaleString()}/mo)
+                    </option>
+                  ))
+                ) : (
+                  <>
+                    <option value="Palace Enterprise">Palace Enterprise ($4,900/mo)</option>
+                    <option value="Grand Luxury">Grand Luxury ($2,800/mo)</option>
+                    <option value="Boutique Heritage">Boutique Heritage ($1,400/mo)</option>
+                  </>
+                )}
               </select>
             </div>
 
@@ -276,22 +296,45 @@ export const AddHotelPage = () => {
             />
           </div>
 
-          {/* Row 4: Email & Contact */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Row 4: Email & Contact & Password */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-[11px] font-bold tracking-wider uppercase text-charcoal dark:text-gray-200">
-                  GENERAL MANAGER EMAIL
+                  OWNER / GM EMAIL <span className="text-rose-500">*</span>
                 </label>
                 <span className="text-[11px] text-charcoal-muted dark:text-gray-400">
-                  For executive platform alerts
+                  Login credential
                 </span>
               </div>
               <input
                 type="email"
+                required
                 placeholder="gm@resort.com"
                 value={formAdminEmail}
-                onChange={e => setFormAdminEmail(e.target.value)}
+                onChange={e => {
+                  setFormAdminEmail(e.target.value);
+                  if (errors.adminEmail) setErrors(prev => ({ ...prev, adminEmail: '' }));
+                }}
+                className={`w-full px-4 py-3 text-sm bg-white dark:bg-primary-900/60 border ${errors.adminEmail ? 'border-rose-500 ring-1 ring-rose-500' : 'border-border dark:border-white/10'} rounded-2xl focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent text-charcoal dark:text-white transition-all`}
+              />
+              {errors.adminEmail && <p className="text-xs text-rose-500 font-medium">{errors.adminEmail}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold tracking-wider uppercase text-charcoal dark:text-gray-200">
+                  INITIAL PASSCODE
+                </label>
+                <span className="text-[11px] text-charcoal-muted dark:text-gray-400">
+                  Default: password123
+                </span>
+              </div>
+              <input
+                type="text"
+                placeholder="password123"
+                value={formAdminPassword}
+                onChange={e => setFormAdminPassword(e.target.value)}
                 className="w-full px-4 py-3 text-sm bg-white dark:bg-primary-900/60 border border-border dark:border-white/10 rounded-2xl focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent text-charcoal dark:text-white transition-all"
               />
             </div>
@@ -302,7 +345,7 @@ export const AddHotelPage = () => {
                   CONTACT NUMBER
                 </label>
                 <span className="text-[11px] text-charcoal-muted dark:text-gray-400">
-                  Direct private telephone
+                  Direct telephone
                 </span>
               </div>
               <input

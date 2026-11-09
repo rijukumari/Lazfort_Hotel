@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader, Button, ConfirmDialog } from '../../components/ui';
-import { mockPlanFeatures } from '../../data/mockSubscriptions';
 import { useERP } from '../../context/ERPContext';
 import { FeatureTable } from '../../components/subscription/FeatureTable';
 import { SearchFilter } from '../../components/subscription/SearchFilter';
@@ -13,7 +12,7 @@ import { Plus } from 'lucide-react';
 export const PlanFeaturesPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { planFeatures = mockPlanFeatures, updatePlanFeature, deletePlanFeature } = useERP();
+  const { planFeatures = [], updatePlanFeature, deletePlanFeature } = useERP();
   const features = planFeatures;
 
   // Trigger getPlanFeatures with caching

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { SimpleAreaChart } from '../../../components/data-display/SimpleChart';
-import { monthlyRevenueData } from '../../../data/mockAnalytics';
 import { useToast } from '../../../context/ToastContext';
 import { hotelApi } from '../../../services/hotelApi';
 import {
@@ -26,7 +25,7 @@ export const RevenueReportsPage = () => {
     let isMounted = true;
     const fetchRevStats = async () => {
       try {
-        const stats = await hotelApi.getRevenueReportsData();
+        const stats = await hotelApi.getRevenueReportsData(selectedPeriod);
         if (isMounted && stats) {
           setBackendStats(stats);
         }
@@ -36,7 +35,7 @@ export const RevenueReportsPage = () => {
     };
     fetchRevStats();
     return () => { isMounted = false; };
-  }, []);
+  }, [selectedPeriod]);
 
   const handleExportCSV = () => {
     const headers = ['Revenue Stream', 'Category', 'Fiscal Period', 'Gross Invoiced', 'Realized Settlements', 'Variance (%)'];
@@ -76,11 +75,10 @@ export const RevenueReportsPage = () => {
                 <button
                   key={p}
                   onClick={() => setSelectedPeriod(p)}
-                  className={`px-3 py-1 rounded-lg font-mono font-bold transition-colors ${
-                    selectedPeriod === p
+                  className={`px-3 py-1 rounded-lg font-mono font-bold transition-colors ${selectedPeriod === p
                       ? 'bg-accent text-white shadow-sm'
                       : 'text-charcoal-muted hover:text-charcoal dark:hover:text-white'
-                  }`}
+                    }`}
                 >
                   {p}
                 </button>
@@ -148,7 +146,7 @@ export const RevenueReportsPage = () => {
         </div>
 
         <SimpleAreaChart
-          data={monthlyRevenueData}
+          data={backendStats?.monthlyRevenue || []}
           height={260}
           valuePrefix="$"
           color="#C6A66B"

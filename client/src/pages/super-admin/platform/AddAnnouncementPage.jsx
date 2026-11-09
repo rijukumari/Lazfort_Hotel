@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { initialAnnouncements } from '../../../data/mockSuperAdminModules';
 import { useToast } from '../../../context/ToastContext';
 import { useERP } from '../../../context/ERPContext';
 import { FormField, Input, Select, Textarea, Button, Card } from '../../../components/ui';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   ArrowLeft,
   Megaphone,
@@ -31,7 +31,7 @@ export const AddAnnouncementPage = () => {
     } catch (e) {
       console.warn('Failed to parse announcements', e);
     }
-    return initialAnnouncements || [];
+    return [];
   };
 
   const allAnnouncements = getStoredAnnouncements();

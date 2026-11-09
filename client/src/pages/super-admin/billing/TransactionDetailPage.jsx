@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { initialPaymentTransactions } from '../../../data/mockSuperAdminModules';
 import { StatusBadge, Button, Card } from '../../../components/ui';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   ArrowLeft,
   CreditCard,
@@ -19,7 +19,51 @@ export const TransactionDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const tx = (initialPaymentTransactions || []).find(t => t.id === id || t.transactionId === id) || initialPaymentTransactions[0];
+  const [tx, setTx] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchTx = async () => {
+      try {
+        setIsLoading(true);
+        const payments = await hotelApi.getPayments();
+        if (isMounted && Array.isArray(payments)) {
+          const match = payments.find(p => String(p.id) === String(id) || String(p.transaction_ref || p.transactionRef) === String(id));
+          if (match) {
+            setTx({
+              id: match.id,
+              transactionId: match.transaction_ref || match.transactionRef || `TXN-2026-${match.id}`,
+              reference: match.booking_id ? `RES-${match.booking_id}` : 'General Settlement',
+              clientName: match.guest_name || match.guestName || 'Distinguished Guest',
+              hotelName: match.hotel_name || 'Lazfort Sovereign Portfolio',
+              paymentMethod: match.payment_method || match.paymentMethod || 'Amex Centurion',
+              date: match.payment_date || match.date || match.created_at || new Date().toISOString(),
+              amount: Number(match.amount) || 0,
+              currency: 'USD',
+              status: match.status || 'paid',
+            });
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch payment transaction:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    fetchTx();
+    return () => { isMounted = false; };
+  }, [id]);
+
+  if (isLoading && !tx) {
+    return (
+      <div className="space-y-6 p-8 text-center text-xs text-charcoal-muted">
+        <p className="animate-pulse">Loading transaction records from MySQL...</p>
+      </div>
+    );
+  }
 
   if (!tx) {
     return (

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader, Button, StatusBadge, Modal } from '../../components/ui';
+import { PageHeader, Button, StatusBadge, Modal, ViewToggle } from '../../components/ui';
 import { StatCard } from '../../components/ui/StatCard';
 import { DataTable } from '../../components/data-display/DataTable';
 import {
@@ -26,6 +26,21 @@ export const StaffAssignedTasksPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('lazfort_view_staff_assigned_tasks') || 'list';
+    } catch {
+      return 'list';
+    }
+  });
+
+  const handleViewChange = (mode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('lazfort_view_staff_assigned_tasks', mode);
+    } catch {}
+  };
 
   const [tasks, setTasks] = useState([
     {
@@ -299,17 +314,91 @@ export const StaffAssignedTasksPage = () => {
               <option value="High Priority">High Priority</option>
               <option value="Normal">Normal</option>
             </select>
+
+            <ViewToggle viewMode={viewMode} onViewChange={handleViewChange} />
           </div>
         </div>
 
-        <DataTable
-          columns={columns}
-          data={filteredTasks}
-          keyField="id"
-          pagination={true}
-          pageSize={6}
-          emptyMessage="No assigned tasks match your search filter."
-        />
+        {viewMode === 'list' ? (
+          <DataTable
+            columns={columns}
+            data={filteredTasks}
+            keyField="id"
+            pagination={true}
+            pageSize={6}
+            emptyMessage="No assigned tasks match your search filter."
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+            {filteredTasks.map((t) => (
+              <div
+                key={t.id}
+                className="card-luxury p-5 rounded-2xl border border-border/80 dark:border-white/10 space-y-3 flex flex-col justify-between hover:border-accent/40 transition-all group"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-bold text-accent">{t.id}</span>
+                    <StatusBadge
+                      status={
+                        t.status === 'Completed'
+                          ? 'active'
+                          : t.status === 'In Progress'
+                          ? 'pending'
+                          : 'inactive'
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <h4 className="font-serif font-bold text-base text-primary dark:text-white">{t.title}</h4>
+                    <p className="text-xs text-charcoal-muted flex items-center gap-1.5">
+                      <BedDouble className="w-3.5 h-3.5 text-accent" />
+                      <span>{t.suite}</span>
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-ivory dark:bg-black/30 border border-border/60 dark:border-white/5 space-y-1 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-charcoal-muted">Guest:</span>
+                      <span className="font-semibold text-primary dark:text-white">{t.guestName}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-charcoal-muted">Priority:</span>
+                      <span className={`font-semibold ${t.priority.includes('Urgent') ? 'text-rose-500' : 'text-accent'}`}>{t.priority}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-charcoal-muted">Due By:</span>
+                      <span className="font-mono text-[11px] text-charcoal-muted">{t.dueTime}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-border/70 dark:border-white/10 flex items-center justify-end gap-2">
+                  {t.status === 'Pending' && (
+                    <Button
+                      variant="gold"
+                      size="xs"
+                      icon={Play}
+                      onClick={() => handleStartTask(t.id)}
+                    >
+                      Start Task
+                    </Button>
+                  )}
+                  {t.status === 'In Progress' && (
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      icon={CheckCircle2}
+                      onClick={() => handleCompleteTask(t.id)}
+                    >
+                      Finish Task
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

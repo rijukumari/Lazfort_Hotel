@@ -15,11 +15,10 @@ use Illuminate\Support\Str;
 class AuthController extends Controller
 {
     /**
-     * Ensure database tables & schema additions are created
+     * Ensure database tables & schema additions are created (Cached statically)
      */
     protected function ensureUsersTable()
     {
-        // One-time schema check cached statically to avoid running DDL checks on every request
         static $checked = false;
         if ($checked) return;
         $checked = true;
@@ -29,23 +28,12 @@ class AuthController extends Controller
                 Artisan::call('migrate', ['--force' => true]);
             }
 
-            // Create personal_access_tokens if still missing
-            if (!Schema::hasTable('personal_access_tokens')) {
-                Schema::create('personal_access_tokens', function ($table) {
-                    $table->id();
-                    $table->morphs('tokenable');
-                    $table->string('name');
-                    $table->string('token', 64)->unique();
-                    $table->text('abilities')->nullable();
-                    $table->timestamp('last_used_at')->nullable();
-                    $table->timestamp('expires_at')->nullable();
-                    $table->timestamps();
-                });
-            }
-
             if (Schema::hasTable('users')) {
                 if (!Schema::hasColumn('users', 'role')) {
-                    DB::statement("ALTER TABLE users ADD COLUMN role VARCHAR(100) DEFAULT 'customer' AFTER email");
+                    DB::statement("ALTER TABLE users ADD COLUMN role VARCHAR(50) DEFAULT 'customer' AFTER email");
+                }
+                if (!Schema::hasColumn('users', 'hotel_id')) {
+                    DB::statement("ALTER TABLE users ADD COLUMN hotel_id VARCHAR(50) NULL AFTER role");
                 }
                 if (!Schema::hasColumn('users', 'hotel_name')) {
                     DB::statement("ALTER TABLE users ADD COLUMN hotel_name VARCHAR(255) NULL AFTER role");
@@ -240,8 +228,23 @@ class AuthController extends Controller
             // Trust the database role, NOT the frontend role
             $dbRole = $this->normalizeRole($user->role);
 
-            // Generate secure bearer token
-            $token = 'tk_' . bin2hex(random_bytes(32));
+            // Generate real Sanctum token if supported, or fallback to personal_access_tokens
+            try {
+                $token = $user->createToken('lazfort_auth_token')->plainTextToken;
+            } catch (\Throwable $te) {
+                $token = 'tk_' . bin2hex(random_bytes(32));
+                try {
+                    DB::table('personal_access_tokens')->insert([
+                        'tokenable_type' => get_class($user),
+                        'tokenable_id' => $user->id,
+                        'name' => 'lazfort_auth_token',
+                        'token' => hash('sha256', $token),
+                        'abilities' => '["*"]',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                } catch (\Throwable $ie) {}
+            }
 
             return response()->json([
                 'status' => 'success',
@@ -253,7 +256,9 @@ class AuthController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'role' => $dbRole,
+                    'hotelId' => $user->hotel_id,
                     'hotelName' => $user->hotel_name ?? 'Lazfort Global Corporate Office',
+                    'hotelAccess' => $user->hotel_access ? explode(',', $user->hotel_access) : [$user->hotel_name ?? 'All Properties'],
                     'phone' => $user->phone,
                     'status' => $user->status ?? 'active',
                     'avatar' => $user->avatar ?: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
@@ -285,6 +290,31 @@ class AuthController extends Controller
         $this->ensureUsersTable();
         $user = $request->user();
 
+        // If default Sanctum user is not resolved, inspect bearer token directly
+        if (!$user) {
+            $bearer = $request->bearerToken();
+            if ($bearer) {
+                // If token contains id|token format (Standard Sanctum)
+                if (str_contains($bearer, '|')) {
+                    [$id, $plainToken] = explode('|', $bearer, 2);
+                    $tokenRecord = DB::table('personal_access_tokens')
+                        ->where('id', $id)
+                        ->first();
+                    if ($tokenRecord && hash_equals($tokenRecord->token, hash('sha256', $plainToken))) {
+                        $user = User::find($tokenRecord->tokenable_id);
+                    }
+                } else {
+                    $tokenRecord = DB::table('personal_access_tokens')
+                        ->where('token', hash('sha256', $bearer))
+                        ->orWhere('token', $bearer)
+                        ->first();
+                    if ($tokenRecord) {
+                        $user = User::find($tokenRecord->tokenable_id);
+                    }
+                }
+            }
+        }
+
         if (!$user) {
             return response()->json(['status' => 'error', 'message' => 'Unauthenticated'], 401);
         }
@@ -297,7 +327,9 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $user->role,
+                'hotelId' => $user->hotel_id,
                 'hotelName' => $user->hotel_name,
+                'hotelAccess' => $user->hotel_access ? explode(',', $user->hotel_access) : [$user->hotel_name ?? 'All Properties'],
                 'phone' => $user->phone,
                 'status' => $user->status,
                 'avatar' => $user->avatar,

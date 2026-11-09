@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { mockPlanFeatures } from '../../data/mockSubscriptions';
 import { useERP } from '../../context/ERPContext';
 import { useToast } from '../../context/ToastContext';
 import {
@@ -32,10 +31,10 @@ export const AddPlanFeaturePage = () => {
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { planFeatures = mockPlanFeatures, addPlanFeature, updatePlanFeature } = useERP();
+  const { planFeatures = [], addPlanFeature, updatePlanFeature } = useERP();
 
   const existing = id
-    ? planFeatures.find(f => f.id === id) || mockPlanFeatures.find(f => f.id === id)
+    ? planFeatures.find(f => String(f.id) === String(id))
     : null;
 
   const [formName, setFormName] = useState(existing?.name || '');

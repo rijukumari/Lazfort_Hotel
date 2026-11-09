@@ -24,6 +24,7 @@ class Room extends Model
         'images',
         'description',
         'hotel_id',
+        'is_deleted',
     ];
 
     protected $casts = [

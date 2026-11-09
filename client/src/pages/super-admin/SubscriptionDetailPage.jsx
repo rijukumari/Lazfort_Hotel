@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { mockExpiredSubscriptions, mockActiveSubscriptions } from '../../data/mockSubscriptions';
+import { hotelApi } from '../../services/hotelApi';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import {
   CreditCard,
@@ -13,8 +13,32 @@ export const SubscriptionDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const allSubs = [...mockExpiredSubscriptions, ...mockActiveSubscriptions];
-  const sub = allSubs.find(s => s.id === id) || mockExpiredSubscriptions[0];
+  const [sub, setSub] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getSubscriptions().then(subs => {
+      if (isMounted && Array.isArray(subs)) {
+        const match = subs.find(s => String(s.id) === String(id));
+        if (match) {
+          setSub(match);
+        }
+      }
+    }).catch(() => {})
+    .finally(() => {
+      if (isMounted) setIsLoading(false);
+    });
+    return () => { isMounted = false; };
+  }, [id]);
+
+  if (isLoading && !sub) {
+    return (
+      <div className="space-y-6 p-8 text-center text-xs text-charcoal-muted">
+        <p className="animate-pulse">Loading subscription details from database...</p>
+      </div>
+    );
+  }
 
   if (!sub) {
     return (

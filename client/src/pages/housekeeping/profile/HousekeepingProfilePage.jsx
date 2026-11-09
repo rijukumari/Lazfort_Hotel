@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader, Card, Button } from '../../../components/ui';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   User,
   Mail,
@@ -37,9 +38,94 @@ export const HousekeepingProfilePage = () => {
   const [department, setDepartment] = useState(user?.department || 'Housekeeping & Chamber Care');
   const [hotelBranch] = useState(user?.hotelName || 'Lazfort Grand Palace & Royal Spa — Monaco');
   const [assignedFloors, setAssignedFloors] = useState('Floors 3, 4 & Royal Penthouse Suite Level');
-  const [avatar, setAvatar] = useState(
-    user?.avatar || 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=400&q=80'
-  );
+  const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=400&q=80';
+  const [avatar, setAvatar] = useState(user?.avatar || DEFAULT_AVATAR);
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatar || DEFAULT_AVATAR);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getCurrentUser()
+      .then(res => {
+        if (isMounted && res && res.user) {
+          if (res.user.name) setName(res.user.name);
+          if (res.user.email) setEmail(res.user.email);
+          if (res.user.phone) setPhone(res.user.phone);
+          if (res.user.avatar) {
+            setAvatar(res.user.avatar);
+            setAvatarPreview(res.user.avatar);
+          }
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
+
+  const handleAvatarFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+      showToast('Invalid Image Format', 'Please upload a JPEG, PNG, WEBP, or GIF image file.', 'error');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('File Too Large', 'Profile image size must not exceed 5MB.', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setAvatarPreview(event.target.result);
+    };
+    reader.readAsDataURL(file);
+
+    setIsUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const targetId = user?.id || user?.email || 'usr-hk-1';
+      const response = await hotelApi.uploadAvatar(targetId, formData);
+
+      if (response && response.avatar) {
+        setAvatar(response.avatar);
+        setAvatarPreview(response.avatar);
+        if (updateUserProfile) {
+          updateUserProfile({ avatar: response.avatar });
+        }
+        showToast('Profile Picture Updated', 'Housekeeping portrait stored securely in MySQL.', 'success');
+      }
+    } catch (err) {
+      console.error('Avatar upload error:', err);
+      showToast('Upload Error', err?.data?.message || err.message || 'Failed to upload profile picture.', 'error');
+      setAvatarPreview(avatar);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    setIsUploadingAvatar(true);
+    try {
+      const targetId = user?.id || user?.email || 'usr-hk-1';
+      const response = await hotelApi.uploadAvatar(targetId, { remove_avatar: true });
+      if (response) {
+        setAvatar(DEFAULT_AVATAR);
+        setAvatarPreview(DEFAULT_AVATAR);
+        if (updateUserProfile) {
+          updateUserProfile({ avatar: DEFAULT_AVATAR });
+        }
+        showToast('Profile Picture Removed', 'Avatar restored to default housekeeping portrait.', 'info');
+      }
+    } catch (err) {
+      showToast('Error', 'Failed to remove profile picture.', 'error');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
 
   // Security Credentials Form
   const [currentPassword, setCurrentPassword] = useState('');
@@ -132,12 +218,18 @@ export const HousekeepingProfilePage = () => {
             </div>
 
             <div className="relative inline-block mx-auto mb-4 mt-2">
-              <div className="w-28 h-28 rounded-full p-1 bg-gradient-to-tr from-accent via-accent/40 to-accent/90 shadow-gold">
+              <div className="w-28 h-28 rounded-full p-1 bg-gradient-to-tr from-accent via-accent/40 to-accent/90 shadow-gold relative">
                 <img
-                  src={avatar}
+                  src={avatarPreview}
                   alt={name}
-                  className="w-full h-full rounded-full object-cover"
+                  onError={() => setAvatarPreview(DEFAULT_AVATAR)}
+                  className={`w-full h-full rounded-full object-cover transition-opacity ${isUploadingAvatar ? 'opacity-50' : 'opacity-100'}`}
                 />
+                {isUploadingAvatar && (
+                  <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/60 text-accent font-mono text-[10px] font-bold">
+                    Uploading...
+                  </div>
+                )}
               </div>
               <label
                 htmlFor="hk-avatar-upload"
@@ -148,19 +240,26 @@ export const HousekeepingProfilePage = () => {
                 <input
                   id="hk-avatar-upload"
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
                   className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = (event) => setAvatar(event.target.result);
-                      reader.readAsDataURL(file);
-                    }
-                  }}
+                  disabled={isUploadingAvatar}
+                  onChange={handleAvatarFileChange}
                 />
               </label>
             </div>
+
+            {avatar && avatar !== DEFAULT_AVATAR && (
+              <div className="mb-3">
+                <button
+                  type="button"
+                  onClick={handleRemoveAvatar}
+                  disabled={isUploadingAvatar}
+                  className="text-[11px] text-rose-500 hover:text-rose-400 hover:underline font-mono"
+                >
+                  Remove Profile Picture
+                </button>
+              </div>
+            )}
 
             <h3 className="font-serif font-black text-xl text-primary dark:text-white tracking-wide">
               {name}

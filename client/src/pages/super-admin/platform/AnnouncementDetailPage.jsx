@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { initialAnnouncements } from '../../../data/mockSuperAdminModules';
 import { Button, Card, StatusBadge } from '../../../components/ui';
 import { useToast } from '../../../context/ToastContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   ArrowLeft,
   Megaphone,
@@ -23,18 +23,34 @@ export const AnnouncementDetailPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  const getStoredAnnouncements = () => {
-    try {
-      const stored = localStorage.getItem('lazfort_announcements');
-      if (stored) return JSON.parse(stored);
-    } catch (e) {
-      console.warn('Failed to parse announcements', e);
-    }
-    return initialAnnouncements || [];
-  };
+  const [announcement, setAnnouncement] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const storedList = getStoredAnnouncements();
-  const announcement = storedList.find(a => a.id === id) || storedList[0];
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getAnnouncements()
+      .then(list => {
+        if (isMounted && Array.isArray(list)) {
+          const match = list.find(a => String(a.id) === String(id));
+          if (match) {
+            setAnnouncement(match);
+          }
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+    return () => { isMounted = false; };
+  }, [id]);
+
+  if (isLoading && !announcement) {
+    return (
+      <div className="space-y-6 p-6 text-xs text-charcoal-muted">
+        <p className="animate-pulse">Loading announcement record...</p>
+      </div>
+    );
+  }
 
   if (!announcement) {
     return (

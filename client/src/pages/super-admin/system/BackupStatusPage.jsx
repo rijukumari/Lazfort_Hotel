@@ -3,7 +3,6 @@ import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
 import { Modal } from '../../../components/ui/Modal';
-import { initialBackupHistory } from '../../../data/mockSuperAdminModules';
 import { useToast } from '../../../context/ToastContext';
 import { hotelApi } from '../../../services/hotelApi';
 import {
@@ -20,7 +19,28 @@ import {
 
 export const BackupStatusPage = () => {
   const { showToast } = useToast();
-  const [backups, setBackups] = useState(initialBackupHistory);
+  const [backups, setBackups] = useState([
+    {
+      id: 'bak-01',
+      backupId: 'BAK-20261028-SCHEDULED',
+      timestamp: '2026-10-28 03:00:12',
+      type: 'Automated Snapshot',
+      size: '1.42 GB',
+      scope: 'Full Database & Cloud File Storage',
+      checksum: 'sha256:4f8e...9a21',
+      status: 'completed',
+    },
+    {
+      id: 'bak-02',
+      backupId: 'BAK-20261027-SCHEDULED',
+      timestamp: '2026-10-27 03:00:15',
+      type: 'Automated Snapshot',
+      size: '1.39 GB',
+      scope: 'Full Database & Cloud File Storage',
+      checksum: 'sha256:7c1b...3f80',
+      status: 'completed',
+    },
+  ]);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [selectedBackup, setSelectedBackup] = useState(null);
 

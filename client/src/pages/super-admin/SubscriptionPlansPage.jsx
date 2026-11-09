@@ -1,12 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader, Button, StatusBadge, ConfirmDialog, EmptyState } from '../../components/ui';
+import { PageHeader, Button, StatusBadge, ConfirmDialog, EmptyState, ViewToggle } from '../../components/ui';
 import { PlanCard } from '../../components/subscription/PlanCard';
 import { SearchFilter } from '../../components/subscription/SearchFilter';
 import { SubscriptionNavTabs } from '../../components/subscription/SubscriptionNavTabs';
 import { useToast } from '../../context/ToastContext';
 import { useERP } from '../../context/ERPContext';
-import { mockSubscriptionPlans } from '../../data/mockSubscriptions';
 import { hotelApi } from '../../services/hotelApi';
 import {
   Plus,
@@ -22,18 +21,31 @@ export const SubscriptionPlansPage = () => {
   const { showToast } = useToast();
   const erp = useERP() || {};
   const {
-    subscriptionPlans = mockSubscriptionPlans,
+    subscriptionPlans = [],
     updateSubscriptionPlan,
     deleteSubscriptionPlan,
   } = erp;
 
-  // Ensure plans list is valid array with fallback
-  const plans = (subscriptionPlans && subscriptionPlans.length > 0)
-    ? subscriptionPlans
-    : mockSubscriptionPlans;
+  // Use real backend plans
+  const plans = subscriptionPlans || [];
 
   const [billingCycle, setBillingCycle] = useState('Monthly');
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem('lazfort_view_subscription_plans');
+      return saved === 'list' || saved === 'table' ? 'table' : 'grid';
+    } catch {
+      return 'grid';
+    }
+  });
+
+  const handleViewChange = (mode) => {
+    const target = mode === 'list' ? 'table' : 'grid';
+    setViewMode(target);
+    try {
+      localStorage.setItem('lazfort_view_subscription_plans', mode);
+    } catch {}
+  };
 
   // Search & Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -82,23 +94,37 @@ export const SubscriptionPlansPage = () => {
       });
   }, [plans, searchTerm, statusFilter, sortBy]);
 
-  const handleConfirmToggleStatus = () => {
+  const handleConfirmToggleStatus = async () => {
     if (!planToToggle) return;
     const nextStatus = planToToggle.status === 'active' ? 'inactive' : 'active';
-    updateSubscriptionPlan(planToToggle.id, { status: nextStatus });
-    showToast(
-      'Plan Status Updated',
-      `Plan "${planToToggle.name}" has been marked as ${nextStatus}.`,
-      'info'
-    );
-    setPlanToToggle(null);
+    try {
+      await updateSubscriptionPlan(planToToggle.id, { status: nextStatus });
+      showToast(
+        'Plan Status Updated',
+        `Plan "${planToToggle.name}" marked as ${nextStatus} in MySQL database.`,
+        'success'
+      );
+    } catch (err) {
+      showToast('Error', err?.message || 'Failed to update plan status.', 'error');
+    } finally {
+      setPlanToToggle(null);
+    }
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!deletePlanId) return;
-    deleteSubscriptionPlan(deletePlanId);
-    setDeletePlanId(null);
-    showToast('Plan Removed', 'Subscription tier removed successfully.', 'success');
+    try {
+      const res = await deleteSubscriptionPlan(deletePlanId);
+      if (res?.archived) {
+        showToast('Plan Archived', res.message || 'Plan was safely archived because active subscriptions depend on it.', 'info');
+      } else {
+        showToast('Plan Removed', 'Subscription tier removed successfully from MySQL database.', 'success');
+      }
+    } catch (err) {
+      showToast('Error', err?.message || 'Failed to remove plan.', 'error');
+    } finally {
+      setDeletePlanId(null);
+    }
   };
 
   return (
@@ -109,29 +135,10 @@ export const SubscriptionPlansPage = () => {
         badge={`${plans.length} Commercial Plans`}
         actions={
           <div className="flex items-center gap-3">
-            {/* View Mode Toggle */}
-            <div className="flex items-center bg-white/90 dark:bg-primary-900/90 border border-border/80 dark:border-accent/25 rounded-2xl p-1 shadow-sm">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-xl transition-all duration-200 ${viewMode === 'grid'
-                  ? 'gold-gradient-bg text-primary-900 font-bold shadow-sm'
-                  : 'text-charcoal-muted hover:text-accent'
-                  }`}
-                title="Cards View"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('table')}
-                className={`p-2 rounded-xl transition-all duration-200 ${viewMode === 'table'
-                  ? 'gold-gradient-bg text-primary-900 font-bold shadow-sm'
-                  : 'text-charcoal-muted hover:text-accent'
-                  }`}
-                title="Table View"
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
+            <ViewToggle
+              viewMode={viewMode === 'table' ? 'list' : 'grid'}
+              onViewChange={handleViewChange}
+            />
 
             <Button
               variant="gold"

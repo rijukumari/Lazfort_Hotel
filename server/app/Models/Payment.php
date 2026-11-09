@@ -18,6 +18,8 @@ class Payment extends Model
         'amount',
         'payment_method',
         'status',
+        'hotel_id',
+        'refund_request_id',
         'payment_date',
         'card_last4',
         'notes',

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { PageHeader, Button, StatusBadge } from '../../components/ui';
 import { StatCard, StatsGrid } from '../../components/ui/StatCard';
 import { SimpleAreaChart, SimpleBarChart } from '../../components/data-display/SimpleChart';
-import { monthlyRevenueData, weeklyOccupancyData, superAdminMetrics } from '../../data/mockAnalytics';
 import { DataTable } from '../../components/data-display/DataTable';
 import { Plus, ArrowUpRight, Sparkles, Download, RefreshCw, Eye, Building2, Users, CreditCard, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -15,7 +14,7 @@ export const SuperAdminDashboard = () => {
   const { showToast } = useToast();
   const { hotels } = useERP();
   const [dashboardMetrics, setDashboardMetrics] = useState(null);
-  const [revenueChartData, setRevenueChartData] = useState(monthlyRevenueData);
+  const [revenueChartData, setRevenueChartData] = useState([]);
   const [recentActivities, setRecentActivities] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -24,14 +23,18 @@ export const SuperAdminDashboard = () => {
   const loadStats = useCallback(async (force = false) => {
     try {
       setIsLoading(true);
-      if (force) {
-        invalidateApiCache('/super-admin/dashboard-stats');
-      }
-      const res = await hotelApi.getSuperAdminStats({ skipCache: force });
+      invalidateApiCache('/super-admin/dashboard-stats');
+      const res = await hotelApi.getSuperAdminStats({ skipCache: true });
       if (res?.status === 'success' && res.metrics) {
         setDashboardMetrics(res.metrics);
         if (Array.isArray(res.monthlyRevenue) && res.monthlyRevenue.length > 0) {
-          setRevenueChartData(res.monthlyRevenue);
+          // Normalize API items to have { label, value, secondaryValue }
+          const formatted = res.monthlyRevenue.map(item => ({
+            label: item.label || item.month || item.name || '',
+            value: Number(item.value ?? item.revenue ?? 0),
+            secondaryValue: Number(item.secondaryValue ?? item.target ?? 0),
+          }));
+          setRevenueChartData(formatted);
         }
         if (Array.isArray(res.recentActivities)) {
           setRecentActivities(res.recentActivities);
@@ -179,6 +182,17 @@ export const SuperAdminDashboard = () => {
     },
   ];
 
+  const totalRevenueDisplay = dashboardMetrics
+    ? (typeof dashboardMetrics.totalRevenue === 'number'
+        ? `$${dashboardMetrics.totalRevenue >= 1000000 
+            ? (dashboardMetrics.totalRevenue / 1000000).toFixed(2) + 'M' 
+            : dashboardMetrics.totalRevenue.toLocaleString()}`
+        : `$${dashboardMetrics.totalRevenue}`)
+    : (hotels.length > 0 ? '$0' : '$0');
+
+  const revenueChangeDisplay = dashboardMetrics?.revenueGrowth || '+0%';
+  const weeklyOccupancyList = dashboardMetrics?.weeklyOccupancy || [];
+
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       <PageHeader
@@ -220,14 +234,8 @@ export const SuperAdminDashboard = () => {
         <div onClick={() => navigate('/super-admin/reports/revenue')} className="cursor-pointer">
           <StatCard
             title="Consolidated Platform Revenue"
-            value={dashboardMetrics ? (
-              typeof dashboardMetrics.totalRevenue === 'number'
-                ? `$${dashboardMetrics.totalRevenue >= 1000000 
-                    ? (dashboardMetrics.totalRevenue / 1000000).toFixed(2) + 'M' 
-                    : dashboardMetrics.totalRevenue.toLocaleString()}`
-                : `$${dashboardMetrics.totalRevenue}`
-            ) : superAdminMetrics.totalRevenue}
-            change={superAdminMetrics.revenueGrowth}
+            value={totalRevenueDisplay}
+            change={revenueChangeDisplay}
             isPositive={true}
             iconName="DollarSign"
             subtitle="View Revenue Reports →"
@@ -237,7 +245,7 @@ export const SuperAdminDashboard = () => {
           <StatCard
             title="Platform Registered Hotels"
             value={dashboardMetrics ? dashboardMetrics.totalHotels : hotels.length}
-            change={dashboardMetrics ? `${dashboardMetrics.activeHotels} Active` : "+2 new"}
+            change={dashboardMetrics ? `${dashboardMetrics.activeHotels} Active` : `${hotels.length} Registered`}
             isPositive={true}
             iconName="Building2"
             subtitle="Manage Properties →"
@@ -246,8 +254,8 @@ export const SuperAdminDashboard = () => {
         <div onClick={() => navigate('/super-admin/users/all')} className="cursor-pointer">
           <StatCard
             title="Total Platform Users"
-            value={dashboardMetrics ? dashboardMetrics.totalUsers : "2,480"}
-            change={dashboardMetrics ? `${dashboardMetrics.totalAdmins} Admins` : "+4.2%"}
+            value={dashboardMetrics ? dashboardMetrics.totalUsers : 0}
+            change={dashboardMetrics ? `${dashboardMetrics.totalAdmins} Admins` : "Active"}
             isPositive={true}
             iconName="TrendingUp"
             subtitle="Inspect RBAC Users →"
@@ -256,7 +264,7 @@ export const SuperAdminDashboard = () => {
         <div onClick={() => navigate('/super-admin/system/status')} className="cursor-pointer">
           <StatCard
             title="Platform Health Score"
-            value={dashboardMetrics ? dashboardMetrics.healthScore : "99.98%"}
+            value={dashboardMetrics ? dashboardMetrics.healthScore : "100%"}
             change="Optimal"
             isPositive={true}
             iconName="ShieldCheck"
@@ -282,7 +290,13 @@ export const SuperAdminDashboard = () => {
               Full Ledger <ArrowUpRight className="w-3.5 h-3.5" />
             </button>
           </div>
-          <SimpleAreaChart data={revenueChartData} height={240} />
+          {revenueChartData.length > 0 ? (
+            <SimpleAreaChart data={revenueChartData} height={240} />
+          ) : (
+            <div className="h-[240px] flex items-center justify-center text-xs text-charcoal-muted">
+              No revenue transactions recorded yet.
+            </div>
+          )}
         </div>
 
         <div className="card-luxury p-6 rounded-3xl border border-border/80 dark:border-white/10">
@@ -300,7 +314,13 @@ export const SuperAdminDashboard = () => {
               Occupancy Detail <ArrowUpRight className="w-3.5 h-3.5" />
             </button>
           </div>
-          <SimpleBarChart data={weeklyOccupancyData} height={240} />
+          {weeklyOccupancyList.length > 0 ? (
+            <SimpleBarChart data={weeklyOccupancyList} height={240} />
+          ) : (
+            <div className="h-[240px] flex items-center justify-center text-xs text-charcoal-muted">
+              No active reservations in current cycle.
+            </div>
+          )}
         </div>
       </div>
 

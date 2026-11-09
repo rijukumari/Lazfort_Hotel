@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '../../components/ui';
-import { mockExpiredSubscriptions } from '../../data/mockSubscriptions';
+import { PageHeader, StatusBadge, ViewToggle } from '../../components/ui';
 import { SubscriptionTable } from '../../components/subscription/SubscriptionTable';
 import { SearchFilter } from '../../components/subscription/SearchFilter';
 import { SubscriptionNavTabs } from '../../components/subscription/SubscriptionNavTabs';
@@ -14,12 +13,29 @@ import {
   AlertOctagon,
   TrendingDown,
   Info,
+  Building2,
+  Calendar,
+  Eye,
 } from 'lucide-react';
 
 export const ExpiredSubscriptionsPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [expiredSubs, setExpiredSubs] = useState(mockExpiredSubscriptions);
+  const [expiredSubs, setExpiredSubs] = useState([]);
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('lazfort_view_expired_subs') || 'list';
+    } catch {
+      return 'list';
+    }
+  });
+
+  const handleViewChange = (mode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('lazfort_view_expired_subs', mode);
+    } catch { }
+  };
 
   // Fetch expired subscriptions from Laravel MySQL backend with caching
   useEffect(() => {
@@ -53,14 +69,22 @@ export const ExpiredSubscriptionsPage = () => {
   );
 
   const filteredSubs = useMemo(() => {
-    return expiredSubs.filter(sub => {
-      const matchesSearch =
-        sub.subscriptionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sub.hotelName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sub.hotelLocation.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sub.planName.toLowerCase().includes(searchTerm.toLowerCase());
+    const term = (searchTerm || '').toLowerCase().trim();
+    return (expiredSubs || []).filter(sub => {
+      const subId = (sub.subscriptionId || sub.id || '').toLowerCase();
+      const hotelName = (sub.hotelName || sub.hotel_name || '').toLowerCase();
+      const hotelLoc = (sub.hotelLocation || sub.location || '').toLowerCase();
+      const planName = (sub.planName || sub.plan_name || '').toLowerCase();
 
-      const matchesPlan = planFilter === 'all' || sub.planName === planFilter;
+      const matchesSearch =
+        !term ||
+        subId.includes(term) ||
+        hotelName.includes(term) ||
+        hotelLoc.includes(term) ||
+        planName.includes(term);
+
+      const currentPlan = sub.planName || sub.plan_name;
+      const matchesPlan = planFilter === 'all' || currentPlan === planFilter;
 
       return matchesSearch && matchesPlan;
     });
@@ -168,16 +192,81 @@ export const ExpiredSubscriptionsPage = () => {
         />
       </div>
 
-      {/* Expired Subscriptions Table */}
-      <SubscriptionTable
-        subscriptions={paginatedSubs}
-        type="expired"
-        onViewDetails={sub => navigate(`/super-admin/subscriptions/details/${sub.id}`)}
-        onRenew={sub => navigate(`/super-admin/subscriptions/renew/${sub.id}`)}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
+      {/* Subscriptions View: Table or Luxury Card Grid */}
+      <div className="flex items-center justify-between pb-2">
+        <span className="text-xs text-charcoal-muted">
+          Showing <strong className="text-primary dark:text-white">{filteredSubs.length}</strong> lapsed subscriptions
+        </span>
+        <ViewToggle viewMode={viewMode} onViewChange={handleViewChange} />
+      </div>
+
+      {viewMode === 'list' ? (
+        <SubscriptionTable
+          subscriptions={paginatedSubs}
+          type="expired"
+          onViewDetails={sub => navigate(`/super-admin/subscriptions/details/${sub.id}`)}
+          onRenew={sub => navigate(`/super-admin/subscriptions/renew/${sub.id}`)}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {paginatedSubs.map(sub => (
+            <div
+              key={sub.id}
+              className="card-luxury p-5 rounded-2xl border border-rose-500/20 dark:border-rose-500/10 space-y-4 hover:border-rose-500/40 transition-all flex flex-col justify-between group"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs font-bold text-accent">{sub.code || sub.id}</span>
+                  <StatusBadge status="expired" />
+                </div>
+
+                <div>
+                  <h4 className="font-serif font-bold text-lg text-primary dark:text-white leading-tight">
+                    {sub.hotelName}
+                  </h4>
+                  <p className="text-xs text-charcoal-muted mt-0.5">Previous Plan: {sub.planName}</p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-ivory dark:bg-black/30 border border-border/60 dark:border-white/5 space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between text-charcoal-muted">
+                    <span>Lapsed Date:</span>
+                    <span className="font-mono text-rose-500 font-semibold">{sub.expiryDate || sub.endDate}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-charcoal-muted">
+                    <span>Prior Tariff:</span>
+                    <span className="font-mono font-semibold text-primary dark:text-white">${Number(sub.amount || 0).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-border/70 dark:border-white/10 flex items-center justify-between">
+                <span className="text-[11px] text-rose-500 font-mono">Service Discontinued</span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => navigate(`/super-admin/subscriptions/details/${sub.id}`)}
+                    className="p-1.5 rounded-lg border border-border dark:border-white/10 hover:border-accent hover:text-accent transition-colors"
+                    title="View Dossier"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => navigate(`/super-admin/subscriptions/renew/${sub.id}`)}
+                    className="p-1.5 rounded-lg border border-accent/30 bg-accent/10 hover:bg-accent/20 text-accent transition-colors flex items-center gap-1 text-xs font-semibold px-2.5"
+                    title="Renew Lapsed Agreement"
+                  >
+                    <RotateCw className="w-3.5 h-3.5" />
+                    <span>Renew</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
     </div>
   );
 };

@@ -4,7 +4,7 @@ import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
-import { initialBillingInvoices } from '../../../data/mockSuperAdminModules';
+import { ViewToggle } from '../../../components/ui/ViewToggle';
 import { useToast } from '../../../context/ToastContext';
 import { useERP } from '../../../context/ERPContext';
 import { hotelApi } from '../../../services/hotelApi';
@@ -22,18 +22,35 @@ import {
   CheckCircle,
   Clock,
   Sparkles,
+  User,
 } from 'lucide-react';
 
 export const BillingInvoicesPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { invoices: erpInvoices = [] } = useERP();
-  const [invoices, setInvoices] = useState(initialBillingInvoices || []);
+  const [invoices, setInvoices] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('lazfort_view_invoices') || 'list';
+    } catch {
+      return 'list';
+    }
+  });
+
+  const handleViewChange = (mode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('lazfort_view_invoices', mode);
+    } catch {}
+  };
 
   useEffect(() => {
-    hotelApi.getInvoices().then(data => {
+    let isMounted = true;
+    hotelApi.getInvoices({ skipCache: true }).then(data => {
+      if (!isMounted) return;
       if (Array.isArray(data) && data.length > 0) {
         const mapped = data.map((inv, idx) => ({
           id: inv.id || `inv-${idx}`,
@@ -49,10 +66,14 @@ export const BillingInvoicesPage = () => {
           balanceDue: Math.max(0, (Number(inv.total_amount) || 0) - (Number(inv.amount_paid) || 0)),
           status: inv.status || 'paid',
         }));
-        setInvoices([...mapped, ...initialBillingInvoices]);
+        setInvoices(mapped);
       }
     }).catch(() => {});
-  }, [erpInvoices.length]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Metrics
   const totalBilled = useMemo(() => invoices.reduce((acc, inv) => acc + (inv.totalAmount || 0), 0), [invoices]);
@@ -98,6 +119,10 @@ export const BillingInvoicesPage = () => {
     link.click();
     document.body.removeChild(link);
     showToast('Export Successful', 'Billing invoices exported to CSV format.', 'success');
+  };
+
+  const handlePrintInvoice = (inv) => {
+    navigate(`/super-admin/billing/invoices/${inv.id}`);
   };
 
   const columns = [
@@ -287,17 +312,88 @@ export const BillingInvoicesPage = () => {
               <option value="pending">Pending</option>
               <option value="overdue">Overdue</option>
             </select>
+            <ViewToggle viewMode={viewMode} onViewChange={handleViewChange} className="ml-2" />
           </div>
         </div>
 
-        <DataTable
-          columns={columns}
-          data={filteredInvoices}
-          keyExtractor={(inv) => inv.id}
-          showSearch={false}
-          pageSize={10}
-          emptyMessage="No billing invoice records found."
-        />
+        {viewMode === 'list' ? (
+          <DataTable
+            columns={columns}
+            data={filteredInvoices}
+            keyExtractor={(inv) => inv.id}
+            showSearch={false}
+            pageSize={10}
+            emptyMessage="No billing invoice records found."
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+            {filteredInvoices.map((inv) => (
+              <div
+                key={inv.id}
+                className="card-luxury p-5 rounded-2xl border border-border/80 dark:border-white/10 space-y-4 hover:border-accent/40 transition-all group flex flex-col justify-between"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-bold text-accent">{inv.invoiceNumber}</span>
+                    <StatusBadge status={inv.status} />
+                  </div>
+
+                  <div>
+                    <h4 className="font-serif font-bold text-base text-primary dark:text-white leading-tight">
+                      {inv.clientName}
+                    </h4>
+                    <p className="text-xs text-charcoal-muted flex items-center gap-1.5 mt-0.5">
+                      <Building2 className="w-3.5 h-3.5 text-accent" />
+                      <span>{inv.hotelName}</span>
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-ivory dark:bg-black/30 border border-border/60 dark:border-white/5 space-y-1 text-xs">
+                    <div className="flex items-center justify-between text-charcoal-muted">
+                      <span>Issued:</span>
+                      <span className="font-mono">{inv.invoiceDate}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-charcoal-muted">
+                      <span>Due Date:</span>
+                      <span className="font-mono font-semibold text-rose-500">{inv.dueDate}</span>
+                    </div>
+                    <div className="flex items-center justify-between pt-1 border-t border-border/40 dark:border-white/5">
+                      <span>Balance Due:</span>
+                      <span className="font-mono font-bold text-primary dark:text-white">${inv.balanceDue.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-border/70 dark:border-white/10 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-charcoal-muted uppercase block">Total Amount</span>
+                    <span className="font-serif font-bold text-lg text-primary dark:text-accent">
+                      ${inv.totalAmount.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => navigate(`/super-admin/billing/invoices/${inv.id}`)}
+                      className="p-1.5 rounded-lg border border-accent/30 bg-accent/10 hover:bg-accent/20 text-accent transition-colors flex items-center gap-1 text-xs font-semibold px-2.5"
+                      title="View Invoice"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>View</span>
+                    </button>
+                    <button
+                      onClick={() => handlePrintInvoice(inv)}
+                      className="p-1.5 rounded-lg border border-border dark:border-white/10 hover:bg-ivory dark:hover:bg-white/5 text-charcoal dark:text-gray-300 transition-colors"
+                      title="Print Invoice"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
       </div>
     </div>
   );

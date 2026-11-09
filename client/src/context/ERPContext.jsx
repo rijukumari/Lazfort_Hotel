@@ -1,44 +1,21 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { mockRooms } from '../data/mockRooms';
-import { mockBookings } from '../data/mockBookings';
-import { mockGuests } from '../data/mockGuests';
-import { mockHotels } from '../data/mockHotels';
-import { mockStaff } from '../data/mockStaff';
-import { mockHousekeepingTasks as mockCleaningTasks } from '../data/mockHousekeeping';
-import { mockSubscriptionPlans, mockPlanFeatures } from '../data/mockSubscriptions';
-import {
-  mockGuestFolios,
-  mockInvoices,
-  mockRestaurantOrders,
-  mockInventoryItems,
-  mockStockMovements,
-  mockSuppliers,
-  mockMaintenanceTickets,
-  mockFixedAssets,
-  mockChartOfAccounts,
-  mockJournalEntries,
-  mockPayrollRun,
-  mockAuditLogs
-} from '../data/mockERPData';
-import {
-  mockMenuCategories,
-  mockMenuItemsData,
-  mockRestaurantTables,
-  mockInitialFoodOrders,
-  mockRestaurantBills,
-} from '../data/mockRestaurantData';
 import { useAuth } from './AuthContext';
 import { hotelApi, invalidateApiCache } from '../services/hotelApi';
-import { DEFAULT_CURRENCIES, getCurrencySymbol } from '../data/mockCurrencies';
-import {
-  initialPaymentTransactions,
-  initialRefundRequests,
-  initialBillingInvoices,
-  initialAnnouncements,
-  initialSupportTickets,
-  initialComplaints,
-  initialContactRequests,
-} from '../data/mockSuperAdminModules';
+
+export const DEFAULT_CURRENCIES = [
+  { currency_name: 'US Dollar', currency_code: 'USD', currency_symbol: '$', decimal_precision: 2, is_default: true, is_active: true },
+  { currency_name: 'Indian Rupee', currency_code: 'INR', currency_symbol: '₹', decimal_precision: 2, is_default: false, is_active: true },
+  { currency_name: 'Euro', currency_code: 'EUR', currency_symbol: '€', decimal_precision: 2, is_default: false, is_active: true },
+  { currency_name: 'British Pound', currency_code: 'GBP', currency_symbol: '£', decimal_precision: 2, is_default: false, is_active: true },
+  { currency_name: 'Swiss Franc', currency_code: 'CHF', currency_symbol: 'CHF', decimal_precision: 2, is_default: false, is_active: true },
+  { currency_name: 'UAE Dirham', currency_code: 'AED', currency_symbol: 'د.إ', decimal_precision: 2, is_default: false, is_active: true },
+];
+
+export const getCurrencySymbol = (code = 'USD', customCurrencies = []) => {
+  const all = [...(Array.isArray(customCurrencies) ? customCurrencies : []), ...DEFAULT_CURRENCIES];
+  const match = all.find(c => c.currency_code === code || c.code === code);
+  return match ? (match.currency_symbol || match.symbol) : '$';
+};
 
 const STORAGE_KEY = 'lazfort_erp_database_v1';
 
@@ -48,7 +25,7 @@ export const ERPProvider = ({ children }) => {
   const { user } = useAuth();
 
   // Helper to load or initialize state
-  const loadInitialData = (key, fallback) => {
+  const loadInitialData = (key, fallback = []) => {
     try {
       const stored = localStorage.getItem(`${STORAGE_KEY}_${key}`) || localStorage.getItem(`aurelia_erp_database_v1_${key}`);
       if (stored) return JSON.parse(stored);
@@ -58,113 +35,48 @@ export const ERPProvider = ({ children }) => {
     return fallback;
   };
 
-  const [rooms, setRooms] = useState(() => loadInitialData('rooms', mockRooms));
-  const [bookings, setBookings] = useState(() => loadInitialData('bookings', mockBookings));
-  const [guests, setGuests] = useState(() => loadInitialData('guests', mockGuests));
-  const [cleaningTasks, setCleaningTasks] = useState(() => loadInitialData('cleaningTasks', mockCleaningTasks));
-  const [folios, setFolios] = useState(() => loadInitialData('folios', mockGuestFolios));
-  const [invoices, setInvoices] = useState(() => loadInitialData('invoices', mockInvoices));
-  const [restaurantOrders, setRestaurantOrders] = useState(() => loadInitialData('orders', mockInitialFoodOrders || mockRestaurantOrders));
-  const [menuCategories, setMenuCategories] = useState(() => loadInitialData('restaurant_categories', mockMenuCategories));
-  const [menuItems, setMenuItems] = useState(() => loadInitialData('restaurant_menu_items', mockMenuItemsData));
-  const [restaurantTables, setRestaurantTables] = useState(() => loadInitialData('restaurant_tables', mockRestaurantTables));
-  const [restaurantBills, setRestaurantBills] = useState(() => loadInitialData('restaurant_bills', mockRestaurantBills));
-  const [inventoryItems, setInventoryItems] = useState(() => loadInitialData('inventory', mockInventoryItems));
-  const [stockMovements, setStockMovements] = useState(() => loadInitialData('movements', mockStockMovements));
-  const [suppliers, setSuppliers] = useState(() => loadInitialData('suppliers', mockSuppliers));
-  const [maintenanceTickets, setMaintenanceTickets] = useState(() => loadInitialData('maintenance', mockMaintenanceTickets));
-  const [fixedAssets, setFixedAssets] = useState(() => loadInitialData('assets', mockFixedAssets));
-  const [chartOfAccounts, setChartOfAccounts] = useState(() => loadInitialData('coa', mockChartOfAccounts));
-  const [journalEntries, setJournalEntries] = useState(() => loadInitialData('journal', mockJournalEntries));
-  const [payrollRuns, setPayrollRuns] = useState(() => loadInitialData('payroll', [mockPayrollRun]));
-  const [payments, setPayments] = useState(() => loadInitialData('payments', [
-    {
-      id: 'TX-98421',
-      transactionRef: 'TX-98421',
-      guestName: 'Duke William Somerset',
-      bookingCode: 'AUR-9921',
-      folioId: 'folio-001',
-      paymentMethod: 'Centurion Black Card',
-      amount: 14400,
-      date: '2026-10-28',
-      status: 'paid',
-      notes: 'Advance deposit settled via luxury concierge terminal',
-      createdAt: '2026-10-28T14:20:00Z',
-    },
-    {
-      id: 'TX-98422',
-      transactionRef: 'TX-98422',
-      guestName: 'Baroness Genevieve von Stauffen',
-      bookingCode: 'AUR-9922',
-      folioId: 'folio-002',
-      paymentMethod: 'International Wire Transfer',
-      amount: 8600,
-      date: '2026-10-29',
-      status: 'paid',
-      notes: 'Full penthouse stay settled via UBS Private Banking',
-      createdAt: '2026-10-29T10:15:00Z',
-    },
-    {
-      id: 'TX-98423',
-      transactionRef: 'TX-98423',
-      guestName: 'Sheikh Mansoor Al-Nahyan',
-      bookingCode: 'AUR-9923',
-      folioId: 'folio-001',
-      paymentMethod: 'Centurion Black Card',
-      amount: 32000,
-      date: '2026-10-30',
-      status: 'paid',
-      notes: 'Royal Presidential Suite buyout settlement',
-      createdAt: '2026-10-30T16:45:00Z',
-    },
-    {
-      id: 'TX-98424',
-      transactionRef: 'TX-98424',
-      guestName: 'Countess Eleonora Rossi',
-      bookingCode: 'AUR-9924',
-      folioId: 'folio-002',
-      paymentMethod: 'Visa Infinite',
-      amount: 3800,
-      date: '2026-10-30',
-      status: 'pending',
-      notes: 'Concierge yacht charter charge verification pending',
-      createdAt: '2026-10-30T18:10:00Z',
-    },
-    {
-      id: 'TX-98425',
-      transactionRef: 'TX-98425',
-      guestName: 'Lord Alistair Sterling',
-      bookingCode: 'AUR-9925',
-      folioId: 'folio-001',
-      paymentMethod: 'Mastercard World Elite',
-      amount: 1250,
-      date: '2026-10-27',
-      status: 'refunded',
-      notes: 'Spa hydrotherapy cancellation refund processed',
-      createdAt: '2026-10-27T11:30:00Z',
-    }
-  ]));
-  const [auditLogs, setAuditLogs] = useState(() => loadInitialData('audit', mockAuditLogs));
-  const [hotels, setHotels] = useState(() => loadInitialData('hotels', mockHotels));
-  const [staff, setStaff] = useState(() => loadInitialData('staff', mockStaff));
-  const [subscriptionPlans, setSubscriptionPlans] = useState(() => loadInitialData('plans', mockSubscriptionPlans));
-  const [planFeatures, setPlanFeatures] = useState(() => loadInitialData('features', mockPlanFeatures));
+  const [rooms, setRooms] = useState(() => loadInitialData('rooms', []));
+  const [bookings, setBookings] = useState(() => loadInitialData('bookings', []));
+  const [guests, setGuests] = useState(() => loadInitialData('guests', []));
+  const [cleaningTasks, setCleaningTasks] = useState(() => loadInitialData('cleaningTasks', []));
+  const [folios, setFolios] = useState(() => loadInitialData('folios', []));
+  const [invoices, setInvoices] = useState(() => loadInitialData('invoices', []));
+  const [restaurantOrders, setRestaurantOrders] = useState(() => loadInitialData('orders', []));
+  const [menuCategories, setMenuCategories] = useState(() => loadInitialData('restaurant_categories', []));
+  const [menuItems, setMenuItems] = useState(() => loadInitialData('restaurant_menu_items', []));
+  const [restaurantTables, setRestaurantTables] = useState(() => loadInitialData('restaurant_tables', []));
+  const [restaurantBills, setRestaurantBills] = useState(() => loadInitialData('restaurant_bills', []));
+  const [inventoryItems, setInventoryItems] = useState(() => loadInitialData('inventory', []));
+  const [stockMovements, setStockMovements] = useState(() => loadInitialData('movements', []));
+  const [suppliers, setSuppliers] = useState(() => loadInitialData('suppliers', []));
+  const [maintenanceTickets, setMaintenanceTickets] = useState(() => loadInitialData('maintenance', []));
+  const [fixedAssets, setFixedAssets] = useState(() => loadInitialData('assets', []));
+  const [chartOfAccounts, setChartOfAccounts] = useState(() => loadInitialData('coa', []));
+  const [journalEntries, setJournalEntries] = useState(() => loadInitialData('journal', []));
+  const [payrollRuns, setPayrollRuns] = useState(() => loadInitialData('payroll', []));
+  const [payments, setPayments] = useState(() => loadInitialData('payments', []));
+  const [auditLogs, setAuditLogs] = useState(() => loadInitialData('audit', []));
+  const [hotels, setHotels] = useState(() => loadInitialData('hotels', []));
+  const [staff, setStaff] = useState(() => loadInitialData('staff', []));
+  const [subscriptionPlans, setSubscriptionPlans] = useState(() => loadInitialData('plans', []));
+  const [planFeatures, setPlanFeatures] = useState(() => loadInitialData('features', []));
   const [currencies, setCurrencies] = useState(() => loadInitialData('currencies', DEFAULT_CURRENCIES));
-  const [refundRequests, setRefundRequests] = useState(() => loadInitialData('refund_requests', initialRefundRequests));
-  const [announcements, setAnnouncements] = useState(() => loadInitialData('announcements', initialAnnouncements));
-  const [supportTickets, setSupportTickets] = useState(() => loadInitialData('support_tickets', initialSupportTickets));
-  const [complaints, setComplaints] = useState(() => loadInitialData('complaints', initialComplaints));
-  const [contactRequests, setContactRequests] = useState(() => loadInitialData('contact_requests', initialContactRequests));
+  const [refundRequests, setRefundRequests] = useState(() => loadInitialData('refund_requests', []));
+  const [announcements, setAnnouncements] = useState(() => loadInitialData('announcements', []));
+  const [supportTickets, setSupportTickets] = useState(() => loadInitialData('support_tickets', []));
+  const [complaints, setComplaints] = useState(() => loadInitialData('complaints', []));
+  const [contactRequests, setContactRequests] = useState(() => loadInitialData('contact_requests', []));
   const [platformSettings, setPlatformSettings] = useState(() => loadInitialData('platform_settings', {}));
 
-  // Initial fetch from Laravel MySQL backend on mount: only essential session items (currencies & active hotel context)
+  // Initial fetch from Laravel MySQL backend on mount: essential platform items (currencies, hotels, subscription plans)
   useEffect(() => {
     let isMounted = true;
     const fetchBackendData = async () => {
       try {
-        const [apiCurrencies, apiHotels] = await Promise.allSettled([
+        const [apiCurrencies, apiHotels, apiPlans] = await Promise.allSettled([
           hotelApi.getCurrencies(),
           hotelApi.getHotels(),
+          hotelApi.getSubscriptionPlans(),
         ]);
 
         if (!isMounted) return;
@@ -183,6 +95,21 @@ export const ERPProvider = ({ children }) => {
             subscriptionPlan: h.subscription_plan || h.subscriptionPlan || 'Enterprise Luxury',
             currencyCode: h.currency_code || h.currencyCode || 'USD',
           })));
+        }
+
+        // If backend returned subscription plans, sync them
+        if (apiPlans.status === 'fulfilled' && Array.isArray(apiPlans.value) && apiPlans.value.length > 0) {
+          setSubscriptionPlans(apiPlans.value.map(p => ({
+            ...p,
+            tierCode: p.tier_code || p.tierCode,
+            monthlyPrice: Number(p.price || 0),
+            annualPrice: Number(p.price || 0) * 10,
+            roomLimit: p.max_rooms || p.roomLimit || 50,
+            staffLimit: p.max_staff || p.staffLimit || 25,
+            features: Array.isArray(p.features) ? p.features : [],
+            status: p.status || 'active',
+          })));
+          localStorage.setItem(`${STORAGE_KEY}_plans`, JSON.stringify(apiPlans.value));
         }
       } catch (err) {
         console.warn('ERPContext initial sync deferred:', err);
@@ -337,26 +264,33 @@ export const ERPProvider = ({ children }) => {
       currency_code: code,
       currency_name: currencyData.currency_name || currencyData.currencyName,
       currency_symbol: currencyData.currency_symbol || currencyData.currencySymbol,
+      decimal_precision: Number(currencyData.decimal_precision || currencyData.decimalPrecision || 2),
       id: currencyData.id || Date.now(),
-      is_default: false,
-      is_active: true,
+      is_default: Boolean(currencyData.is_default),
+      is_active: currencyData.is_active !== undefined ? Boolean(currencyData.is_active) : true,
     };
 
+    // Check duplicate code
+    if (currencies.some(c => c.currency_code?.toUpperCase() === code)) {
+      throw new Error(`Currency code '${code}' already exists.`);
+    }
+
     setCurrencies(prev => {
-      const exists = prev.some(c => c.currency_code?.toUpperCase() === code);
-      if (exists) return prev;
       const updated = [...prev, newCurr];
       localStorage.setItem(`${STORAGE_KEY}_currencies`, JSON.stringify(updated));
       return updated;
     });
 
     try {
+      invalidateApiCache('/currencies');
       const res = await hotelApi.createCurrency(newCurr);
       if (res && res.id) {
         setCurrencies(prev => prev.map(c => c.currency_code === code ? res : c));
+        return { success: true, currency: res };
       }
     } catch (err) {
       console.warn('Could not persist currency to MySQL:', err.message);
+      throw err;
     }
 
     logAudit('CREATE', 'Currencies', code, `Added custom currency ${newCurr.currency_name} (${code} - ${newCurr.currency_symbol})`);
@@ -370,44 +304,114 @@ export const ERPProvider = ({ children }) => {
       return updated;
     });
     try {
+      invalidateApiCache('/currencies');
       await hotelApi.updateCurrency(id, data);
     } catch (err) {
       console.warn('Could not update currency in MySQL:', err.message);
+      throw err;
     }
     logAudit('UPDATE', 'Currencies', id, `Updated currency details for ${id}`);
     return { success: true };
   };
 
-  const deleteCurrency = async (id) => {
+  const toggleCurrencyActive = async (id) => {
+    const target = currencies.find(c => c.id === id || c.currency_code === id);
+    if (!target) return;
+    if (target.is_default && target.is_active) {
+      throw new Error('Default base platform currency cannot be deactivated.');
+    }
+    const newStatus = !target.is_active;
+    return updateCurrency(id, { is_active: newStatus });
+  };
+
+  const setDefaultBaseCurrency = async (id) => {
     setCurrencies(prev => {
-      const updated = prev.filter(c => c.id !== id && c.currency_code !== id);
+      const updated = prev.map(c => ({
+        ...c,
+        is_default: (c.id === id || c.currency_code === id),
+      }));
       localStorage.setItem(`${STORAGE_KEY}_currencies`, JSON.stringify(updated));
       return updated;
     });
     try {
-      await hotelApi.deleteCurrency(id);
+      invalidateApiCache('/currencies');
+      await hotelApi.updateCurrency(id, { is_default: true, is_active: true });
+    } catch (err) {
+      console.warn('Could not set default currency in MySQL:', err.message);
+      throw err;
+    }
+    logAudit('UPDATE', 'Currencies', id, `Set ${id} as central clearing base currency`);
+    return { success: true };
+  };
+
+  const deleteCurrency = async (idOrCode) => {
+    const target = currencies.find(c => c.id === idOrCode || c.currency_code === idOrCode);
+    if (!target) {
+      return { success: true };
+    }
+    if (target.is_default) {
+      throw new Error('Default system currency cannot be deleted.');
+    }
+
+    const resolvedIdentifier = target.id ?? target.currency_code;
+
+    try {
+      invalidateApiCache('/currencies');
+      const res = await hotelApi.deleteCurrency(resolvedIdentifier);
+
+      if (res && res.status === 'deactivated') {
+        // Updated safely in database instead of hard delete
+        setCurrencies(prev => {
+          const updated = prev.map(c =>
+            (c.id === target.id || c.currency_code === target.currency_code)
+              ? { ...c, is_active: false }
+              : c
+          );
+          localStorage.setItem(`${STORAGE_KEY}_currencies`, JSON.stringify(updated));
+          return updated;
+        });
+        return { success: true, message: res.message, deactivated: true };
+      }
+
+      // Hard deleted from database successfully
+      setCurrencies(prev => {
+        const updated = prev.filter(c => c.id !== target.id && c.currency_code !== target.currency_code);
+        localStorage.setItem(`${STORAGE_KEY}_currencies`, JSON.stringify(updated));
+        return updated;
+      });
+
+      logAudit('DELETE', 'Currencies', String(target.currency_code || target.id), `Removed currency ${target.currency_name} (${target.currency_code})`);
+      return { success: true, message: 'Currency deleted successfully.' };
     } catch (err) {
       console.warn('Could not delete currency in MySQL:', err.message);
+      throw err;
     }
-    logAudit('DELETE', 'Currencies', id, `Removed custom currency ${id}`);
-    return { success: true };
   };
 
   /**
    * Helper to resolve the active hotel's currency symbol dynamically
-   * Priority: passed hotelId -> logged-in user's hotelId -> active property -> fallback USD ($)
+   * Priority: passed hotelId -> logged-in user's hotelId -> active property -> platform base default -> fallback USD ($)
    */
   const getHotelCurrencySymbol = (hotelId) => {
     const targetHotelId = hotelId || user?.hotelId || 'hotel-001';
     const targetHotel = hotels.find(h => h.id === targetHotelId);
-    const code = targetHotel?.currencyCode || targetHotel?.currency_code || 'USD';
+    let code = targetHotel?.currencyCode || targetHotel?.currency_code;
+    if (!code) {
+      const defaultCurr = currencies.find(c => c.is_default);
+      code = defaultCurr ? defaultCurr.currency_code : 'USD';
+    }
     return getCurrencySymbol(code, currencies);
   };
 
   const getHotelCurrencyCode = (hotelId) => {
     const targetHotelId = hotelId || user?.hotelId || 'hotel-001';
     const targetHotel = hotels.find(h => h.id === targetHotelId);
-    return targetHotel?.currencyCode || targetHotel?.currency_code || 'USD';
+    let code = targetHotel?.currencyCode || targetHotel?.currency_code;
+    if (!code) {
+      const defaultCurr = currencies.find(c => c.is_default);
+      code = defaultCurr ? defaultCurr.currency_code : 'USD';
+    }
+    return code;
   };
 
   // =========================================================================
@@ -419,30 +423,59 @@ export const ERPProvider = ({ children }) => {
       id: hotelData.id || `hotel-${Date.now().toString().slice(-6)}`,
       createdAt: new Date().toISOString(),
     };
-    setHotels(prev => [newHotel, ...prev]);
 
-    // Persist directly to Laravel REST API -> MySQL hotel_erp.hotels table
+    // Persist directly to Laravel REST API -> MySQL hotel_erp.hotels table & owner user
+    let res = null;
     try {
-      await hotelApi.createHotel({
+      invalidateApiCache('/hotels');
+      res = await hotelApi.createHotel({
         id: newHotel.id,
         name: newHotel.name,
+        legal_name: newHotel.legalName || newHotel.legal_name || newHotel.name,
+        code: newHotel.code || newHotel.hotelCode,
         location: newHotel.location,
-        total_rooms: Number(newHotel.totalRooms || 0),
-        subscription_plan: newHotel.subscriptionPlan || 'Palace Enterprise',
-        currency_code: newHotel.currencyCode || 'USD',
-        status: newHotel.status || 'active',
-        brand: newHotel.brand || 'Lazfort Sovereign Portfolio',
+        address: newHotel.address,
+        city: newHotel.city,
+        state: newHotel.state,
+        postal_code: newHotel.postalCode || newHotel.postal_code,
+        country: newHotel.country,
         phone: newHotel.adminContact || newHotel.phone || '+1 (800) 555-0199',
         email: newHotel.adminEmail || newHotel.email || 'gm@resort.com',
+        website: newHotel.website,
+        total_rooms: Number(newHotel.totalRooms || newHotel.total_rooms || 0),
+        subscription_plan: newHotel.subscriptionPlan || newHotel.subscription_plan || 'Palace Enterprise',
+        currency_code: newHotel.currencyCode || newHotel.currency_code || 'USD',
+        timezone: newHotel.timezone || 'UTC',
+        hotel_category: newHotel.hotelCategory || newHotel.hotel_category || 'Luxury Boutique',
+        status: newHotel.status || 'active',
+        brand: newHotel.brand || 'Lazfort Sovereign Portfolio',
+        adminName: newHotel.adminName || 'General Manager',
+        adminEmail: newHotel.adminEmail || newHotel.email || 'gm@resort.com',
+        adminContact: newHotel.adminContact || newHotel.phone || '+1 (800) 555-0199',
+        adminPassword: newHotel.adminPassword || 'password123',
         image: newHotel.image,
+      });
+
+      const savedHotelObj = res?.hotel ? {
+        ...res.hotel,
+        totalRooms: res.hotel.total_rooms || res.hotel.totalRooms || 0,
+        subscriptionPlan: res.hotel.subscription_plan || res.hotel.subscriptionPlan || 'Palace Enterprise',
+        currencyCode: res.hotel.currency_code || res.hotel.currencyCode || 'USD',
+      } : newHotel;
+
+      setHotels(prev => {
+        const filtered = prev.filter(h => h.id !== savedHotelObj.id);
+        return [savedHotelObj, ...filtered];
       });
     } catch (err) {
       console.warn('Could not persist hotel directly to MySQL backend:', err.message);
+      throw err;
     }
 
     logAudit('CREATE', 'Platform Setting', newHotel.id, `Onboarded new luxury property: ${newHotel.name}`);
     invalidateApiCache('/super-admin/dashboard-stats');
-    return { success: true, message: `Successfully onboarded ${newHotel.name}`, hotel: newHotel };
+    invalidateApiCache('/users');
+    return { success: true, message: `Successfully onboarded ${newHotel.name}`, hotel: res?.hotel || newHotel, owner: res?.owner };
   };
 
   const updateHotelStatus = (hotelId, status) => {
@@ -473,6 +506,195 @@ export const ERPProvider = ({ children }) => {
     invalidateApiCache('/super-admin/dashboard-stats');
     return { success: true };
   };
+
+  // =========================================================================
+  // SUPER ADMIN: SUBSCRIPTION PLANS & FEATURES MANAGEMENT (REAL MYSQL PERSISTENCE)
+  // =========================================================================
+  const addSubscriptionPlan = async (planData) => {
+    const tempId = planData.id || `plan-${Date.now()}`;
+    const monthlyPrice = Number(planData.monthlyPrice || planData.price || 0);
+    const annualPrice = Number(planData.annualPrice || monthlyPrice * 10);
+    const tierCode = (planData.tierCode || planData.tier_code || planData.name || '').toUpperCase().trim();
+    const maxRooms = planData.maxRooms || planData.max_rooms || (planData.roomLimit === 'Unlimited' ? 9999 : Number(planData.roomLimit) || 50);
+    const maxStaff = planData.maxStaff || planData.max_staff || (planData.userLimit === 'Unlimited' ? 999 : Number(planData.userLimit) || 25);
+    const features = Array.isArray(planData.features) ? planData.features : (planData.includedModules || []);
+
+    const newPlanObj = {
+      id: tempId,
+      name: planData.name,
+      tierCode,
+      tier_code: tierCode,
+      price: monthlyPrice,
+      monthlyPrice,
+      annualPrice,
+      currency: planData.currency || 'USD',
+      billingCycle: planData.billingCycle || planData.billing_cycle || 'monthly',
+      billing_cycle: planData.billingCycle || planData.billing_cycle || 'monthly',
+      maxRooms,
+      max_rooms: maxRooms,
+      roomLimit: maxRooms >= 9999 ? 'Unlimited' : maxRooms,
+      maxStaff,
+      max_staff: maxStaff,
+      userLimit: maxStaff >= 999 ? 'Unlimited' : maxStaff,
+      description: planData.description || '',
+      features,
+      includedModules: features,
+      status: planData.status || 'active',
+      trialDays: Number(planData.trialDays || 14),
+      recommendedFor: planData.recommendedFor || '',
+      createdAt: new Date().toISOString(),
+    };
+
+    // Optimistic UI state update
+    setSubscriptionPlans(prev => [newPlanObj, ...prev.filter(p => p.id !== tempId)]);
+
+    // Persist to Laravel MySQL database
+    try {
+      invalidateApiCache('/super-admin/subscription-plans');
+      invalidateApiCache('/super-admin/dashboard-stats');
+      const savedPlan = await hotelApi.createSubscriptionPlan({
+        id: tempId,
+        name: newPlanObj.name,
+        tierCode: newPlanObj.tierCode,
+        tier_code: newPlanObj.tier_code,
+        price: newPlanObj.price,
+        currency: newPlanObj.currency,
+        billingCycle: newPlanObj.billingCycle,
+        billing_cycle: newPlanObj.billing_cycle,
+        maxRooms: newPlanObj.maxRooms,
+        max_rooms: newPlanObj.max_rooms,
+        maxStaff: newPlanObj.maxStaff,
+        max_staff: newPlanObj.max_staff,
+        description: newPlanObj.description,
+        features: newPlanObj.features,
+        status: newPlanObj.status,
+      });
+
+      if (savedPlan && savedPlan.id) {
+        const normalized = {
+          ...savedPlan,
+          tierCode: savedPlan.tier_code || savedPlan.tierCode || newPlanObj.tierCode,
+          monthlyPrice: Number(savedPlan.price || newPlanObj.monthlyPrice),
+          annualPrice: Number(savedPlan.price || newPlanObj.monthlyPrice) * 10,
+          roomLimit: savedPlan.max_rooms >= 9999 ? 'Unlimited' : (savedPlan.max_rooms || newPlanObj.roomLimit),
+          userLimit: savedPlan.max_staff >= 999 ? 'Unlimited' : (savedPlan.max_staff || newPlanObj.userLimit),
+          features: Array.isArray(savedPlan.features) ? savedPlan.features : newPlanObj.features,
+          status: savedPlan.status || newPlanObj.status,
+        };
+        setSubscriptionPlans(prev => prev.map(p => (p.id === tempId ? normalized : p)));
+        logAudit('CREATE', 'Subscription Plans', normalized.id, `Created commercial plan ${normalized.name} (${normalized.tierCode}) in MySQL`);
+        return { success: true, plan: normalized };
+      }
+    } catch (err) {
+      console.error('[ERPContext] Failed to persist subscription plan to MySQL:', err);
+      // Revert optimistic update
+      setSubscriptionPlans(prev => prev.filter(p => p.id !== tempId));
+      throw err;
+    }
+
+    return { success: true, plan: newPlanObj };
+  };
+
+  const updateSubscriptionPlan = async (planId, updates) => {
+    // Optimistic UI state update
+    setSubscriptionPlans(prev =>
+      prev.map(p => {
+        if (p.id === planId) {
+          const nextPrice = updates.monthlyPrice !== undefined ? Number(updates.monthlyPrice) : (updates.price !== undefined ? Number(updates.price) : p.monthlyPrice);
+          const nextRooms = updates.maxRooms !== undefined ? updates.maxRooms : (updates.max_rooms !== undefined ? updates.max_rooms : p.roomLimit);
+          const nextStaff = updates.maxStaff !== undefined ? updates.maxStaff : (updates.max_staff !== undefined ? updates.max_staff : p.userLimit);
+          return {
+            ...p,
+            ...updates,
+            monthlyPrice: nextPrice,
+            annualPrice: updates.annualPrice !== undefined ? Number(updates.annualPrice) : nextPrice * 10,
+            price: nextPrice,
+            tierCode: updates.tierCode || updates.tier_code || p.tierCode,
+            roomLimit: nextRooms >= 9999 ? 'Unlimited' : nextRooms,
+            userLimit: nextStaff >= 999 ? 'Unlimited' : nextStaff,
+            features: updates.features || updates.includedModules || p.features,
+            status: updates.status || p.status,
+          };
+        }
+        return p;
+      })
+    );
+
+    // Persist to Laravel MySQL database
+    try {
+      invalidateApiCache('/super-admin/subscription-plans');
+      invalidateApiCache('/super-admin/dashboard-stats');
+      const res = await hotelApi.updateSubscriptionPlan(planId, {
+        ...updates,
+        ...(updates.tierCode ? { tier_code: updates.tierCode } : {}),
+        ...(updates.billingCycle ? { billing_cycle: updates.billingCycle } : {}),
+        ...(updates.maxRooms ? { max_rooms: updates.maxRooms } : {}),
+        ...(updates.maxStaff ? { max_staff: updates.maxStaff } : {}),
+      });
+
+      logAudit('UPDATE', 'Subscription Plans', planId, `Updated plan specifications for ${planId} in MySQL`);
+      return { success: true, plan: res };
+    } catch (err) {
+      console.error('[ERPContext] Failed to update subscription plan in MySQL:', err);
+      throw err;
+    }
+  };
+
+  const deleteSubscriptionPlan = async (planId) => {
+    try {
+      invalidateApiCache('/super-admin/subscription-plans');
+      invalidateApiCache('/super-admin/dashboard-stats');
+      const res = await hotelApi.deleteSubscriptionPlan(planId);
+
+      if (res && res.status === 'archived') {
+        // Safe archive response from server
+        setSubscriptionPlans(prev =>
+          prev.map(p => (p.id === planId ? { ...p, status: 'archived' } : p))
+        );
+        logAudit('UPDATE', 'Subscription Plans', planId, `Archived commercial plan ${planId} (dependent subscriptions exist)`);
+        return { success: true, archived: true, message: res.message };
+      }
+
+      setSubscriptionPlans(prev => prev.filter(p => p.id !== planId));
+      logAudit('DELETE', 'Subscription Plans', planId, `Deleted subscription plan ${planId}`);
+      return { success: true, message: 'Subscription plan deleted successfully.' };
+    } catch (err) {
+      console.error('[ERPContext] Failed to delete subscription plan in MySQL:', err);
+      throw err;
+    }
+  };
+
+  const addPlanFeature = async (featureData) => {
+    const newFeature = {
+      id: featureData.id || `feat-${Date.now()}`,
+      name: featureData.name,
+      category: featureData.category || 'Core Module',
+      description: featureData.description || '',
+      status: featureData.status || 'active',
+      createdAt: new Date().toISOString(),
+    };
+    setPlanFeatures(prev => [newFeature, ...prev]);
+    try {
+      invalidateApiCache('/super-admin/plan-features');
+      await hotelApi.createPlanFeature(newFeature);
+    } catch (err) {
+      console.warn('Could not persist plan feature to MySQL:', err.message);
+    }
+    return { success: true, feature: newFeature };
+  };
+
+  const updatePlanFeature = (featureId, updates) => {
+    setPlanFeatures(prev =>
+      prev.map(f => (f.id === featureId ? { ...f, ...updates } : f))
+    );
+    return { success: true };
+  };
+
+  const deletePlanFeature = (featureId) => {
+    setPlanFeatures(prev => prev.filter(f => f.id !== featureId));
+    return { success: true };
+  };
+
 
   // =========================================================================
   // WORKFLOW 1: RESERVATION CREATION (WITH CONFLICT CHECK & AUTO-FOLIO SETUP)
@@ -1906,80 +2128,6 @@ export const ERPProvider = ({ children }) => {
     return { success: true };
   };
 
-  const addSubscriptionPlan = async (data) => {
-    const newPlan = {
-      ...data,
-      id: data.id || `plan-${Date.now()}`,
-      status: data.status || 'active',
-    };
-    setSubscriptionPlans(prev => [newPlan, ...prev]);
-    logAudit('CREATE', 'Platform Management', newPlan.id, `Created subscription plan ${newPlan.name} (${newPlan.tierCode}).`);
-
-    try {
-      await hotelApi.createSubscriptionPlan(newPlan);
-    } catch (e) {
-      console.warn('Could not persist plan to MySQL backend:', e.message);
-    }
-    return { success: true, plan: newPlan };
-  };
-
-  const updateSubscriptionPlan = async (planId, data) => {
-    setSubscriptionPlans(prev =>
-      prev.map(p => (p.id === planId ? { ...p, ...data } : p))
-    );
-    logAudit('UPDATE', 'Platform Management', planId, `Updated subscription plan ${data?.name || planId}.`);
-
-    try {
-      await hotelApi.updateSubscriptionPlan(planId, data);
-    } catch (e) {
-      console.warn('Could not persist plan update to MySQL backend:', e.message);
-    }
-    return { success: true };
-  };
-
-  const deleteSubscriptionPlan = async (planId) => {
-    setSubscriptionPlans(prev => prev.filter(p => p.id !== planId));
-    logAudit('DELETE', 'Platform Management', planId, `Removed subscription tier ${planId}`);
-
-    try {
-      await hotelApi.deleteSubscriptionPlan(planId);
-    } catch (e) {
-      console.warn('Could not delete plan from MySQL backend:', e.message);
-    }
-    return { success: true };
-  };
-
-  const addPlanFeature = async (data) => {
-    const newFeature = {
-      ...data,
-      id: data.id || `feat-${Date.now()}`,
-      status: data.status || 'enabled',
-    };
-    setPlanFeatures(prev => [newFeature, ...prev]);
-    logAudit('CREATE', 'Platform Management', newFeature.id, `Created feature ${newFeature.name} (${newFeature.code}).`);
-
-    try {
-      await hotelApi.createPlanFeature(newFeature);
-    } catch (e) {
-      console.warn('Could not persist feature to MySQL:', e.message);
-    }
-    return { success: true, feature: newFeature };
-  };
-
-  const updatePlanFeature = (featureId, data) => {
-    setPlanFeatures(prev =>
-      prev.map(f => (f.id === featureId ? { ...f, ...data } : f))
-    );
-    logAudit('UPDATE', 'Platform Management', featureId, `Updated feature ${data?.name || featureId}.`);
-    return { success: true };
-  };
-
-  const deletePlanFeature = (featureId) => {
-    setPlanFeatures(prev => prev.filter(f => f.id !== featureId));
-    logAudit('DELETE', 'Platform Management', featureId, `Removed plan feature ${featureId}`);
-    return { success: true };
-  };
-
   // Super Admin: Refunds Workflow
   const addRefundRequest = async (data) => {
     const newRef = {
@@ -3233,6 +3381,8 @@ export const ERPProvider = ({ children }) => {
         currencies,
         addCurrency,
         updateCurrency,
+        toggleCurrencyActive,
+        setDefaultBaseCurrency,
         deleteCurrency,
         getHotelCurrencySymbol,
         getHotelCurrencyCode,

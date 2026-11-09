@@ -4,7 +4,6 @@ import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
 import { Modal } from '../../../components/ui/Modal';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
-import { initialContactRequests } from '../../../data/mockSuperAdminModules';
 import { useToast } from '../../../context/ToastContext';
 import { useERP } from '../../../context/ERPContext';
 import { hotelApi } from '../../../services/hotelApi';
@@ -32,17 +31,17 @@ export const ContactRequestsPage = () => {
     try {
       const stored = localStorage.getItem('lazfort_contact_requests');
       if (stored) return JSON.parse(stored);
-    } catch {}
-    return initialContactRequests || [];
+    } catch { }
+    return [];
   });
 
   useEffect(() => {
     let isMounted = true;
     hotelApi.getContactRequests().then(data => {
-      if (isMounted && Array.isArray(data) && data.length > 0) {
+      if (isMounted && Array.isArray(data)) {
         setRequests(data);
       }
-    }).catch(() => {});
+    }).catch(() => { });
 
     return () => { isMounted = false; };
   }, []);
@@ -51,7 +50,7 @@ export const ContactRequestsPage = () => {
     setRequests(list);
     try {
       localStorage.setItem('lazfort_contact_requests', JSON.stringify(list));
-    } catch {}
+    } catch { }
   };
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -97,10 +96,10 @@ export const ContactRequestsPage = () => {
     const updated = requests.map(r =>
       r.id === notesTarget.id
         ? {
-            ...r,
-            status: 'in_progress',
-            followUpNotes: followUpNoteInput,
-          }
+          ...r,
+          status: 'in_progress',
+          followUpNotes: followUpNoteInput,
+        }
         : r
     );
     persistRequests(updated);

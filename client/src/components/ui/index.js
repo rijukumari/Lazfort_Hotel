@@ -10,5 +10,6 @@ export { Modal, ConfirmDialog } from './Modal';
 export { Tabs, Pagination } from './Tabs';
 export { PageHeader } from './PageHeader';
 export { EmptyState, LoadingSpinner } from './EmptyState';
+export { ViewToggle } from './ViewToggle';
 
 

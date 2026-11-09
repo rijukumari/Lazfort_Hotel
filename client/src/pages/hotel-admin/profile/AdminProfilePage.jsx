@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '../../../components/ui';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
+import { hotelApi } from '../../../services/hotelApi';
+import { UserAvatar } from '../../../components/common/UserAvatar';
 import {
   User,
   Mail,
@@ -33,43 +35,95 @@ export const AdminProfilePage = () => {
   const [bio, setBio] = useState(
     user?.bio || 'Supervising high-level palace hospitality operations, private royal engagements, and Michelin culinary affairs at Lazfort Grand Palace.'
   );
-  const [avatar, setAvatar] = useState(
-    user?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80'
-  );
+  const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80';
+  const [avatar, setAvatar] = useState(user?.avatar || DEFAULT_AVATAR);
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatar || DEFAULT_AVATAR);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
-  // Personal preferences
-  const [preferences, setPreferences] = useState(() => {
-    try {
-      const saved = localStorage.getItem('lazfort_admin_personal_prefs');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return {
-      emailAlerts: true,
-      soundNotifications: true,
-      compactTableRows: false,
-      autoLockSessionMinutes: '30',
-      defaultLoginLanding: '/hotel-admin/dashboard',
-      twoFactorEnabled: true,
-    };
-  });
+  // Sync with current user from backend
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getCurrentUser()
+      .then(res => {
+        if (isMounted && res && res.user) {
+          if (res.user.name) setName(res.user.name);
+          if (res.user.email) setEmail(res.user.email);
+          if (res.user.phone) setPhone(res.user.phone);
+          if (res.user.avatar) {
+            setAvatar(res.user.avatar);
+            setAvatarPreview(res.user.avatar);
+          }
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
-  // Password fields
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
-
-  // Handle avatar upload simulated with URL or file reader
-  const handleAvatarChange = (e) => {
+  // Handle avatar upload via real Laravel API & MySQL storage
+  const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatar(reader.result);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+      showToast('Invalid Image Format', 'Please upload a JPEG, PNG, WEBP, or GIF image file.', 'error');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('File Too Large', 'Profile image size must not exceed 5MB.', 'error');
+      return;
+    }
+
+    // Local preview immediately
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setAvatarPreview(event.target.result);
+    };
+    reader.readAsDataURL(file);
+
+    setIsUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const targetId = user?.id || user?.email || 'usr-ha-1';
+      const response = await hotelApi.uploadAvatar(targetId, formData);
+
+      if (response && response.avatar) {
+        setAvatar(response.avatar);
+        setAvatarPreview(response.avatar);
+        if (updateUserProfile) {
+          updateUserProfile({ avatar: response.avatar });
+        }
+        showToast('Profile Picture Updated', 'Your general manager portrait has been securely stored in MySQL.', 'success');
+      }
+    } catch (err) {
+      console.error('Avatar upload error:', err);
+      showToast('Upload Error', err?.data?.message || err.message || 'Failed to upload profile picture.', 'error');
+      setAvatarPreview(avatar);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    setIsUploadingAvatar(true);
+    try {
+      const targetId = user?.id || user?.email || 'usr-ha-1';
+      const response = await hotelApi.uploadAvatar(targetId, { remove_avatar: true });
+      if (response) {
+        setAvatar(DEFAULT_AVATAR);
+        setAvatarPreview(DEFAULT_AVATAR);
+        if (updateUserProfile) {
+          updateUserProfile({ avatar: DEFAULT_AVATAR });
+        }
+        showToast('Profile Picture Removed', 'Avatar restored to default sovereign portrait.', 'info');
+      }
+    } catch (err) {
+      showToast('Error', 'Failed to remove profile picture.', 'error');
+    } finally {
+      setIsUploadingAvatar(false);
     }
   };
 
@@ -153,23 +207,43 @@ export const AdminProfilePage = () => {
             <div className="flex flex-col items-center text-center">
               {/* Profile Photo with Upload Button */}
               <div className="relative group mb-4">
-                <div className="w-28 h-28 rounded-full p-1 bg-gradient-to-tr from-accent via-accent/40 to-accent/90 shadow-gold">
+                <div className="w-28 h-28 rounded-full p-1 bg-gradient-to-tr from-accent via-accent/40 to-accent/90 shadow-gold relative">
                   <img
-                    src={avatar}
+                    src={avatarPreview}
                     alt={name}
-                    className="w-full h-full rounded-full object-cover"
+                    onError={() => setAvatarPreview(DEFAULT_AVATAR)}
+                    className={`w-full h-full rounded-full object-cover transition-opacity ${isUploadingAvatar ? 'opacity-50' : 'opacity-100'}`}
                   />
+                  {isUploadingAvatar && (
+                    <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/60 text-accent font-mono text-[10px] font-bold">
+                      Uploading...
+                    </div>
+                  )}
                 </div>
-                <label className="absolute bottom-1 right-1 p-2 rounded-full bg-accent text-primary dark:text-primary-950 hover:bg-accent-hover shadow-lg cursor-pointer transition-transform hover:scale-110 active:scale-95">
+                <label className="absolute bottom-1 right-1 p-2 rounded-full bg-accent text-primary dark:text-primary-950 hover:bg-accent-hover shadow-lg cursor-pointer transition-transform hover:scale-110 active:scale-95" title="Upload/Change Profile Picture">
                   <Camera className="w-4 h-4" />
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    disabled={isUploadingAvatar}
                     onChange={handleAvatarChange}
                     className="hidden"
                   />
                 </label>
               </div>
+
+              {avatar && avatar !== DEFAULT_AVATAR && (
+                <div className="mb-3">
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    disabled={isUploadingAvatar}
+                    className="text-[11px] text-rose-500 hover:text-rose-400 hover:underline font-mono"
+                  >
+                    Remove Profile Picture
+                  </button>
+                </div>
+              )}
 
               <h3 className="font-serif text-lg font-bold text-charcoal dark:text-white flex items-center gap-1.5">
                 {name}

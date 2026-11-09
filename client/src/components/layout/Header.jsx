@@ -5,7 +5,7 @@ import { NotificationDropdown } from '../navigation/NotificationDropdown';
 import { ProfileDropdown } from '../navigation/ProfileDropdown';
 import { GlobalSearchModal } from '../navigation/GlobalSearchModal';
 
-export const Header = ({ onOpenMobileSidebar }) => {
+export const Header = React.memo(({ onOpenMobileSidebar }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
@@ -77,7 +77,7 @@ export const Header = ({ onOpenMobileSidebar }) => {
       <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
   );
-};
+});
 
 export default Header;
 

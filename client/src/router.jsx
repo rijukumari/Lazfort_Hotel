@@ -462,6 +462,8 @@ export const AppRouter = () => {
           <Route path="/super-admin/platform/announcements" element={<SystemAnnouncementsPage />} />
           <Route path="/super-admin/platform" element={<GlobalSettingsPage />} />
           <Route path="/super-admin/platform/settings" element={<GlobalSettingsPage />} />
+          <Route path="/super-admin/platform/currencies" element={<GlobalSettingsPage />} />
+          <Route path="/super-admin/currencies" element={<GlobalSettingsPage />} />
           <Route path="/super-admin/platform/features" element={<FeatureManagementPage />} />
           <Route path="/super-admin/platform/*" element={<GlobalSettingsPage />} />
 

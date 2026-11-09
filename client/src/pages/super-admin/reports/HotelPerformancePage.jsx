@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { SimpleAreaChart } from '../../../components/data-display/SimpleChart';
-import { weeklyOccupancyData } from '../../../data/mockAnalytics';
 import { useToast } from '../../../context/ToastContext';
 import { useERP } from '../../../context/ERPContext';
 import { hotelApi } from '../../../services/hotelApi';
@@ -15,67 +14,14 @@ import {
   TrendingUp,
 } from 'lucide-react';
 
-const mockHotelPerformances = [
-  {
-    id: 'hotel-01',
-    name: 'Lazfort Grand Palace Monaco',
-    destination: 'Monaco, French Riviera',
-    totalRooms: 120,
-    occupiedRooms: 113,
-    availableRooms: 7,
-    totalBookings: 1420,
-    grossRevenue: 1840000,
-    adr: 2450,
-    revPar: 2307,
-  },
-  {
-    id: 'hotel-02',
-    name: 'The Ritz-Crest Alpine Sanctuary',
-    destination: 'St. Moritz, Switzerland',
-    totalRooms: 84,
-    occupiedRooms: 74,
-    availableRooms: 10,
-    totalBookings: 890,
-    grossRevenue: 1290000,
-    adr: 1850,
-    revPar: 1637,
-  },
-  {
-    id: 'hotel-03',
-    name: 'Seraphina Azure Lagoon Resort',
-    destination: 'Bora Bora, French Polynesia',
-    totalRooms: 45,
-    occupiedRooms: 43,
-    availableRooms: 2,
-    totalBookings: 610,
-    grossRevenue: 980000,
-    adr: 3100,
-    revPar: 3001,
-  },
-  {
-    id: 'hotel-04',
-    name: 'The Golden Pavilion Heritage Manor',
-    destination: 'Kyoto, Japan',
-    totalRooms: 52,
-    occupiedRooms: 47,
-    availableRooms: 5,
-    totalBookings: 540,
-    grossRevenue: 740000,
-    adr: 1620,
-    revPar: 1474,
-  },
-  {
-    id: 'hotel-05',
-    name: 'Villa Bellissima Bellagio',
-    destination: 'Lake Como, Italy',
-    totalRooms: 38,
-    occupiedRooms: 34,
-    availableRooms: 4,
-    totalBookings: 382,
-    grossRevenue: 620000,
-    adr: 1950,
-    revPar: 1743,
-  },
+const weeklyOccupancyData = [
+  { label: 'Mon', value: 82 },
+  { label: 'Tue', value: 85 },
+  { label: 'Wed', value: 89 },
+  { label: 'Thu', value: 92 },
+  { label: 'Fri', value: 98 },
+  { label: 'Sat', value: 100 },
+  { label: 'Sun', value: 94 },
 ];
 
 export const HotelPerformancePage = () => {
@@ -91,23 +37,21 @@ export const HotelPerformancePage = () => {
   }, []);
 
   const displayHotels = useMemo(() => {
-    let list = mockHotelPerformances;
-    if (hotels && hotels.length > 0) {
-      list = hotels.map(h => ({
-        id: h.id,
-        name: h.name,
-        destination: h.location || 'Global Destination',
-        totalRooms: Number(h.totalRooms) || 50,
-        occupiedRooms: Math.round((Number(h.totalRooms) || 50) * 0.85),
-        availableRooms: Math.max(1, (Number(h.totalRooms) || 50) - Math.round((Number(h.totalRooms) || 50) * 0.85)),
-        totalBookings: Math.round((Number(h.totalRooms) || 50) * 12),
-        grossRevenue: (Number(h.totalRooms) || 50) * 18500,
-        adr: 2200,
-        revPar: 1870,
-      }));
-    }
+    if (!hotels || hotels.length === 0) return [];
+    const list = hotels.map(h => ({
+      id: h.id,
+      name: h.name,
+      destination: h.location || h.city || h.country || 'Global Destination',
+      totalRooms: Number(h.totalRooms || h.total_rooms) || 0,
+      occupiedRooms: Math.round((Number(h.totalRooms || h.total_rooms) || 0) * 0.75),
+      availableRooms: Math.max(0, (Number(h.totalRooms || h.total_rooms) || 0) - Math.round((Number(h.totalRooms || h.total_rooms) || 0) * 0.75)),
+      totalBookings: Math.round((Number(h.totalRooms || h.total_rooms) || 0) * 12),
+      grossRevenue: Math.round((Number(h.totalRooms || h.total_rooms) || 0) * 12 * 850),
+      adr: 850,
+      revPar: 638,
+    }));
     if (selectedHotelId === 'all') return list;
-    return list.filter(h => h.id === selectedHotelId);
+    return list.filter(h => String(h.id) === String(selectedHotelId));
   }, [hotels, selectedHotelId]);
 
   const totalRoomsAgg = useMemo(() => displayHotels.reduce((acc, h) => acc + h.totalRooms, 0), [displayHotels]);
@@ -168,7 +112,7 @@ export const HotelPerformancePage = () => {
                 className="input-luxury text-xs py-1.5 px-3 min-w-[200px]"
               >
                 <option value="all">All Luxury Properties (Consolidated)</option>
-                {mockHotelPerformances.map(h => (
+                {hotels.map(h => (
                   <option key={h.id} value={h.id}>{h.name}</option>
                 ))}
               </select>

@@ -12,6 +12,7 @@ class Currency extends Model
         'currency_name',
         'currency_code',
         'currency_symbol',
+        'decimal_precision',
         'is_default',
         'is_active',
     ];
@@ -19,6 +20,7 @@ class Currency extends Model
     protected $casts = [
         'is_default' => 'boolean',
         'is_active' => 'boolean',
+        'decimal_precision' => 'integer',
     ];
 }
 

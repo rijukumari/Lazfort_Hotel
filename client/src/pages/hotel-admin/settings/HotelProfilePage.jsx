@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PageHeader } from '../../../components/ui';
 import { useToast } from '../../../context/ToastContext';
-import { mockOrganization } from '../../../data/mockERPData';
 import {
   Building2,
   Mail,
@@ -25,8 +24,8 @@ export const HotelProfilePage = () => {
     return {
       hotelName: 'Lazfort Grand Palace & Royal Spa',
       tradeName: 'Lazfort Sovereign Hospitality Group',
-      legalEntity: mockOrganization?.legalEntity || 'Lazfort Resorts International S.A. Monaco',
-      taxId: mockOrganization?.taxId || 'MC-893021-X',
+      legalEntity: 'Lazfort Resorts International S.A. Monaco',
+      taxId: 'MC-893021-X',
       registrationNumber: 'HRB-980021-MC',
       contactEmail: 'concierge@lazfort.com',
       contactPhone: '+377 98 06 20 00',

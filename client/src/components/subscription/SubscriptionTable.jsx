@@ -67,10 +67,10 @@ export const SubscriptionTable = ({
                     {/* Subscription ID */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       <div className="font-mono font-bold text-accent">
-                        {sub.subscriptionId}
+                        {sub.subscriptionId || sub.id}
                       </div>
                       <span className="text-[10px] text-charcoal-muted">
-                        {sub.autoRenew ? 'Auto-Renew: ON' : 'Auto-Renew: OFF'}
+                        {sub.autoRenew || sub.auto_renew ? 'Auto-Renew: ON' : 'Auto-Renew: OFF'}
                       </span>
                     </td>
 
@@ -78,17 +78,17 @@ export const SubscriptionTable = ({
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3 min-w-[200px]">
                         <img
-                          src={sub.hotelImage}
-                          alt={sub.hotelName}
+                          src={sub.hotelImage || sub.image || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=200'}
+                          alt={sub.hotelName || sub.hotel_name || 'Hotel'}
                           className="w-10 h-10 rounded-xl object-cover ring-1 ring-border/80 shrink-0"
                         />
                         <div>
                           <p className="font-semibold text-primary dark:text-white font-serif line-clamp-1">
-                            {sub.hotelName}
+                            {sub.hotelName || sub.hotel_name || 'Lazfort Property'}
                           </p>
                           <p className="text-[11px] text-charcoal-muted flex items-center gap-1 mt-0.5">
                             <MapPin className="w-3 h-3 text-accent shrink-0" />
-                            <span className="truncate max-w-[150px]">{sub.hotelLocation}</span>
+                            <span className="truncate max-w-[150px]">{sub.hotelLocation || sub.location || 'Global Destination'}</span>
                           </p>
                         </div>
                       </div>
@@ -96,9 +96,9 @@ export const SubscriptionTable = ({
 
                     {/* Plan Name */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
-                      <StatusBadge status={sub.planName} size="sm" />
+                      <StatusBadge status={sub.planName || sub.plan_name || 'Enterprise'} size="sm" />
                       <span className="text-[10px] text-charcoal-muted block mt-1 font-mono">
-                        Cycle: {sub.billingCycle}
+                        Cycle: {sub.billingCycle || sub.billing_cycle || 'Monthly'}
                       </span>
                     </td>
 
@@ -106,10 +106,10 @@ export const SubscriptionTable = ({
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       <div className="space-y-0.5 font-mono text-[11px]">
                         <p className="text-charcoal dark:text-gray-300">
-                          <span className="text-charcoal-muted">Start: </span>{sub.startDate}
+                          <span className="text-charcoal-muted">Start: </span>{sub.startDate || sub.start_date || '2026-01-01'}
                         </p>
                         <p className={`font-semibold ${isExpiringSoon ? 'text-amber-600 dark:text-amber-400' : isExpired ? 'text-rose-600 dark:text-rose-400' : 'text-charcoal dark:text-gray-300'}`}>
-                          <span className="text-charcoal-muted">Expiry: </span>{sub.expiryDate}
+                          <span className="text-charcoal-muted">{isExpired ? 'Expired: ' : 'Renewal: '}</span>{sub.expiryDate || sub.renewalDate || sub.endDate || sub.end_date || '2027-01-01'}
                         </p>
                         {isExpired && sub.lapsedDays && (
                           <span className="inline-block text-[10px] text-rose-500 font-bold bg-rose-500/10 px-1.5 py-0.5 rounded">

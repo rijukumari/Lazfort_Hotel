@@ -5,7 +5,7 @@ import { NAVIGATION_CONFIG } from '../../config/navigation';
 import { NavIcon } from '../navigation/NavIcon';
 import { ChevronDown, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 
-export const Sidebar = ({
+export const Sidebar = React.memo(({
   isCollapsed,
   onToggleCollapse,
   onNavigateMobile,
@@ -501,6 +501,6 @@ export const Sidebar = ({
       </div>
     </aside>
   );
-};
+});
 
 export default Sidebar;

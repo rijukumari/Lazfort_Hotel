@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { mockSubscriptionPlans } from '../../data/mockSubscriptions';
+import { useERP } from '../../context/ERPContext';
 import { useToast } from '../../context/ToastContext';
+import { hotelApi } from '../../services/hotelApi';
 import { Button, Input, Select, FormField } from '../../components/ui';
 import {
   ArrowLeft,
@@ -30,31 +31,32 @@ export const AddSubscriptionPlanPage = () => {
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { subscriptionPlans = [], addSubscriptionPlan, updateSubscriptionPlan } = useERP();
 
-  const existingPlan = id ? mockSubscriptionPlans.find(p => p.id === id) : null;
+  const existingPlan = id ? subscriptionPlans.find(p => p.id === id) : null;
 
   const [formName, setFormName] = useState(existingPlan?.name || '');
-  const [formTierCode, setFormTierCode] = useState(existingPlan?.tierCode || '');
+  const [formTierCode, setFormTierCode] = useState(existingPlan?.tierCode || existingPlan?.tier_code || '');
   const [formDescription, setFormDescription] = useState(existingPlan?.description || '');
-  const [formMonthlyPrice, setFormMonthlyPrice] = useState(existingPlan?.monthlyPrice || 2900);
-  const [formAnnualPrice, setFormAnnualPrice] = useState(existingPlan?.annualPrice || 29000);
+  const [formMonthlyPrice, setFormMonthlyPrice] = useState(existingPlan?.monthlyPrice || existingPlan?.price || 2900);
+  const [formAnnualPrice, setFormAnnualPrice] = useState(existingPlan?.annualPrice || (Number(existingPlan?.price || 2900) * 10));
   const [formRoomLimitType, setFormRoomLimitType] = useState(
-    existingPlan?.roomLimit === 'Unlimited' ? 'unlimited' : 'number'
+    existingPlan?.roomLimit === 'Unlimited' || existingPlan?.max_rooms >= 500 ? 'unlimited' : 'number'
   );
   const [formRoomLimitNum, setFormRoomLimitNum] = useState(
-    existingPlan?.roomLimit !== 'Unlimited' && existingPlan?.roomLimit ? existingPlan.roomLimit : 100
+    existingPlan?.roomLimit !== 'Unlimited' && existingPlan?.max_rooms ? existingPlan.max_rooms : 100
   );
   const [formUserLimitType, setFormUserLimitType] = useState(
-    existingPlan?.userLimit === 'Unlimited' ? 'unlimited' : 'number'
+    existingPlan?.userLimit === 'Unlimited' || existingPlan?.max_staff >= 250 ? 'unlimited' : 'number'
   );
   const [formUserLimitNum, setFormUserLimitNum] = useState(
-    existingPlan?.userLimit !== 'Unlimited' && existingPlan?.userLimit ? existingPlan.userLimit : 50
+    existingPlan?.userLimit !== 'Unlimited' && existingPlan?.max_staff ? existingPlan.max_staff : 50
   );
   const [formTrialDays, setFormTrialDays] = useState(existingPlan?.trialDays || 14);
   const [formRecommendedFor, setFormRecommendedFor] = useState(existingPlan?.recommendedFor || '');
   const [formStatus, setFormStatus] = useState(existingPlan?.status || 'active');
   const [formModules, setFormModules] = useState(
-    existingPlan?.includedModules || [
+    existingPlan?.features || existingPlan?.includedModules || [
       'Front Desk & Folios',
       'VIP Customer Panel',
       'Housekeeping Automation',
@@ -62,6 +64,30 @@ export const AddSubscriptionPlanPage = () => {
   );
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (existingPlan) {
+      setFormName(existingPlan.name || '');
+      setFormTierCode(existingPlan.tierCode || existingPlan.tier_code || '');
+      setFormDescription(existingPlan.description || '');
+      setFormMonthlyPrice(existingPlan.monthlyPrice || existingPlan.price || 2900);
+      setFormAnnualPrice(existingPlan.annualPrice || (Number(existingPlan.price || 2900) * 10));
+      setFormStatus(existingPlan.status || 'active');
+      setFormTrialDays(existingPlan.trialDays || 14);
+      setFormRecommendedFor(existingPlan.recommendedFor || '');
+      if (existingPlan.features) setFormModules(existingPlan.features);
+      if (existingPlan.max_rooms || existingPlan.roomLimit) {
+        const isUnl = existingPlan.roomLimit === 'Unlimited' || Number(existingPlan.max_rooms) >= 9999;
+        setFormRoomLimitType(isUnl ? 'unlimited' : 'number');
+        if (!isUnl) setFormRoomLimitNum(existingPlan.max_rooms || existingPlan.roomLimit);
+      }
+      if (existingPlan.max_staff || existingPlan.userLimit) {
+        const isUnl = existingPlan.userLimit === 'Unlimited' || Number(existingPlan.max_staff) >= 999;
+        setFormUserLimitType(isUnl ? 'unlimited' : 'number');
+        if (!isUnl) setFormUserLimitNum(existingPlan.max_staff || existingPlan.userLimit);
+      }
+    }
+  }, [existingPlan]);
 
   const toggleModuleSelection = moduleName => {
     setFormModules(prev =>
@@ -94,15 +120,38 @@ export const AddSubscriptionPlanPage = () => {
 
     setIsSubmitting(true);
     try {
-      await new Promise(r => setTimeout(r, 600));
-      showToast(
-        isEditMode ? 'Plan Updated' : 'Subscription Plan Created',
-        `Plan ${formName} (${formTierCode}) has been persisted to the platform catalog.`,
-        'success'
-      );
+      const planPayload = {
+        name: formName.trim(),
+        tierCode: formTierCode.trim().toUpperCase(),
+        tier_code: formTierCode.trim().toUpperCase(),
+        price: Number(formMonthlyPrice),
+        monthlyPrice: Number(formMonthlyPrice),
+        annualPrice: Number(formAnnualPrice),
+        currency: 'USD',
+        billingCycle: 'monthly',
+        billing_cycle: 'monthly',
+        maxRooms: formRoomLimitType === 'unlimited' ? 9999 : Number(formRoomLimitNum),
+        max_rooms: formRoomLimitType === 'unlimited' ? 9999 : Number(formRoomLimitNum),
+        maxStaff: formUserLimitType === 'unlimited' ? 999 : Number(formUserLimitNum),
+        max_staff: formUserLimitType === 'unlimited' ? 999 : Number(formUserLimitNum),
+        description: formDescription.trim(),
+        features: formModules,
+        status: formStatus,
+        trialDays: Number(formTrialDays),
+        recommendedFor: formRecommendedFor,
+      };
+
+      if (isEditMode) {
+        await updateSubscriptionPlan(id, planPayload);
+        showToast('Plan Updated', `Plan ${formName} (${formTierCode}) has been updated in MySQL.`, 'success');
+      } else {
+        await addSubscriptionPlan(planPayload);
+        showToast('Subscription Plan Created', `Plan ${formName} (${formTierCode}) has been persisted to MySQL database.`, 'success');
+      }
+
       navigate('/super-admin/subscriptions/plans');
-    } catch {
-      showToast('Error', 'Failed to save plan configuration.', 'error');
+    } catch (err) {
+      showToast('Error', err?.message || 'Failed to save plan configuration.', 'error');
     } finally {
       setIsSubmitting(false);
     }

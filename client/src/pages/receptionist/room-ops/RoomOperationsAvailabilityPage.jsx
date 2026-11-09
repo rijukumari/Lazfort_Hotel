@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader, StatusBadge, Button, StatCard } from '../../../components/ui';
+import { PageHeader, StatusBadge, Button, StatCard, ViewToggle } from '../../../components/ui';
 import { DataTable } from '../../../components/data-display/DataTable';
 import {
   BedDouble,
@@ -14,6 +14,7 @@ import {
   Clock,
   DollarSign,
   Plus,
+  Users,
 } from 'lucide-react';
 import { useERP } from '../../../context/ERPContext';
 
@@ -25,6 +26,21 @@ export const RoomOperationsAvailabilityPage = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [searchDate, setSearchDate] = useState('2026-11-03');
+
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('lazfort_view_receptionist_room_ops') || 'list';
+    } catch {
+      return 'list';
+    }
+  });
+
+  const handleViewChange = (mode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('lazfort_view_receptionist_room_ops', mode);
+    } catch {}
+  };
 
   // Compute status breakdown
   const availableRooms = rooms.filter((r) => r.status === 'available');
@@ -270,17 +286,75 @@ export const RoomOperationsAvailabilityPage = () => {
               ))}
             </select>
           </div>
+
+          <ViewToggle viewMode={viewMode} onViewChange={handleViewChange} />
         </div>
       </div>
 
-      {/* Rooms Table */}
-      <DataTable
-        data={filteredRooms}
-        columns={columns}
-        keyExtractor={(item) => item.id}
-        pageSize={8}
-        emptyMessage="No chambers match your availability criteria."
-      />
+      {/* Rooms Display: Table or Grid */}
+      {viewMode === 'list' ? (
+        <DataTable
+          data={filteredRooms}
+          columns={columns}
+          keyExtractor={(item) => item.id}
+          pageSize={8}
+          emptyMessage="No chambers match your availability criteria."
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredRooms.map((room) => (
+            <div
+              key={room.id}
+              className="card-luxury p-5 rounded-2xl border border-border/80 dark:border-white/10 space-y-3 flex flex-col justify-between hover:border-accent/40 transition-all group"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+                      <BedDouble className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-serif font-bold text-base text-primary dark:text-white block">
+                        Suite {room.roomNumber}
+                      </span>
+                      <span className="text-[11px] text-charcoal-muted">Floor {room.floor || '2'}</span>
+                    </div>
+                  </div>
+                  <StatusBadge status={room.status} />
+                </div>
+
+                <div className="p-3 rounded-xl bg-ivory dark:bg-black/30 border border-border/60 dark:border-white/5 space-y-1 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-charcoal-muted">Classification:</span>
+                    <span className="font-semibold text-primary dark:text-white truncate max-w-[140px]">{room.type}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-charcoal-muted">Nightly Tariff:</span>
+                    <span className="font-serif font-bold text-accent">${Number(room.pricePerNight || 850).toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-charcoal-muted">Capacity:</span>
+                    <span className="font-medium text-charcoal-muted">{room.capacity || 2} VIP Guests</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-border/70 dark:border-white/10 flex items-center justify-between">
+                <span className="text-[11px] font-mono text-charcoal-muted">
+                  Bed: {room.bedType || 'Imperial King'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/hotel-admin/rooms/details/${room.id}`)}
+                  className="px-2.5 py-1 rounded-lg border border-accent/30 bg-accent/10 hover:bg-accent/20 text-accent transition-colors text-xs font-semibold"
+                >
+                  Manage
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

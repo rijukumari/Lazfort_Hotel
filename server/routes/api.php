@@ -21,6 +21,14 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/logout', [AuthController::class, 'logout']);
 Route::post('/logout', [AuthController::class, 'logout']);
 Route::get('/auth/me', [AuthController::class, 'me']);
+Route::get('/user', [AuthController::class, 'me']);
+Route::post('/auth/avatar', function (\Illuminate\Http\Request $request) {
+    $user = $request->user();
+    if (!$user) {
+        return response()->json(['status' => 'error', 'message' => 'Unauthenticated'], 401);
+    }
+    return app(HotelErpController::class)->uploadAvatar($request, $user->id);
+});
 
 // Diagnostic & Health
 Route::get('/health', [HotelErpController::class, 'health']);
@@ -31,6 +39,8 @@ Route::get('/users', [HotelErpController::class, 'getUsers']);
 Route::post('/users', [HotelErpController::class, 'createUser']);
 Route::put('/users/{id}', [HotelErpController::class, 'updateUser']);
 Route::delete('/users/{id}', [HotelErpController::class, 'deleteUser']);
+Route::post('/users/{id}/avatar', [HotelErpController::class, 'uploadAvatar']);
+Route::post('/users/{id}/profile-picture', [HotelErpController::class, 'uploadAvatar']);
 
 // Currencies
 Route::get('/currencies', [HotelErpController::class, 'getCurrencies']);
@@ -43,6 +53,7 @@ Route::get('/hotels', [HotelErpController::class, 'getHotels']);
 Route::post('/hotels', [HotelErpController::class, 'createHotel']);
 Route::put('/hotels/{id}', [HotelErpController::class, 'updateHotel']);
 Route::delete('/hotels/{id}', [HotelErpController::class, 'deleteHotel']);
+Route::post('/hotels/{id}/logo', [HotelErpController::class, 'uploadHotelLogo']);
 
 // Rooms
 Route::get('/rooms', [HotelErpController::class, 'getRooms']);

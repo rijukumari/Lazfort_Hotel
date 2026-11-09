@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { User, Settings, ShieldCheck, LogOut, ChevronDown, Sparkles, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { UserAvatar } from '../common/UserAvatar';
 
 export const ProfileDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -48,13 +49,13 @@ export const ProfileDropdown = () => {
       >
         {/* 3D Double-Ring Gold Avatar */}
         <div className="relative">
-          <div className="w-9 h-9 rounded-full p-0.5 bg-gradient-to-tr from-accent via-accent/40 to-accent/90 shadow-sm group-hover:shadow-gold transition-all duration-300">
-            <img
-              src={user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
-              alt={user?.name || 'User'}
-              className="w-full h-full rounded-full object-cover"
-            />
-          </div>
+          <UserAvatar
+            src={user?.avatar}
+            alt={user?.name || 'User'}
+            fallbackName={user?.name}
+            size="sm"
+            ring={true}
+          />
           <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-surface-dark" />
         </div>
 
@@ -74,13 +75,13 @@ export const ProfileDropdown = () => {
       {isOpen && (
         <div className="absolute right-0 mt-3 w-72 glass-dropdown rounded-3xl shadow-2xl border border-accent/30 py-2.5 z-50 animate-in fade-in zoom-in-95 duration-200">
           <div className="px-5 py-3.5 border-b border-border/80 dark:border-border-dark flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full p-0.5 bg-accent/40 shadow-sm flex-shrink-0">
-              <img
-                src={user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
-                alt={user?.name || 'User'}
-                className="w-full h-full rounded-full object-cover"
-              />
-            </div>
+            <UserAvatar
+              src={user?.avatar}
+              alt={user?.name || 'User'}
+              fallbackName={user?.name}
+              size="md"
+              ring={true}
+            />
             <div className="truncate">
               <div className="flex items-center gap-1.5">
                 <p className="text-xs font-bold text-primary dark:text-white truncate">

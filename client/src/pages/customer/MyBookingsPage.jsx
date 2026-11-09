@@ -7,6 +7,7 @@ import { useToast } from '../../context/ToastContext';
 import { BookingStatusBadge, PaymentStatusBadge } from '../../components/booking/BookingStatusBadge';
 import { InvoiceModal } from '../../components/data-display/InvoiceModal';
 import { Modal } from '../../components/ui/Modal';
+import { ViewToggle } from '../../components/ui/ViewToggle';
 import {
   Calendar,
   Sparkles,
@@ -19,7 +20,9 @@ import {
   Eye,
   MapPin,
   BedDouble,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Clock,
+  User,
 } from 'lucide-react';
 
 export const MyBookingsPage = () => {
@@ -27,6 +30,21 @@ export const MyBookingsPage = () => {
   const { bookings, rooms, cancelBooking } = useERP();
   const { user, isAuthenticated } = useAuth();
   const { showToast } = useToast();
+
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('lazfort_view_customer_bookings') || 'list';
+    } catch {
+      return 'list';
+    }
+  });
+
+  const handleViewChange = (mode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('lazfort_view_customer_bookings', mode);
+    } catch {}
+  };
 
   const [activeTab, setActiveTab] = useState('all');
   const [searchRef, setSearchRef] = useState('');
@@ -161,11 +179,14 @@ export const MyBookingsPage = () => {
           />
         </div>
 
-        <div className="text-xs text-charcoal-muted dark:text-gray-400">
-          Showing bookings for:{' '}
-          <strong className="text-primary dark:text-white font-mono">
-            {isAuthenticated && user ? user.email : 'All Stays'}
-          </strong>
+        <div className="flex items-center gap-4">
+          <div className="text-xs text-charcoal-muted dark:text-gray-400">
+            Showing bookings for:{' '}
+            <strong className="text-primary dark:text-white font-mono">
+              {isAuthenticated && user ? user.email : 'All Stays'}
+            </strong>
+          </div>
+          <ViewToggle viewMode={viewMode} onViewChange={handleViewChange} />
         </div>
       </div>
 
@@ -197,7 +218,7 @@ export const MyBookingsPage = () => {
         })}
       </div>
 
-      {/* Bookings List */}
+      {/* Bookings List: Grid or List */}
       {tabFilteredBookings.length === 0 ? (
         <div className="p-12 text-center rounded-3xl bg-white/60 dark:bg-surface-dark/60 border border-dashed border-border dark:border-white/10 space-y-4">
           <BedDouble className="w-12 h-12 text-accent/50 mx-auto" />
@@ -214,6 +235,92 @@ export const MyBookingsPage = () => {
           >
             Explore Royal Suites
           </button>
+        </div>
+      ) : viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {tabFilteredBookings.map(b => {
+            const room = (rooms || []).find(r => r.id === b.roomId);
+            const isCancellable = b.status === 'confirmed' || b.status === 'pending';
+
+            return (
+              <div
+                key={b.id}
+                className="card-luxury p-5 rounded-3xl border border-border/80 dark:border-white/10 space-y-4 flex flex-col justify-between hover:border-accent/40 transition-all group"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-bold text-accent px-2.5 py-1 rounded-lg bg-accent/15 border border-accent/30">
+                      {b.bookingCode}
+                    </span>
+                    <BookingStatusBadge status={b.status} />
+                  </div>
+
+                  <div className="space-y-1">
+                    <h4 className="font-serif font-bold text-base text-primary dark:text-white">
+                      {b.roomType || room?.type || 'Luxury Suite'}
+                    </h4>
+                    <p className="text-xs text-charcoal-muted flex items-center gap-1.5">
+                      <BedDouble className="w-3.5 h-3.5 text-accent" />
+                      <span>Chamber {b.roomNumber || 'Assigned'}</span>
+                      <span>•</span>
+                      <span>{b.nights || 1} Night(s)</span>
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-ivory dark:bg-black/30 border border-border/60 dark:border-white/5 space-y-1.5 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-charcoal-muted">Guest:</span>
+                      <span className="font-semibold text-primary dark:text-white truncate max-w-[150px]">{b.guestName}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-charcoal-muted">Check-In:</span>
+                      <span className="font-mono font-medium text-primary dark:text-white">{b.checkIn}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-charcoal-muted">Check-Out:</span>
+                      <span className="font-mono font-medium text-primary dark:text-white">{b.checkOut}</span>
+                    </div>
+                    <div className="flex items-center justify-between pt-1 border-t border-border/50 dark:border-white/5">
+                      <span className="text-charcoal-muted">Total Tariff:</span>
+                      <span className="font-serif font-bold text-accent">${Number(b.totalAmount || 0).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-border/70 dark:border-white/10 flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedInvoiceBooking(b)}
+                    className="p-1.5 rounded-lg border border-accent/30 bg-accent/10 hover:bg-accent/20 text-accent transition-colors flex items-center gap-1 text-xs font-semibold px-2.5"
+                    title="View Folio / Invoice"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>Folio</span>
+                  </button>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/customer/bookings/${b.id}`)}
+                      className="p-1.5 rounded-lg border border-border dark:border-white/10 hover:border-accent/40 text-primary dark:text-white text-xs font-semibold px-2.5"
+                    >
+                      Details
+                    </button>
+                    {isCancellable && (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenCancelModal(b)}
+                        className="p-1.5 rounded-lg border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 text-xs font-semibold px-2"
+                        title="Cancel"
+                      >
+                        <XCircle className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       ) : (
         <div className="space-y-5">

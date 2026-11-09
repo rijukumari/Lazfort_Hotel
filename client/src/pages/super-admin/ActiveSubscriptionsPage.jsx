@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '../../components/ui';
-import { mockActiveSubscriptions } from '../../data/mockSubscriptions';
+import { PageHeader, StatusBadge, ViewToggle } from '../../components/ui';
 import { SubscriptionTable } from '../../components/subscription/SubscriptionTable';
 import { SearchFilter } from '../../components/subscription/SearchFilter';
 import { SubscriptionNavTabs } from '../../components/subscription/SubscriptionNavTabs';
@@ -11,11 +10,31 @@ import {
   AlertTriangle,
   DollarSign,
   Sparkles,
+  Building2,
+  Calendar,
+  CreditCard,
+  Eye,
+  RotateCw,
+  Sliders,
 } from 'lucide-react';
 
 export const ActiveSubscriptionsPage = () => {
   const navigate = useNavigate();
-  const [subscriptions, setSubscriptions] = useState(mockActiveSubscriptions);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('lazfort_view_active_subs') || 'list';
+    } catch {
+      return 'list';
+    }
+  });
+
+  const handleViewChange = (mode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('lazfort_view_active_subs', mode);
+    } catch {}
+  };
 
   // Fetch active subscriptions from Laravel MySQL backend with caching
   useEffect(() => {
@@ -51,16 +70,27 @@ export const ActiveSubscriptionsPage = () => {
 
   // Filtered & Paginated List
   const filteredSubscriptions = useMemo(() => {
-    return subscriptions.filter(sub => {
-      const matchesSearch =
-        sub.subscriptionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sub.hotelName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sub.hotelLocation.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sub.planName.toLowerCase().includes(searchTerm.toLowerCase());
+    const term = (searchTerm || '').toLowerCase().trim();
+    return (subscriptions || []).filter(sub => {
+      const subId = (sub.subscriptionId || sub.id || '').toLowerCase();
+      const hotelName = (sub.hotelName || sub.hotel_name || '').toLowerCase();
+      const hotelLoc = (sub.hotelLocation || sub.location || '').toLowerCase();
+      const planName = (sub.planName || sub.plan_name || '').toLowerCase();
 
-      const matchesPlan = planFilter === 'all' || sub.planName === planFilter;
-      const matchesStatus = statusFilter === 'all' || sub.status === statusFilter;
-      const matchesCycle = cycleFilter === 'all' || sub.billingCycle === cycleFilter;
+      const matchesSearch =
+        !term ||
+        subId.includes(term) ||
+        hotelName.includes(term) ||
+        hotelLoc.includes(term) ||
+        planName.includes(term);
+
+      const currentPlan = sub.planName || sub.plan_name;
+      const currentStatus = sub.status;
+      const currentCycle = sub.billingCycle || sub.billing_cycle;
+
+      const matchesPlan = planFilter === 'all' || currentPlan === planFilter;
+      const matchesStatus = statusFilter === 'all' || currentStatus === statusFilter;
+      const matchesCycle = cycleFilter === 'all' || currentCycle === cycleFilter;
 
       return matchesSearch && matchesPlan && matchesStatus && matchesCycle;
     });
@@ -162,17 +192,93 @@ export const ActiveSubscriptionsPage = () => {
         />
       </div>
 
-      {/* Subscriptions Table */}
-      <SubscriptionTable
-        subscriptions={paginatedSubscriptions}
-        type="active"
-        onViewDetails={sub => navigate(`/super-admin/subscriptions/details/${sub.id}`)}
-        onRenew={sub => navigate(`/super-admin/subscriptions/renew/${sub.id}`)}
-        onManage={sub => navigate(`/super-admin/subscriptions/manage/${sub.id}`)}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
+      {/* Subscriptions View: Table or Luxury Card Grid */}
+      <div className="flex items-center justify-between pb-2">
+        <span className="text-xs text-charcoal-muted">
+          Showing <strong className="text-primary dark:text-white">{filteredSubscriptions.length}</strong> active agreements
+        </span>
+        <ViewToggle viewMode={viewMode} onViewChange={handleViewChange} />
+      </div>
+
+      {viewMode === 'list' ? (
+        <SubscriptionTable
+          subscriptions={paginatedSubscriptions}
+          type="active"
+          onViewDetails={sub => navigate(`/super-admin/subscriptions/details/${sub.id}`)}
+          onRenew={sub => navigate(`/super-admin/subscriptions/renew/${sub.id}`)}
+          onManage={sub => navigate(`/super-admin/subscriptions/manage/${sub.id}`)}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {paginatedSubscriptions.map(sub => (
+            <div
+              key={sub.id}
+              className="card-luxury p-5 rounded-2xl border border-border/80 dark:border-white/10 space-y-4 hover:border-accent/40 transition-all flex flex-col justify-between group"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs font-bold text-accent">{sub.code || sub.id}</span>
+                  <StatusBadge status={sub.status} />
+                </div>
+
+                <div>
+                  <h4 className="font-serif font-bold text-lg text-primary dark:text-white leading-tight">
+                    {sub.hotelName}
+                  </h4>
+                  <p className="text-xs text-accent font-semibold mt-0.5">{sub.planName}</p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-ivory dark:bg-black/30 border border-border/60 dark:border-white/5 space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between text-charcoal-muted">
+                    <span>Billing Interval:</span>
+                    <span className="font-semibold text-primary dark:text-white">{sub.billingCycle}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-charcoal-muted">
+                    <span>Next Renewal:</span>
+                    <span className="font-mono text-primary dark:text-white">{sub.renewalDate || sub.endDate}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-charcoal-muted">
+                    <span>Auto-Renew:</span>
+                    <span className="font-mono text-emerald-500 font-bold">Enabled</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-border/70 dark:border-white/10 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-charcoal-muted uppercase block">Contract Value</span>
+                  <span className="font-serif font-bold text-lg text-primary dark:text-accent">
+                    ${Number(sub.amount || 0).toLocaleString()}
+                    <span className="text-xs font-sans text-charcoal-muted font-normal"> / {sub.billingCycle === 'Annually' ? 'yr' : 'mo'}</span>
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => navigate(`/super-admin/subscriptions/details/${sub.id}`)}
+                    className="p-1.5 rounded-lg border border-border dark:border-white/10 hover:border-accent hover:text-accent transition-colors"
+                    title="View Agreement Dossier"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => navigate(`/super-admin/subscriptions/renew/${sub.id}`)}
+                    className="p-1.5 rounded-lg border border-accent/30 bg-accent/10 hover:bg-accent/20 text-accent transition-colors flex items-center gap-1 text-xs font-semibold px-2"
+                    title="Renew Agreement"
+                  >
+                    <RotateCw className="w-3.5 h-3.5" />
+                    <span>Renew</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
     </div>
   );
 };

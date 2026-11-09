@@ -52,9 +52,12 @@ export const LoginPage = () => {
       );
       navigate(roleConfig?.defaultPath || '/hotel-admin/dashboard');
     } catch (err) {
+      const isNetworkOffline = err?.message?.includes('Failed to fetch');
       showToast(
-        'Authentication Error',
-        err?.data?.message || err.message || 'Clearance rejected. Please verify your credentials.',
+        isNetworkOffline ? 'Backend Server Offline' : 'Authentication Error',
+        isNetworkOffline
+          ? 'Cannot connect to backend server at http://127.0.0.1:8000. Please start the Laravel server (php artisan serve).'
+          : (err?.data?.message || err.message || 'Clearance rejected. Please verify your credentials.'),
         'error'
       );
     } finally {

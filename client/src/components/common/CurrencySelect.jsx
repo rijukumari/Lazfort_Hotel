@@ -18,6 +18,7 @@ export const CurrencySelect = ({
   const [customName, setCustomName] = useState('');
   const [customCode, setCustomCode] = useState('');
   const [customSymbol, setCustomSymbol] = useState('');
+  const [customDecimals, setCustomDecimals] = useState(2);
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -34,7 +35,7 @@ export const CurrencySelect = ({
     const errs = {};
     if (!customName.trim()) errs.name = 'Currency name is required';
     if (!customCode.trim()) errs.code = '3-letter ISO code is required';
-    else if (customCode.trim().length !== 3) errs.code = 'Code must be exactly 3 characters (e.g. JPY, CHF)';
+    else if (customCode.trim().length !== 3) errs.code = 'Code must be exactly 3 characters (e.g. JPY, CHF, INR)';
     if (!customSymbol.trim()) errs.symbol = 'Currency symbol is required';
 
     const normalizedCode = customCode.trim().toUpperCase();
@@ -60,14 +61,17 @@ export const CurrencySelect = ({
         currency_name: name,
         currency_code: code,
         currency_symbol: symbol,
+        decimal_precision: Number(customDecimals),
+        is_active: true,
       });
 
-      showToast('Currency Added', `${name} (${code} - ${symbol}) added successfully.`, 'success');
+      showToast('Currency Added', `${name} (${code} - ${symbol}) added successfully and saved to MySQL.`, 'success');
       onChange(code);
       setIsCustomModalOpen(false);
       setCustomName('');
       setCustomCode('');
       setCustomSymbol('');
+      setCustomDecimals(2);
       setErrors({});
     } catch (err) {
       showToast('Error', err.message || 'Failed to register currency.', 'error');
@@ -159,7 +163,7 @@ export const CurrencySelect = ({
                 {errors.name && <p className="text-xs text-rose-500">{errors.name}</p>}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold uppercase tracking-wider text-charcoal dark:text-gray-300">
                     ISO Code *
@@ -168,7 +172,7 @@ export const CurrencySelect = ({
                     type="text"
                     required
                     maxLength={3}
-                    placeholder="e.g. JPY"
+                    placeholder="e.g. JPY, INR"
                     value={customCode}
                     onChange={e => {
                       setCustomCode(e.target.value.toUpperCase());
@@ -187,7 +191,7 @@ export const CurrencySelect = ({
                     type="text"
                     required
                     maxLength={5}
-                    placeholder="e.g. ¥, ₣, ฿"
+                    placeholder="e.g. ¥, ₹, ₣"
                     value={customSymbol}
                     onChange={e => {
                       setCustomSymbol(e.target.value);
@@ -196,6 +200,20 @@ export const CurrencySelect = ({
                     className={`w-full px-4 py-2.5 text-sm bg-white dark:bg-primary-900/60 border ${errors.symbol ? 'border-rose-500' : 'border-border dark:border-white/10'} rounded-xl focus:outline-none focus:ring-1 focus:ring-accent text-charcoal dark:text-white`}
                   />
                   {errors.symbol && <p className="text-xs text-rose-500">{errors.symbol}</p>}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-charcoal dark:text-gray-300">
+                    Decimals
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="4"
+                    value={customDecimals}
+                    onChange={e => setCustomDecimals(Number(e.target.value))}
+                    className="w-full px-4 py-2.5 text-sm bg-white dark:bg-primary-900/60 border border-border dark:border-white/10 rounded-xl focus:outline-none focus:ring-1 focus:ring-accent text-charcoal dark:text-white"
+                  />
                 </div>
               </div>
 

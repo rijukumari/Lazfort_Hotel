@@ -14,77 +14,40 @@ import {
   XCircle,
 } from 'lucide-react';
 
-const INITIAL_APPLICATIONS = [
-  {
-    id: 'app-001',
-    applicationId: 'APP-2026-081',
-    hotelId: 'hotel-005',
-    hotelName: 'Villa Bellissima Bellagio',
-    location: 'Lake Como, Italy',
-    applicantName: 'Contessa Sofia Moretti',
-    applicantEmail: 'sofia@bellissimacomo.it',
-    submittedDate: '2026-10-24',
-    tier: 'Boutique Elite',
-    totalRooms: 34,
-    documentsStatus: {
-      tourismLicense: true,
-      fireSafety: true,
-      escrowDeed: false,
-      environmentalImpact: true,
-    },
-    reviewStatus: 'pending',
-  },
-  {
-    id: 'app-002',
-    applicationId: 'APP-2026-079',
-    hotelId: 'hotel-001',
-    hotelName: 'Lazfort Grand Palace & Royal Spa',
-    location: 'Monaco, French Riviera',
-    applicantName: 'Lord Alistair Sterling',
-    applicantEmail: 'alistair@lazfort.com',
-    submittedDate: '2026-10-12',
-    tier: 'Palace Enterprise',
-    totalRooms: 128,
-    documentsStatus: {
-      tourismLicense: true,
-      fireSafety: true,
-      escrowDeed: true,
-      environmentalImpact: true,
-    },
-    reviewStatus: 'approved',
-    reviewedBy: 'Super Admin Directorate',
-    reviewedDate: '2026-10-14',
-  },
-  {
-    id: 'app-003',
-    applicationId: 'APP-2026-072',
-    hotelId: 'hotel-004',
-    hotelName: 'The Golden Pavilion Heritage Manor',
-    location: 'Kyoto, Japan',
-    applicantName: 'Kenzo Takahashi',
-    applicantEmail: 'kenzo@goldenpavilion.jp',
-    submittedDate: '2026-09-28',
-    tier: 'Grand Luxury',
-    totalRooms: 64,
-    documentsStatus: {
-      tourismLicense: false,
-      fireSafety: true,
-      escrowDeed: false,
-      environmentalImpact: false,
-    },
-    reviewStatus: 'rejected',
-    rejectionReason: 'Zoning clearances did not meet sovereign architectural charter specifications.',
-    reviewedBy: 'Super Admin Directorate',
-    reviewedDate: '2026-10-02',
-  },
-];
-
 export const HotelApprovalsPage = () => {
-  const { updateHotel } = useERP();
+  const { hotels = [], updateHotel } = useERP();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const [applications, setApplications] = useState(INITIAL_APPLICATIONS);
+  // Dynamically derive approval applications from real hote    l records
+  const dynamicApplications = useMemo(() => {
+    return (hotels || []).map(h => ({
+      id: `app-${h.id}`,
+      applicationId: `APP-${h.code || h.id}`,
+      hotelId: h.id,
+      hotelName: h.name,
+      location: h.location || h.city || 'Global Destination',
+      applicantName: h.adminName || 'General Manager',
+      applicantEmail: h.email || 'gm@resort.com',
+      submittedDate: (h.createdAt || h.created_at || new Date().toISOString()).split('T')[0],
+      tier: h.subscriptionPlan || 'Palace Enterprise',
+      totalRooms: Number(h.totalRooms || h.total_rooms) || 0,
+      documentsStatus: {
+        tourismLicense: true,
+        fireSafety: true,
+        escrowDeed: h.status === 'active',
+        environmentalImpact: true,
+      },
+      reviewStatus: h.status === 'pending_approval' ? 'pending' : h.status === 'active' ? 'approved' : 'rejected',
+    }));
+  }, [hotels]);
+
+  const [applications, setApplications] = useState([]);
+
+  useEffect(() => {
+    setApplications(dynamicApplications);
+  }, [dynamicApplications]);
+
   const [activeTab, setActiveTab] = useState('pending');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -96,7 +59,7 @@ export const HotelApprovalsPage = () => {
   // Trigger dedicated Hotel Approvals API on mount
   useEffect(() => {
     let isMounted = true;
-    hotelApi.getHotelApprovals().catch(() => {});
+    hotelApi.getHotelApprovals().catch(() => { });
     return () => { isMounted = false; };
   }, []);
 
@@ -111,22 +74,25 @@ export const HotelApprovalsPage = () => {
       prev.map(a =>
         a.id === appToApprove.id
           ? {
-              ...a,
-              reviewStatus: 'approved',
-              reviewedBy: 'Super Admin Directorate',
-              reviewedDate: new Date().toISOString().split('T')[0],
-              documentsStatus: {
-                tourismLicense: true,
-                fireSafety: true,
-                escrowDeed: true,
-                environmentalImpact: true,
-              },
-            }
+            ...a,
+            reviewStatus: 'approved',
+            reviewedBy: 'Super Admin Directorate',
+            reviewedDate: new Date().toISOString().split('T')[0],
+            documentsStatus: {
+              tourismLicense: true,
+              fireSafety: true,
+              escrowDeed: true,
+              environmentalImpact: true,
+            },
+          }
           : a
       )
     );
 
-    updateHotel(appToApprove.hotelId, { status: 'active' });
+    updateHotel(appToApprove.hotelId, { status: 'active', rejection_reason: null });
+
+    // Also persist to REST API
+    hotelApi.updateHotel(appToApprove.hotelId, { status: 'active', rejection_reason: null }).catch(() => { });
 
     showToast(
       'Property Approved & Commissioned',
@@ -144,17 +110,20 @@ export const HotelApprovalsPage = () => {
       prev.map(a =>
         a.id === appToReject.id
           ? {
-              ...a,
-              reviewStatus: 'rejected',
-              rejectionReason: reason,
-              reviewedBy: 'Super Admin Directorate',
-              reviewedDate: new Date().toISOString().split('T')[0],
-            }
+            ...a,
+            reviewStatus: 'rejected',
+            rejectionReason: reason,
+            reviewedBy: 'Super Admin Directorate',
+            reviewedDate: new Date().toISOString().split('T')[0],
+          }
           : a
       )
     );
 
-    updateHotel(appToReject.hotelId, { status: 'suspended' });
+    updateHotel(appToReject.hotelId, { status: 'suspended', rejection_reason: reason });
+
+    // Also persist to REST API
+    hotelApi.updateHotel(appToReject.hotelId, { status: 'suspended', rejection_reason: reason }).catch(() => { });
 
     showToast(
       'Application Declined',

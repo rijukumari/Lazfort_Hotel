@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { mockPlanFeatures } from '../../data/mockSubscriptions';
+import { useERP } from '../../context/ERPContext';
+import { hotelApi } from '../../services/hotelApi';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import {
   ArrowLeft,
@@ -13,8 +14,55 @@ import {
 export const PlanFeatureDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { planFeatures = [] } = useERP();
 
-  const feature = mockPlanFeatures.find(f => f.id === id) || mockPlanFeatures[0];
+  const [feature, setFeature] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchFeature = async () => {
+      try {
+        setIsLoading(true);
+        let found = planFeatures.find(f => String(f.id) === String(id));
+        if (!found) {
+          const apiFeatures = await hotelApi.getPlanFeatures();
+          if (Array.isArray(apiFeatures)) {
+            found = apiFeatures.find(f => String(f.id) === String(id));
+          }
+        }
+        if (isMounted && found) {
+          setFeature(found);
+        }
+      } catch (err) {
+        console.warn('Error loading plan feature:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    fetchFeature();
+    return () => { isMounted = false; };
+  }, [id, planFeatures]);
+
+  if (isLoading && !feature) {
+    return (
+      <div className="space-y-6 p-8 text-center text-xs text-charcoal-muted">
+        <p className="animate-pulse">Loading plan feature specification...</p>
+      </div>
+    );
+  }
+
+  if (!feature) {
+    return (
+      <div className="space-y-6 p-6">
+        <Link to="/super-admin/subscriptions/features" className="text-xs text-charcoal-muted hover:text-accent">
+          ← Return to Feature Matrix
+        </Link>
+        <p className="text-sm">Feature specification not found in database.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300 pb-20">

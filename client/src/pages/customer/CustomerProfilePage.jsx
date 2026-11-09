@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useERP } from '../../context/ERPContext';
 import { useToast } from '../../context/ToastContext';
+import { hotelApi } from '../../services/hotelApi';
 import {
   User,
   Crown,
@@ -18,7 +19,8 @@ import {
   CheckCircle2,
   Calendar,
   DollarSign,
-  AlertCircle
+  AlertCircle,
+  Camera,
 } from 'lucide-react';
 
 export const CustomerProfilePage = () => {
@@ -50,6 +52,94 @@ export const CustomerProfilePage = () => {
   const [dietary, setDietary] = useState('Gluten-Free, Champagne Pairing');
   const [specialRequests, setSpecialRequests] = useState('Non-smoking suite, feather-free hypoallergenic pillows.');
   const [isSaving, setIsSaving] = useState(false);
+
+  const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80';
+  const [avatar, setAvatar] = useState(user?.avatar || DEFAULT_AVATAR);
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatar || DEFAULT_AVATAR);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getCurrentUser()
+      .then(res => {
+        if (isMounted && res && res.user) {
+          if (res.user.name) setName(res.user.name);
+          if (res.user.phone) setPhone(res.user.phone);
+          if (res.user.avatar) {
+            setAvatar(res.user.avatar);
+            setAvatarPreview(res.user.avatar);
+          }
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
+
+  const handleAvatarFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+      showToast('Invalid Image Format', 'Please upload a JPEG, PNG, WEBP, or GIF image file.', 'error');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('File Too Large', 'Profile image size must not exceed 5MB.', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setAvatarPreview(event.target.result);
+    };
+    reader.readAsDataURL(file);
+
+    setIsUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const targetId = user?.id || user?.email || 'usr-cs-1';
+      const response = await hotelApi.uploadAvatar(targetId, formData);
+
+      if (response && response.avatar) {
+        setAvatar(response.avatar);
+        setAvatarPreview(response.avatar);
+        if (updateUserProfile) {
+          updateUserProfile({ avatar: response.avatar });
+        }
+        showToast('Profile Picture Updated', 'Your guest portrait has been stored successfully.', 'success');
+      }
+    } catch (err) {
+      console.error('Avatar upload error:', err);
+      showToast('Upload Error', err?.data?.message || err.message || 'Failed to upload profile picture.', 'error');
+      setAvatarPreview(avatar);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    setIsUploadingAvatar(true);
+    try {
+      const targetId = user?.id || user?.email || 'usr-cs-1';
+      const response = await hotelApi.uploadAvatar(targetId, { remove_avatar: true });
+      if (response) {
+        setAvatar(DEFAULT_AVATAR);
+        setAvatarPreview(DEFAULT_AVATAR);
+        if (updateUserProfile) {
+          updateUserProfile({ avatar: DEFAULT_AVATAR });
+        }
+        showToast('Profile Picture Removed', 'Avatar restored to default VIP guest portrait.', 'info');
+      }
+    } catch (err) {
+      showToast('Error', 'Failed to remove profile picture.', 'error');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
 
   const handleSaveProfile = (e) => {
     e.preventDefault();
@@ -86,18 +176,30 @@ export const CustomerProfilePage = () => {
       <div className="card-luxury-3d p-6 sm:p-8 rounded-3xl">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-border/80 dark:border-white/10">
           <div className="flex items-center gap-5">
-            <div className="relative">
-              <div className="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-accent via-accent/40 to-accent/90 shadow-gold">
+            <div className="relative group">
+              <div className="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-accent via-accent/40 to-accent/90 shadow-gold relative">
                 <img
-                  src={
-                    user?.avatar ||
-                    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80'
-                  }
+                  src={avatarPreview}
                   alt={user?.name || name}
-                  className="w-full h-full rounded-full object-cover"
+                  onError={() => setAvatarPreview(DEFAULT_AVATAR)}
+                  className={`w-full h-full rounded-full object-cover transition-opacity ${isUploadingAvatar ? 'opacity-50' : 'opacity-100'}`}
                 />
+                {isUploadingAvatar && (
+                  <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/60 text-accent font-mono text-[9px] font-bold">
+                    Uploading...
+                  </div>
+                )}
               </div>
-              <span className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-surface-dark" />
+              <label className="absolute bottom-0 right-0 p-1.5 rounded-full bg-accent text-primary-950 hover:bg-accent-hover shadow-lg cursor-pointer transition-transform hover:scale-110 active:scale-95" title="Change Guest Avatar">
+                <Camera className="w-3.5 h-3.5" />
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  disabled={isUploadingAvatar}
+                  onChange={handleAvatarFileChange}
+                  className="hidden"
+                />
+              </label>
             </div>
 
             <div>
@@ -108,6 +210,16 @@ export const CustomerProfilePage = () => {
                 {isVip && <Crown className="w-5 h-5 text-accent animate-pulse" />}
               </div>
               <p className="text-xs text-charcoal-muted dark:text-gray-400 mt-0.5">{email}</p>
+              {avatar && avatar !== DEFAULT_AVATAR && (
+                <button
+                  type="button"
+                  onClick={handleRemoveAvatar}
+                  disabled={isUploadingAvatar}
+                  className="text-[10px] text-rose-500 hover:text-rose-400 hover:underline font-mono mt-1 block"
+                >
+                  Remove Picture
+                </button>
+              )}
               <div className="flex items-center gap-2 mt-2">
                 <span
                   className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider ${isVip

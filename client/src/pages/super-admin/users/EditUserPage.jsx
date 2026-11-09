@@ -19,20 +19,33 @@ export const EditUserPage = () => {
   const { users, updateUser } = useSuperAdminUsers();
   const { showToast } = useToast();
 
-  const user = users.find(u => u.id === id) || users[0];
+  const user = users.find(u => u.id === id || String(u.db_id) === String(id)) || null;
 
   const [formName, setFormName] = useState(user?.name || '');
   const [formPhone, setFormPhone] = useState(user?.phone || '');
   const [formRole, setFormRole] = useState(user?.role || 'Hotel Admin (GM)');
   const [formHotel, setFormHotel] = useState(user?.hotel || 'Lazfort Grand Palace Monaco');
+  const [hotelOptions, setHotelOptions] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getHotels()
+      .then(hotels => {
+        if (isMounted && Array.isArray(hotels) && hotels.length > 0) {
+          setHotelOptions(hotels);
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   useEffect(() => {
     if (user) {
       setFormName(user.name);
       setFormPhone(user.phone || '+377 98 00 12 00');
       setFormRole(user.role);
-      setFormHotel(user.hotel);
+      setFormHotel(user.hotel || (Array.isArray(user.hotelAccess) ? user.hotelAccess[0] : user.hotelAccess) || 'All Properties');
     }
   }, [user]);
 
@@ -51,18 +64,18 @@ export const EditUserPage = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await new Promise(r => setTimeout(r, 400));
-      updateUser(user.id, {
+      await updateUser(user.id, {
         name: formName,
         phone: formPhone,
         role: formRole,
         hotel: formHotel,
+        hotelAccess: [formHotel],
       });
 
-      showToast('User Updated', `${formName}'s permissions and profile modified successfully.`, 'success');
+      showToast('User Updated', `${formName}'s permissions and profile modified successfully in MySQL.`, 'success');
       navigate('/super-admin/users');
     } catch {
-      showToast('Error', 'Failed to update user profile.', 'error');
+      showToast('Error', 'Failed to update user profile in MySQL database.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -136,12 +149,20 @@ export const EditUserPage = () => {
 
             <FormField label="Assigned Hotel Property" required>
               <Select value={formHotel} onChange={e => setFormHotel(e.target.value)}>
-                <option value="Lazfort Grand Palace Monaco">Lazfort Grand Palace Monaco</option>
-                <option value="Alpine Luxury Sanctuary St. Moritz">Alpine Luxury Sanctuary St. Moritz</option>
-                <option value="Bora Bora Overwater Lagoon Resort">Bora Bora Overwater Lagoon Resort</option>
-                <option value="Kyoto Imperial Heritage Manor">Kyoto Imperial Heritage Manor</option>
-                <option value="Villa Bellissima Bellagio (Lake Como)">Villa Bellissima Bellagio (Lake Como)</option>
-                <option value="All Properties (Global Console)">All Properties (Global Console)</option>
+                {hotelOptions.length > 0 ? (
+                  <>
+                    {hotelOptions.map(h => (
+                      <option key={h.id} value={h.name}>{h.name}</option>
+                    ))}
+                    <option value="All Properties (Global Console)">All Properties (Global Console)</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="Lazfort Grand Palace Monaco">Lazfort Grand Palace Monaco</option>
+                    <option value="Alpine Luxury Sanctuary St. Moritz">Alpine Luxury Sanctuary St. Moritz</option>
+                    <option value="All Properties (Global Console)">All Properties (Global Console)</option>
+                  </>
+                )}
               </Select>
             </FormField>
           </div>

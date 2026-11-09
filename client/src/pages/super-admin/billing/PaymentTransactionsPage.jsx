@@ -5,7 +5,7 @@ import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
 import { Modal } from '../../../components/ui/Modal';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
-import { initialPaymentTransactions } from '../../../data/mockSuperAdminModules';
+import { ViewToggle } from '../../../components/ui/ViewToggle';
 import { useToast } from '../../../context/ToastContext';
 import { useERP } from '../../../context/ERPContext';
 import { hotelApi } from '../../../services/hotelApi';
@@ -20,17 +20,35 @@ import {
   RefreshCw,
   Building2,
   ShieldCheck,
+  Calendar,
+  User,
 } from 'lucide-react';
 
 export const PaymentTransactionsPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { payments = [] } = useERP();
-  const [transactions, setTransactions] = useState(initialPaymentTransactions || []);
+  const [transactions, setTransactions] = useState([]);
   const [methodFilter, setMethodFilter] = useState('all');
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('lazfort_view_payments') || 'list';
+    } catch {
+      return 'list';
+    }
+  });
+
+  const handleViewChange = (mode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('lazfort_view_payments', mode);
+    } catch { }
+  };
 
   useEffect(() => {
-    hotelApi.getPayments().then(res => {
+    let isMounted = true;
+    hotelApi.getPayments({ skipCache: true }).then(res => {
+      if (!isMounted) return;
       if (Array.isArray(res) && res.length > 0) {
         const mapped = res.map((p, idx) => ({
           id: p.id || `tx-${idx}`,
@@ -44,10 +62,14 @@ export const PaymentTransactionsPage = () => {
           currency: 'USD',
           status: p.status || 'paid',
         }));
-        setTransactions([...mapped, ...initialPaymentTransactions]);
+        setTransactions(mapped);
       }
-    }).catch(() => {});
-  }, [payments.length]);
+    }).catch(() => { });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Computed KPI Metrics
   const totalVolume = useMemo(
@@ -229,36 +251,125 @@ export const PaymentTransactionsPage = () => {
         />
       </StatsGrid>
 
-      {/* Transactions Table via standard DataTable with status filtering */}
-      <DataTable
-        columns={columns}
-        data={filteredTransactions}
-        keyExtractor={(item) => item.id}
-        searchPlaceholder="Search by TxID, Reference, Client, Hotel..."
-        statusFilterKey="status"
-        statusOptions={['paid', 'pending', 'processing', 'failed']}
-        pageSize={10}
-        actions={
-          <div className="flex items-center gap-2 text-xs">
-            <Filter className="w-3.5 h-3.5 text-accent" />
-            <select
-              value={methodFilter}
-              onChange={(e) => setMethodFilter(e.target.value)}
-              className="pl-3 pr-8 py-2 text-xs bg-white dark:bg-primary-900/80 border border-border dark:border-white/15 rounded-2xl text-charcoal dark:text-white"
-            >
-              <option value="all">All Payment Channels</option>
-              <option value="Amex Centurion">Amex Centurion</option>
-              <option value="SWIFT Wire Transfer">SWIFT Wire Transfer</option>
-              <option value="Visa Infinite">Visa Infinite</option>
-              <option value="Mastercard World Elite">Mastercard World Elite</option>
-              <option value="Crypto Ledger">Crypto Ledger</option>
-            </select>
+      {/* Transactions View: Grid or List using identical data */}
+      {viewMode === 'list' ? (
+        <DataTable
+          columns={columns}
+          data={filteredTransactions}
+          keyExtractor={(item) => item.id}
+          searchPlaceholder="Search by TxID, Reference, Client, Hotel..."
+          statusFilterKey="status"
+          statusOptions={['paid', 'pending', 'processing', 'failed']}
+          pageSize={10}
+          actions={
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-xs">
+                <Filter className="w-3.5 h-3.5 text-accent" />
+                <select
+                  value={methodFilter}
+                  onChange={(e) => setMethodFilter(e.target.value)}
+                  className="pl-3 pr-8 py-2 text-xs bg-white dark:bg-primary-900/80 border border-border dark:border-white/15 rounded-2xl text-charcoal dark:text-white"
+                >
+                  <option value="all">All Payment Channels</option>
+                  <option value="Amex Centurion">Amex Centurion</option>
+                  <option value="SWIFT Wire Transfer">SWIFT Wire Transfer</option>
+                  <option value="Visa Infinite">Visa Infinite</option>
+                  <option value="Mastercard World Elite">Mastercard World Elite</option>
+                  <option value="Crypto Ledger">Crypto Ledger</option>
+                </select>
+              </div>
+              <ViewToggle viewMode={viewMode} onViewChange={handleViewChange} />
+            </div>
+          }
+        />
+      ) : (
+        <div className="space-y-4">
+          <div className="card-luxury p-4 rounded-2xl border border-border/80 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs">
+              <Filter className="w-3.5 h-3.5 text-accent" />
+              <select
+                value={methodFilter}
+                onChange={(e) => setMethodFilter(e.target.value)}
+                className="pl-3 pr-8 py-2 text-xs bg-white dark:bg-primary-900/80 border border-border dark:border-white/15 rounded-2xl text-charcoal dark:text-white"
+              >
+                <option value="all">All Payment Channels</option>
+                <option value="Amex Centurion">Amex Centurion</option>
+                <option value="SWIFT Wire Transfer">SWIFT Wire Transfer</option>
+                <option value="Visa Infinite">Visa Infinite</option>
+                <option value="Mastercard World Elite">Mastercard World Elite</option>
+                <option value="Crypto Ledger">Crypto Ledger</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-charcoal-muted">
+                Showing <strong className="text-primary dark:text-white">{filteredTransactions.length}</strong> transactions
+              </span>
+              <ViewToggle viewMode={viewMode} onViewChange={handleViewChange} />
+            </div>
           </div>
-        }
-      />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filteredTransactions.map((tx) => (
+              <div
+                key={tx.id}
+                className="card-luxury p-5 rounded-2xl border border-border/80 dark:border-white/10 space-y-3 flex flex-col justify-between hover:border-accent/40 transition-all group"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-bold text-accent">{tx.transactionId}</span>
+                    <StatusBadge status={tx.status} />
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <User className="w-3.5 h-3.5 text-charcoal-muted" />
+                      <span className="font-semibold text-primary dark:text-white text-sm">{tx.clientName}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-charcoal-muted">
+                      <Building2 className="w-3.5 h-3.5 text-accent" />
+                      <span className="truncate">{tx.hotelName}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-ivory dark:bg-black/30 border border-border/60 dark:border-white/5 space-y-1 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-charcoal-muted">Settlement Ref:</span>
+                      <span className="font-mono font-semibold text-primary dark:text-white">{tx.reference}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-charcoal-muted">Method:</span>
+                      <span className="font-semibold text-accent">{tx.paymentMethod}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-charcoal-muted">Timestamp:</span>
+                      <span className="font-mono text-[11px] text-charcoal-muted">{tx.date}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-border/70 dark:border-white/10 flex items-center justify-between">
+                  <span className="font-serif font-bold text-base text-primary dark:text-accent">
+                    ${Number(tx.amount).toLocaleString()}
+                  </span>
+                  <button
+                    onClick={() => navigate(`/super-admin/billing/transactions/${tx.id}`)}
+                    className="p-1.5 rounded-lg border border-accent/30 bg-accent/10 hover:bg-accent/20 text-accent transition-colors flex items-center gap-1.5 text-xs font-semibold px-2.5"
+                    title="View Transaction Dossier"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Details</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
 
 export default PaymentTransactionsPage;
+
 

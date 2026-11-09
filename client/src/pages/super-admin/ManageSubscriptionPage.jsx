@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { mockActiveSubscriptions, mockSubscriptionPlans } from '../../data/mockSubscriptions';
 import { useToast } from '../../context/ToastContext';
+import { hotelApi } from '../../services/hotelApi';
 import {
   ArrowLeft,
   Sliders,
@@ -18,25 +18,71 @@ export const ManageSubscriptionPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  const subscription = mockActiveSubscriptions.find(s => s.id === id) || mockActiveSubscriptions[0];
-
-  const [planName, setPlanName] = useState(subscription.planName);
-  const [billingCycle, setBillingCycle] = useState(subscription.billingCycle);
-  const [contactName, setContactName] = useState(subscription.contactName);
-  const [contactEmail, setContactEmail] = useState(subscription.contactEmail);
-  const [contactPhone, setContactPhone] = useState(subscription.contactPhone || '+1 (800) 555-0199');
+  const [subscription, setSubscription] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [planName, setPlanName] = useState('Palace Enterprise');
+  const [billingCycle, setBillingCycle] = useState('monthly');
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('+1 (800) 555-0199');
   const [autoRenew, setAutoRenew] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState('Credit Card (Sovereign Amex Vault)');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getSubscriptions().then(subs => {
+      if (isMounted && Array.isArray(subs)) {
+        const match = subs.find(s => String(s.id) === String(id));
+        if (match) {
+          setSubscription(match);
+          setPlanName(match.planName || match.plan_name || 'Palace Enterprise');
+          setBillingCycle(match.billingCycle || match.billing_cycle || 'monthly');
+          setContactName(match.contactName || match.contact_name || '');
+          setContactEmail(match.contactEmail || match.contact_email || '');
+          setContactPhone(match.contactPhone || match.contact_phone || '+1 (800) 555-0199');
+        }
+      }
+    }).catch(() => {})
+    .finally(() => {
+      if (isMounted) setIsLoading(false);
+    });
+    return () => { isMounted = false; };
+  }, [id]);
+
+  if (isLoading && !subscription) {
+    return (
+      <div className="space-y-6 p-8 text-center text-xs text-charcoal-muted">
+        <p className="animate-pulse">Loading subscription parameters from database...</p>
+      </div>
+    );
+  }
+
+  if (!subscription) {
+    return (
+      <div className="space-y-6">
+        <Link to="/super-admin/subscriptions" className="text-xs text-charcoal-muted hover:text-accent">
+          ← Back to Subscriptions
+        </Link>
+        <p className="text-sm">Subscription not found.</p>
+      </div>
+    );
+  }
 
   const handleSave = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     setIsSubmitting(true);
     try {
-      await new Promise(r => setTimeout(r, 600));
+      await hotelApi.updateSubscription(id, {
+        planName,
+        billingCycle,
+        contactName,
+        contactEmail,
+        contactPhone,
+      });
       showToast(
         'Subscription Updated',
-        `Tier and settings for ${subscription.hotelName} have been persisted successfully.`,
+        `Tier and settings for ${subscription.hotelName || subscription.hotel_name} have been persisted successfully.`,
         'success'
       );
       navigate('/super-admin/subscriptions');

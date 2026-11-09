@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader, StatusBadge, Button, ConfirmDialog } from '../../components/ui';
 import { DataTable } from '../../components/data-display/DataTable';
-import { UserPlus, Edit, Eye, Trash2 } from 'lucide-react';
+import { ViewToggle } from '../../components/ui/ViewToggle';
+import { UserPlus, Edit, Eye, Trash2, Mail, Phone, Calendar, DollarSign, Globe } from 'lucide-react';
 import { useERP } from '../../context/ERPContext';
 import { useToast } from '../../context/ToastContext';
 
@@ -11,6 +12,20 @@ export const GuestsManagementPage = () => {
   const { guests, deleteGuest } = useERP();
   const { showToast } = useToast();
   const [deleteGuestId, setDeleteGuestId] = useState(null);
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('lazfort_view_guests') || 'list';
+    } catch {
+      return 'list';
+    }
+  });
+
+  const handleViewChange = (mode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('lazfort_view_guests', mode);
+    } catch {}
+  };
 
   const handleConfirmDelete = () => {
     if (!deleteGuestId) return;
@@ -114,23 +129,105 @@ export const GuestsManagementPage = () => {
         description="Distinguished clientele, preferences, spending history, and bespoke concierge notes."
         badge={`${guests.length} Registered VIPs`}
         actions={
-          <Button
-            variant="gold"
-            icon={UserPlus}
-            onClick={() => navigate('/hotel-admin/guests/add')}
-          >
-            Enroll VIP Guest
-          </Button>
+          <div className="flex items-center gap-3">
+            <ViewToggle viewMode={viewMode} onViewChange={handleViewChange} />
+            <Button
+              variant="gold"
+              icon={UserPlus}
+              onClick={() => navigate('/hotel-admin/guests/add')}
+            >
+              Enroll VIP Guest
+            </Button>
+          </div>
         }
       />
 
-      <DataTable
-        data={guests}
-        columns={columns}
-        keyExtractor={item => item.id}
-        searchPlaceholder="Search guest by name, email, or nationality..."
-        pageSize={6}
-      />
+      {viewMode === 'list' ? (
+        <DataTable
+          data={guests}
+          columns={columns}
+          keyExtractor={item => item.id}
+          searchPlaceholder="Search guest by name, email, or nationality..."
+          pageSize={6}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {guests.map(guest => (
+            <div
+              key={guest.id}
+              className="card-luxury p-5 rounded-2xl border border-border/80 dark:border-white/10 space-y-4 hover:border-accent/40 transition-all flex flex-col justify-between group"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <StatusBadge status={guest.vipTier || 'Silver'} size="sm" />
+                  <span className="text-xs text-charcoal-muted flex items-center gap-1 font-mono">
+                    <Globe className="w-3.5 h-3.5 text-accent" />
+                    {guest.nationality}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <img
+                    src={guest.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
+                    alt={guest.name}
+                    className="w-12 h-12 rounded-full object-cover ring-2 ring-accent/30"
+                  />
+                  <div>
+                    <h4 className="font-serif font-bold text-base text-primary dark:text-white leading-tight">
+                      {guest.name}
+                    </h4>
+                    <p className="text-xs text-charcoal-muted">{guest.email}</p>
+                    <p className="text-[11px] text-charcoal-muted font-mono">{guest.phone}</p>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-ivory dark:bg-black/30 border border-border/60 dark:border-white/5 space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between text-charcoal-muted">
+                    <span>Total Stays:</span>
+                    <span className="font-mono font-semibold text-primary dark:text-white">{guest.totalStays || 0} visits</span>
+                  </div>
+                  <div className="flex items-center justify-between text-charcoal-muted">
+                    <span>Lifetime Spend:</span>
+                    <span className="font-mono font-bold text-accent">${Number(guest.totalSpent || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-charcoal-muted">
+                    <span>Last Visit:</span>
+                    <span className="font-mono text-[11px]">{guest.lastVisit || 'First Visit'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-border/70 dark:border-white/10 flex items-center justify-between">
+                <span className="text-[11px] text-charcoal-muted">ID: {guest.id}</span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => navigate(`/hotel-admin/guests/details/${guest.id}`)}
+                    className="p-1.5 rounded-xl border border-border dark:border-white/10 hover:border-accent hover:text-accent transition-colors"
+                    title="View Guest Details"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => navigate(`/hotel-admin/guests/edit/${guest.id}`)}
+                    className="p-1.5 rounded-xl border border-border dark:border-white/10 hover:border-accent hover:text-accent transition-colors"
+                    title="Edit Dossier"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setDeleteGuestId(guest.id)}
+                    className="p-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-colors"
+                    title="Remove Guest Dossier"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
 
       {/* Delete Confirmation */}
       {deleteGuestId && (

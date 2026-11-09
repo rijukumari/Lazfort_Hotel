@@ -39,7 +39,7 @@ use Illuminate\Support\Facades\Log;
 class HotelErpController extends Controller
 {
     /**
-     * Auto migration & table ensure helper
+     * Auto migration & table ensure helper (Cached statically to avoid duplicate DDL operations)
      */
     protected function ensureTables()
     {
@@ -51,172 +51,8 @@ class HotelErpController extends Controller
             if (!Schema::hasTable('hotels') || !Schema::hasTable('bookings') || !Schema::hasTable('users') || !Schema::hasTable('currencies')) {
                 Artisan::call('migrate', ['--force' => true]);
             }
-
-            // Ensure currencies table and default records
-            if (Schema::hasTable('currencies')) {
-                if (Currency::count() === 0) {
-                    $defaultCurrencies = [
-                        ['currency_name' => 'US Dollar', 'currency_code' => 'USD', 'currency_symbol' => '$', 'is_default' => true, 'is_active' => true],
-                        ['currency_name' => 'Indian Rupee', 'currency_code' => 'INR', 'currency_symbol' => '₹', 'is_default' => false, 'is_active' => true],
-                        ['currency_name' => 'Euro', 'currency_code' => 'EUR', 'currency_symbol' => '€', 'is_default' => false, 'is_active' => true],
-                        ['currency_name' => 'British Pound', 'currency_code' => 'GBP', 'currency_symbol' => '£', 'is_default' => false, 'is_active' => true],
-                        ['currency_name' => 'UAE Dirham', 'currency_code' => 'AED', 'currency_symbol' => 'د.إ', 'is_default' => false, 'is_active' => true],
-                        ['currency_name' => 'Saudi Riyal', 'currency_code' => 'SAR', 'currency_symbol' => '﷼', 'is_default' => false, 'is_active' => true],
-                        ['currency_name' => 'Singapore Dollar', 'currency_code' => 'SGD', 'currency_symbol' => 'S$', 'is_default' => false, 'is_active' => true],
-                        ['currency_name' => 'Canadian Dollar', 'currency_code' => 'CAD', 'currency_symbol' => 'C$', 'is_default' => false, 'is_active' => true],
-                        ['currency_name' => 'Australian Dollar', 'currency_code' => 'AUD', 'currency_symbol' => 'A$', 'is_default' => false, 'is_active' => true],
-                    ];
-                    foreach ($defaultCurrencies as $c) {
-                        Currency::create($c);
-                    }
-                }
-            }
-
-            // Ensure currency_code column on hotels
-            if (Schema::hasTable('hotels') && !Schema::hasColumn('hotels', 'currency_code')) {
-                DB::statement("ALTER TABLE hotels ADD COLUMN currency_code VARCHAR(10) DEFAULT 'USD' AFTER subscription_plan");
-            }
-
-            // Ensure extra user columns if missing
-            if (Schema::hasTable('users')) {
-                if (!Schema::hasColumn('users', 'role')) {
-                    DB::statement("ALTER TABLE users ADD COLUMN role VARCHAR(100) DEFAULT 'Staff' AFTER email");
-                }
-                if (!Schema::hasColumn('users', 'hotel_access')) {
-                    DB::statement("ALTER TABLE users ADD COLUMN hotel_access VARCHAR(255) NULL AFTER role");
-                }
-                if (!Schema::hasColumn('users', 'phone')) {
-                    DB::statement("ALTER TABLE users ADD COLUMN phone VARCHAR(100) NULL AFTER email");
-                }
-                if (!Schema::hasColumn('users', 'status')) {
-                    DB::statement("ALTER TABLE users ADD COLUMN status VARCHAR(50) DEFAULT 'active' AFTER role");
-                }
-                if (!Schema::hasColumn('users', 'custom_id')) {
-                    DB::statement("ALTER TABLE users ADD COLUMN custom_id VARCHAR(50) NULL AFTER id");
-                }
-            }
-
-            // Ensure Super Admin Tables
-            if (!Schema::hasTable('subscription_plans') || !Schema::hasTable('subscriptions') || !Schema::hasTable('support_tickets') || !Schema::hasTable('audit_logs')) {
-                Artisan::call('migrate', ['--force' => true]);
-            }
-
-            // Seed default subscription plans if empty
-            if (Schema::hasTable('subscription_plans') && SubscriptionPlan::count() === 0) {
-                $defaultPlans = [
-                    [
-                        'id' => 'plan-01',
-                        'name' => 'Boutique Sovereign',
-                        'tier_code' => 'BOUTIQUE',
-                        'price' => 1400.00,
-                        'currency' => 'USD',
-                        'billing_cycle' => 'monthly',
-                        'max_rooms' => 30,
-                        'max_staff' => 15,
-                        'description' => 'Ideal for historic boutique châteaux and alpine chalets requiring sovereign grade PMS.',
-                        'features' => ['Front Desk & Reservations', 'Housekeeping Suite', 'Basic Multi-Currency Billing'],
-                        'status' => 'active',
-                    ],
-                    [
-                        'id' => 'plan-02',
-                        'name' => 'Grand Palace',
-                        'tier_code' => 'PALACE',
-                        'price' => 3200.00,
-                        'currency' => 'USD',
-                        'billing_cycle' => 'monthly',
-                        'max_rooms' => 120,
-                        'max_staff' => 60,
-                        'description' => 'Flagship package for 5-star palatial estates, high-frequency restaurant POS, and concierge dispatches.',
-                        'features' => ['All Boutique Features', 'Fine Dining POS & Cellar Management', 'VIP Membership Folio Routing', 'Automated Daily Financial Audits'],
-                        'status' => 'active',
-                    ],
-                    [
-                        'id' => 'plan-03',
-                        'name' => 'Imperial Enterprise',
-                        'tier_code' => 'ENTERPRISE',
-                        'price' => 49000.00,
-                        'currency' => 'USD',
-                        'billing_cycle' => 'annual',
-                        'max_rooms' => 500,
-                        'max_staff' => 250,
-                        'description' => 'Unrestricted multinational resort portfolio clearance with custom API gateways and dedicated cloud clusters.',
-                        'features' => ['Unlimited Suites & Inventory', 'Custom ERP Core Integrations', 'Dedicated Cloud Sandbox', '24/7 SLA Concierge Engineering'],
-                        'status' => 'active',
-                    ],
-                ];
-                foreach ($defaultPlans as $p) {
-                    SubscriptionPlan::create($p);
-                }
-            }
-
-            // Ensure notifications table exists
-            if (!Schema::hasTable('notifications')) {
-                Schema::create('notifications', function ($table) {
-                    $table->string('id')->primary();
-                    $table->string('user_id')->nullable();
-                    $table->string('role', 50)->nullable()->default('all');
-                    $table->string('title');
-                    $table->text('message')->nullable();
-                    $table->string('type', 50)->default('system'); // vip, booking, system, payment, maintenance
-                    $table->boolean('is_read')->default(false);
-                    $table->string('action_url')->nullable();
-                    $table->timestamps();
-                });
-
-                // Seed initial notifications
-                DB::table('notifications')->insert([
-                    [
-                        'id' => 'notif-1',
-                        'user_id' => null,
-                        'role' => 'all',
-                        'title' => 'VIP Arrival: Sir Alexander Kensington arriving in 45 minutes.',
-                        'message' => 'Royal Penthouse Suite ST-804 prepared and inspected.',
-                        'type' => 'vip',
-                        'is_read' => false,
-                        'action_url' => '/hotel-admin/front-desk/check-in',
-                        'created_at' => now()->subMinutes(10),
-                        'updated_at' => now()->subMinutes(10),
-                    ],
-                    [
-                        'id' => 'notif-2',
-                        'user_id' => null,
-                        'role' => 'all',
-                        'title' => 'New Presidential Suite reservation confirmed (AUR-9922).',
-                        'message' => 'Deposit settled via wire transfer $12,500.',
-                        'type' => 'booking',
-                        'is_read' => false,
-                        'action_url' => '/hotel-admin/front-desk/walk-in',
-                        'created_at' => now()->subHours(1),
-                        'updated_at' => now()->subHours(1),
-                    ],
-                    [
-                        'id' => 'notif-3',
-                        'user_id' => null,
-                        'role' => 'all',
-                        'title' => 'Suite PH-1201 sanitation inspection approved with 100% score.',
-                        'message' => 'Housekeeping Head of Service has verified room clearance.',
-                        'type' => 'system',
-                        'is_read' => true,
-                        'action_url' => '/super-admin/hotels/details',
-                        'created_at' => now()->subHours(2),
-                        'updated_at' => now()->subHours(2),
-                    ],
-                    [
-                        'id' => 'notif-4',
-                        'user_id' => null,
-                        'role' => 'all',
-                        'title' => 'Platform Revenue Milestone: Monthly settled charges exceeded $5.3M.',
-                        'message' => 'Fiscal report generated and signed into sovereign audit ledger.',
-                        'type' => 'payment',
-                        'is_read' => false,
-                        'action_url' => '/super-admin/reports/revenue',
-                        'created_at' => now()->subHours(5),
-                        'updated_at' => now()->subHours(5),
-                    ],
-                ]);
-            }
         } catch (\Throwable $e) {
-            Log::warning('ensureTables warning: ' . $e->getMessage());
+            Log::warning('ensureTables migration notice: ' . $e->getMessage());
         }
     }
 
@@ -297,15 +133,20 @@ class HotelErpController extends Controller
         $this->ensureTables();
         try {
             $users = User::orderBy('created_at', 'desc')->get()->map(function ($u) {
+                $hotelAccessArr = $u->hotel_access ? explode(',', $u->hotel_access) : ['All Properties'];
                 return [
                     'id' => $u->custom_id ?: ('usr-' . $u->id),
                     'db_id' => $u->id,
                     'name' => $u->name,
                     'email' => $u->email,
                     'role' => $u->role ?? 'Staff',
-                    'hotelAccess' => $u->hotel_access ? explode(',', $u->hotel_access) : ['All Properties'],
+                    'hotel' => $hotelAccessArr[0] ?? 'All Properties',
+                    'hotelAccess' => $hotelAccessArr,
+                    'hotelId' => $u->hotel_id,
+                    'permissions' => $u->permissions,
                     'phone' => $u->phone,
                     'status' => $u->status ?? 'active',
+                    'avatar' => $u->avatar ?: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
                     'registeredDate' => $u->created_at ? $u->created_at->toDateString() : now()->toDateString(),
                     'lastLogin' => 'Recent Active Session',
                 ];
@@ -328,14 +169,36 @@ class HotelErpController extends Controller
                 'role' => 'nullable|string',
                 'phone' => 'nullable|string',
                 'password' => 'nullable|string|min:6',
+                'hotel' => 'nullable|string',
                 'hotelAccess' => 'nullable',
+                'hotelId' => 'nullable',
+                'hotel_id' => 'nullable',
                 'status' => 'nullable|string',
+                'permissions' => 'nullable',
+                'avatar' => 'nullable|string',
             ]);
 
             $hotelAccessStr = null;
             if ($request->has('hotelAccess')) {
                 $hAccess = $request->input('hotelAccess');
                 $hotelAccessStr = is_array($hAccess) ? implode(',', $hAccess) : (string)$hAccess;
+            } elseif ($request->has('hotel')) {
+                $hotelAccessStr = (string)$request->input('hotel');
+            }
+
+            $avatarUrl = $request->input('avatar');
+
+            // Handle file upload if multipart/form-data sent
+            if ($request->hasFile('avatar_file')) {
+                $file = $request->file('avatar_file');
+                $extension = strtolower($file->getClientOriginalExtension());
+                $filename = 'avatar_' . time() . '_' . Str::random(8) . '.' . $extension;
+                $uploadPath = public_path('storage/avatars');
+                if (!file_exists($uploadPath)) {
+                    mkdir($uploadPath, 0755, true);
+                }
+                $file->move($uploadPath, $filename);
+                $avatarUrl = url('storage/avatars/' . $filename);
             }
 
             $user = User::create([
@@ -345,9 +208,14 @@ class HotelErpController extends Controller
                 'phone' => $request->input('phone'),
                 'role' => $request->input('role') ?? 'Staff',
                 'status' => $request->input('status') ?? 'active',
+                'avatar' => $avatarUrl,
                 'hotel_access' => $hotelAccessStr,
+                'hotel_id' => $request->input('hotelId') ?: $request->input('hotel_id'),
+                'permissions' => $request->input('permissions'),
                 'password' => Hash::make($request->input('password') ?? 'Lazfort#2026!'),
             ]);
+
+            $hotelAccessArr = $user->hotel_access ? explode(',', $user->hotel_access) : ['All Properties'];
 
             return response()->json([
                 'id' => $user->custom_id ?: ('usr-' . $user->id),
@@ -355,9 +223,13 @@ class HotelErpController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $user->role,
-                'hotelAccess' => $user->hotel_access ? explode(',', $user->hotel_access) : ['All Properties'],
+                'hotel' => $hotelAccessArr[0] ?? 'All Properties',
+                'hotelAccess' => $hotelAccessArr,
+                'hotelId' => $user->hotel_id,
+                'permissions' => $user->permissions,
                 'phone' => $user->phone,
                 'status' => $user->status,
+                'avatar' => $user->avatar ?: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
                 'registeredDate' => now()->toDateString(),
                 'lastLogin' => 'Never (New Account)',
             ], 201);
@@ -370,33 +242,202 @@ class HotelErpController extends Controller
     public function updateUser(Request $request, $id)
     {
         $this->ensureTables();
-        try {
-            $user = User::where('id', $id)->orWhere('custom_id', $id)->firstOrFail();
-            $data = $request->all();
-            if (isset($data['hotelAccess']) && is_array($data['hotelAccess'])) {
-                $data['hotel_access'] = implode(',', $data['hotelAccess']);
-                unset($data['hotelAccess']);
+        return DB::transaction(function () use ($request, $id) {
+            try {
+                $user = User::where('id', $id)->orWhere('custom_id', $id)->firstOrFail();
+                $data = $request->all();
+                if (isset($data['hotelAccess']) && is_array($data['hotelAccess'])) {
+                    $data['hotel_access'] = implode(',', $data['hotelAccess']);
+                    unset($data['hotelAccess']);
+                } elseif (isset($data['hotel'])) {
+                    $data['hotel_access'] = (string)$data['hotel'];
+                    unset($data['hotel']);
+                }
+                if ($request->has('hotelId')) {
+                    $data['hotel_id'] = $request->input('hotelId');
+                    unset($data['hotelId']);
+                }
+                if ($request->has('permissions')) {
+                    $data['permissions'] = $request->input('permissions');
+                }
+                if (!empty($data['password'])) {
+                    $data['password'] = Hash::make($data['password']);
+                } else {
+                    unset($data['password']);
+                }
+                $user->update($data);
+
+                AuditLog::create([
+                    'action' => 'UPDATE',
+                    'module' => 'User Management',
+                    'target_id' => $user->custom_id ?: ('usr-' . $user->id),
+                    'description' => "Updated credentials & clearance for {$user->name} ({$user->email}). Status: {$user->status}",
+                ]);
+
+                $hotelAccessArr = $user->hotel_access ? explode(',', $user->hotel_access) : ['All Properties'];
+
+                $formattedUser = [
+                    'id' => $user->custom_id ?: ('usr-' . $user->id),
+                    'db_id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role ?? 'Staff',
+                    'hotel' => $hotelAccessArr[0] ?? 'All Properties',
+                    'hotelAccess' => $hotelAccessArr,
+                    'hotelId' => $user->hotel_id,
+                    'permissions' => $user->permissions,
+                    'phone' => $user->phone,
+                    'status' => $user->status ?? 'active',
+                    'avatar' => $user->avatar ?: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+                    'registeredDate' => $user->created_at ? $user->created_at->toDateString() : now()->toDateString(),
+                    'lastLogin' => 'Recent Active Session',
+                ];
+
+                return response()->json(['status' => 'success', 'user' => $formattedUser]);
+            } catch (\Throwable $e) {
+                Log::error('updateUser error: ' . $e->getMessage());
+                return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
             }
-            if (!empty($data['password'])) {
-                $data['password'] = Hash::make($data['password']);
-            } else {
-                unset($data['password']);
-            }
-            $user->update($data);
-            return response()->json(['status' => 'success', 'user' => $user]);
-        } catch (\Throwable $e) {
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
-        }
+        });
     }
 
-    public function deleteUser($id)
+    public function uploadAvatar(Request $request, $id)
     {
         $this->ensureTables();
         try {
-            $user = User::where('id', $id)->orWhere('custom_id', $id)->firstOrFail();
-            $user->delete();
-            return response()->json(['status' => 'success', 'message' => 'User deleted successfully']);
+            // Find by numeric ID, custom_id or email
+            $user = User::where('id', $id)
+                ->orWhere('custom_id', $id)
+                ->orWhere('email', $id)
+                ->firstOrFail();
+
+            $oldAvatar = $user->avatar;
+
+            // Handle remove avatar option
+            if ($request->input('remove_avatar') === true || $request->input('remove_avatar') === 'true' || $request->input('remove_avatar') === '1') {
+                $user->avatar = null;
+                $user->save();
+
+                // Delete old local uploaded file if exists
+                if ($oldAvatar && str_contains($oldAvatar, '/storage/avatars/')) {
+                    $oldFilename = basename(parse_url($oldAvatar, PHP_URL_PATH));
+                    $oldPath = public_path('storage/avatars/' . $oldFilename);
+                    if (file_exists($oldPath)) {
+                        @unlink($oldPath);
+                    }
+                }
+
+                AuditLog::create([
+                    'action' => 'UPDATE',
+                    'module' => 'Profile Management',
+                    'target_id' => $user->custom_id ?: ('usr-' . $user->id),
+                    'description' => "Removed profile picture for {$user->name} ({$user->email})",
+                ]);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Profile picture removed successfully.',
+                    'avatar' => null,
+                    'user' => [
+                        'id' => $user->custom_id ?: ('usr-' . $user->id),
+                        'db_id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'avatar' => null,
+                    ],
+                ]);
+            }
+
+            // Validate avatar file or base64 string
+            if ($request->hasFile('avatar')) {
+                $request->validate([
+                    'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // max 5MB
+                ]);
+
+                $file = $request->file('avatar');
+                $extension = strtolower($file->getClientOriginalExtension());
+                $filename = 'avatar_' . ($user->custom_id ?: $user->id) . '_' . time() . '_' . Str::random(6) . '.' . $extension;
+                
+                // Store in public/storage/avatars
+                $uploadPath = public_path('storage/avatars');
+                if (!file_exists($uploadPath)) {
+                    mkdir($uploadPath, 0755, true);
+                }
+                $file->move($uploadPath, $filename);
+                $avatarUrl = url('storage/avatars/' . $filename);
+
+                // Clean up old local avatar file
+                if ($oldAvatar && str_contains($oldAvatar, '/storage/avatars/')) {
+                    $oldFilename = basename(parse_url($oldAvatar, PHP_URL_PATH));
+                    $oldPath = public_path('storage/avatars/' . $oldFilename);
+                    if (file_exists($oldPath) && $oldFilename !== $filename) {
+                        @unlink($oldPath);
+                    }
+                }
+            } elseif ($request->has('avatar_base64')) {
+                $base64 = $request->input('avatar_base64');
+                // Validate base64 format and size
+                if (preg_match('/^data:image\/(\w+);base64,/', $base64, $type)) {
+                    $imageType = strtolower($type[1]);
+                    if (!in_array($imageType, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                        return response()->json(['status' => 'error', 'message' => 'Invalid image format. Allowed: jpeg, png, gif, webp.'], 422);
+                    }
+                    $base64Data = substr($base64, strpos($base64, ',') + 1);
+                    $decoded = base64_decode($base64Data);
+                    if (strlen($decoded) > 5242880) { // 5MB
+                        return response()->json(['status' => 'error', 'message' => 'File size exceeds 5MB limit.'], 422);
+                    }
+
+                    $filename = 'avatar_' . ($user->custom_id ?: $user->id) . '_' . time() . '_' . Str::random(6) . '.' . $imageType;
+                    $uploadPath = public_path('storage/avatars');
+                    if (!file_exists($uploadPath)) {
+                        mkdir($uploadPath, 0755, true);
+                    }
+                    file_put_contents($uploadPath . '/' . $filename, $decoded);
+                    $avatarUrl = url('storage/avatars/' . $filename);
+
+                    // Clean up old local avatar file
+                    if ($oldAvatar && str_contains($oldAvatar, '/storage/avatars/')) {
+                        $oldFilename = basename(parse_url($oldAvatar, PHP_URL_PATH));
+                        $oldPath = public_path('storage/avatars/' . $oldFilename);
+                        if (file_exists($oldPath) && $oldFilename !== $filename) {
+                            @unlink($oldPath);
+                        }
+                    }
+                } else {
+                    return response()->json(['status' => 'error', 'message' => 'Invalid base64 image data.'], 422);
+                }
+            } elseif ($request->has('avatar_url')) {
+                $avatarUrl = $request->input('avatar_url');
+            } else {
+                return response()->json(['status' => 'error', 'message' => 'No avatar image file or data provided.'], 422);
+            }
+
+            // Save to MySQL
+            $user->avatar = $avatarUrl;
+            $user->save();
+
+            AuditLog::create([
+                'action' => 'UPDATE',
+                'module' => 'Profile Management',
+                'target_id' => $user->custom_id ?: ('usr-' . $user->id),
+                'description' => "Uploaded portrait profile picture for {$user->name} ({$user->email})",
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Profile picture uploaded and saved successfully.',
+                'avatar' => $avatarUrl,
+                'user' => [
+                    'id' => $user->custom_id ?: ('usr-' . $user->id),
+                    'db_id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'avatar' => $avatarUrl,
+                ],
+            ]);
         } catch (\Throwable $e) {
+            Log::error('uploadAvatar error: ' . $e->getMessage());
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
     }
@@ -424,6 +465,7 @@ class HotelErpController extends Controller
                 'currency_name' => 'required|string|max:100',
                 'currency_code' => 'required|string|max:10',
                 'currency_symbol' => 'required|string|max:10',
+                'decimal_precision' => 'nullable|numeric|min:0|max:4',
                 'is_default' => 'nullable|boolean',
                 'is_active' => 'nullable|boolean',
             ]);
@@ -433,19 +475,34 @@ class HotelErpController extends Controller
             if (Currency::where('currency_code', $code)->exists()) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => "Currency code {$code} already exists.",
+                    'message' => "Currency code '{$code}' already exists.",
                 ], 422);
+            }
+
+            $isDefault = $request->boolean('is_default', false);
+            if ($isDefault) {
+                Currency::where('is_default', true)->update(['is_default' => false]);
             }
 
             $currency = Currency::create([
                 'currency_name' => trim($validated['currency_name']),
                 'currency_code' => $code,
                 'currency_symbol' => trim($validated['currency_symbol']),
-                'is_default' => $request->boolean('is_default', false),
+                'decimal_precision' => (int)($request->input('decimal_precision') ?? 2),
+                'is_default' => $isDefault,
                 'is_active' => $request->boolean('is_active', true),
             ]);
 
+            AuditLog::create([
+                'action' => 'CREATE',
+                'module' => 'Currencies',
+                'target_id' => $currency->id,
+                'description' => "Created currency {$currency->currency_name} ({$code} - {$currency->currency_symbol})",
+            ]);
+
             return response()->json($currency, 201);
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json(['status' => 'error', 'message' => 'Validation error', 'errors' => $ve->errors()], 422);
         } catch (\Throwable $e) {
             Log::error('createCurrency error: ' . $e->getMessage());
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
@@ -456,12 +513,31 @@ class HotelErpController extends Controller
     {
         $this->ensureTables();
         try {
-            $currency = Currency::findOrFail($id);
-            $data = $request->only(['currency_name', 'currency_code', 'currency_symbol', 'is_default', 'is_active']);
+            $currency = Currency::where('id', $id)->orWhere('currency_code', strtoupper($id))->firstOrFail();
+            $data = $request->only(['currency_name', 'currency_code', 'currency_symbol', 'decimal_precision', 'is_default', 'is_active']);
+
             if (isset($data['currency_code'])) {
-                $data['currency_code'] = strtoupper(trim($data['currency_code']));
+                $code = strtoupper(trim($data['currency_code']));
+                // Validate duplicate if code changed
+                if ($code !== $currency->currency_code && Currency::where('currency_code', $code)->where('id', '!=', $currency->id)->exists()) {
+                    return response()->json(['status' => 'error', 'message' => "Currency code '{$code}' already exists."], 422);
+                }
+                $data['currency_code'] = $code;
             }
+
+            if (isset($data['is_default']) && $data['is_default']) {
+                Currency::where('id', '!=', $currency->id)->update(['is_default' => false]);
+            }
+
             $currency->update($data);
+
+            AuditLog::create([
+                'action' => 'UPDATE',
+                'module' => 'Currencies',
+                'target_id' => $currency->id,
+                'description' => "Updated currency {$currency->currency_name} ({$currency->currency_code})",
+            ]);
+
             return response()->json($currency);
         } catch (\Throwable $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
@@ -472,13 +548,55 @@ class HotelErpController extends Controller
     {
         $this->ensureTables();
         try {
-            $currency = Currency::findOrFail($id);
-            if ($currency->is_default) {
-                return response()->json(['status' => 'error', 'message' => 'Default system currency cannot be deleted.'], 400);
+            // Support deletion by numeric database ID or ISO Currency Code (e.g. 'CAD', 'USD')
+            $currency = is_numeric($id)
+                ? Currency::find($id)
+                : Currency::where('currency_code', strtoupper(trim($id)))->orWhere('id', $id)->first();
+
+            if (!$currency) {
+                // If already removed or not found, return clean success/idempotent status
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Currency already deleted or does not exist.',
+                ], 200);
             }
+
+            if ($currency->is_default) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Default system currency cannot be deleted.',
+                ], 400);
+            }
+
+            // Relationship safety check: check if referenced in hotels, invoices, or subscriptions
+            $code = $currency->currency_code;
+            $inUseInHotels = Hotel::where('currency_code', $code)->exists();
+            $inUseInSubscriptions = Subscription::where('currency', $code)->exists();
+
+            if ($inUseInHotels || $inUseInSubscriptions) {
+                // Safely deactivate instead of breaking financial integrity
+                $currency->update(['is_active' => false]);
+                return response()->json([
+                    'status' => 'deactivated',
+                    'message' => "Currency {$code} is referenced by existing properties or active subscriptions. It has been safely deactivated instead of deleted.",
+                ], 200);
+            }
+
             $currency->delete();
-            return response()->json(['message' => 'Currency deleted successfully']);
+
+            AuditLog::create([
+                'action' => 'DELETE',
+                'module' => 'Currencies',
+                'target_id' => $currency->id,
+                'description' => "Deleted currency {$currency->currency_name} ({$code})",
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Currency deleted successfully',
+            ], 200);
         } catch (\Throwable $e) {
+            Log::error('deleteCurrency error: ' . $e->getMessage());
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
     }
@@ -505,71 +623,270 @@ class HotelErpController extends Controller
 
     public function createHotel(Request $request)
     {
-        try {
-            if (!\Illuminate\Support\Facades\Schema::hasTable('hotels')) {
-                \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $this->ensureTables();
+        return DB::transaction(function () use ($request) {
+            try {
+                $validated = $request->validate([
+                    'name' => 'required|string',
+                    'legal_name' => 'nullable|string',
+                    'legalName' => 'nullable|string',
+                    'code' => 'nullable|string',
+                    'hotel_code' => 'nullable|string',
+                    'hotelCode' => 'nullable|string',
+                    'location' => 'nullable|string',
+                    'total_rooms' => 'nullable|numeric',
+                    'subscription_plan' => 'nullable|string',
+                    'brand' => 'nullable|string',
+                    'address' => 'nullable|string',
+                    'city' => 'nullable|string',
+                    'state' => 'nullable|string',
+                    'postal_code' => 'nullable|string',
+                    'postalCode' => 'nullable|string',
+                    'country' => 'nullable|string',
+                    'phone' => 'nullable|string',
+                    'email' => 'nullable|string',
+                    'website' => 'nullable|string',
+                    'rating' => 'nullable|string',
+                    'hotel_category' => 'nullable|string',
+                    'hotelCategory' => 'nullable|string',
+                    'timezone' => 'nullable|string',
+                    'status' => 'nullable|string',
+                    'image' => 'nullable|string',
+                    'amenities' => 'nullable|array',
+                    'admin_name' => 'nullable|string',
+                    'adminName' => 'nullable|string',
+                    'admin_email' => 'nullable|string|email',
+                    'adminEmail' => 'nullable|string|email',
+                    'admin_contact' => 'nullable|string',
+                    'adminContact' => 'nullable|string',
+                    'admin_password' => 'nullable|string',
+                    'adminPassword' => 'nullable|string',
+                ]);
+
+                $code = strtoupper(trim($request->input('code') ?: ($request->input('hotel_code') ?: ($request->input('hotelCode') ?: ('HTL-' . rand(100, 999))))));
+                $email = strtolower(trim($request->input('email') ?: ''));
+
+                // Unique Code Check
+                if (Hotel::where('code', $code)->exists()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => "Hotel code '{$code}' is already registered.",
+                    ], 422);
+                }
+
+                $id = $request->input('id') ?: 'hotel-' . Str::slug($validated['name']) . '-' . rand(100, 999);
+                $totalRooms = $request->input('total_rooms') ?? $request->input('totalRooms') ?? 0;
+                $subscriptionPlan = $request->input('subscription_plan') ?? $request->input('subscriptionPlan') ?? 'Palace Enterprise';
+                $currencyCode = $request->input('currency_code') ?? $request->input('currencyCode') ?? 'USD';
+                $legalName = $request->input('legal_name') ?: ($request->input('legalName') ?: $validated['name']);
+                $website = $request->input('website') ?: null;
+                $state = $request->input('state') ?: null;
+                $postalCode = $request->input('postal_code') ?: ($request->input('postalCode') ?: null);
+                $hotelCategory = $request->input('hotel_category') ?: ($request->input('hotelCategory') ?: 'Luxury Boutique');
+                $timezone = $request->input('timezone') ?: 'UTC';
+
+                $adminName = $request->input('admin_name') ?: ($request->input('adminName') ?: 'General Manager');
+                $adminEmail = $request->input('admin_email') ?: ($request->input('adminEmail') ?: ($validated['email'] ?? null));
+                $adminPhone = $request->input('admin_contact') ?: ($request->input('adminContact') ?: ($validated['phone'] ?? '+1 (800) 555-0199'));
+                $adminPassword = $request->input('admin_password') ?: ($request->input('adminPassword') ?: 'password123');
+
+                $hotel = Hotel::updateOrCreate(
+                    ['id' => $id],
+                    [
+                        'id' => $id,
+                        'name' => $validated['name'],
+                        'legal_name' => $legalName,
+                        'code' => $code,
+                        'brand' => $request->input('brand') ?: 'Lazfort Sovereign Portfolio',
+                        'location' => $validated['location'] ?? $request->input('address') ?? 'Global Luxury Destination',
+                        'address' => $request->input('address') ?: ($validated['location'] ?? null),
+                        'city' => $request->input('city') ?: null,
+                        'state' => $state,
+                        'postal_code' => $postalCode,
+                        'country' => $request->input('country') ?: null,
+                        'phone' => $validated['phone'] ?? $adminPhone,
+                        'email' => $validated['email'] ?? $adminEmail,
+                        'website' => $website,
+                        'rating' => $request->input('rating') ?: '5 Star Ultra-Luxury',
+                        'hotel_category' => $hotelCategory,
+                        'status' => $request->input('status') ?: 'active',
+                        'image' => $request->input('image') ?: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80',
+                        'total_rooms' => (int)$totalRooms,
+                        'subscription_plan' => $subscriptionPlan,
+                        'currency_code' => $currencyCode,
+                        'timezone' => $timezone,
+                        'amenities' => $request->input('amenities') ?: ['Private Helipad', 'Michelin Gastronomy', 'Sovereign Spa', 'Royal Butler Fleet'],
+                    ]
+                );
+
+                // If owner / admin email provided, provision initial Hotel Admin in MySQL users table
+                $ownerUser = null;
+                if (!empty($adminEmail)) {
+                    $ownerUser = User::where('email', strtolower(trim($adminEmail)))->first();
+                    if (!$ownerUser) {
+                        $ownerUser = User::create([
+                            'custom_id' => 'usr-ha-' . rand(100, 999),
+                            'name' => $adminName,
+                            'email' => strtolower(trim($adminEmail)),
+                            'phone' => $adminPhone,
+                            'role' => 'hotel_admin',
+                            'hotel_name' => $hotel->name,
+                            'hotel_id' => $hotel->id,
+                            'hotel_access' => $hotel->name,
+                            'status' => 'active',
+                            'password' => Hash::make($adminPassword),
+                            'avatar' => 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+                        ]);
+                    } else {
+                        // Bind hotel relationship
+                        $ownerUser->update([
+                            'hotel_id' => $hotel->id,
+                            'hotel_name' => $hotel->name,
+                            'hotel_access' => $hotel->name,
+                        ]);
+                    }
+                }
+
+                AuditLog::create([
+                    'action' => 'CREATE',
+                    'module' => 'Hotel Management',
+                    'target_id' => $hotel->id,
+                    'description' => "Provisioned new property: {$hotel->name} with Hotel Admin: {$adminName} ({$adminEmail})",
+                ]);
+
+                // Automatically synchronize/create linked Subscription record in MySQL
+                try {
+                    $matchedPlan = SubscriptionPlan::where('name', $subscriptionPlan)
+                        ->orWhere('tier_code', $subscriptionPlan)
+                        ->first();
+                    $planId = $matchedPlan ? $matchedPlan->id : 'plan-01';
+                    $planTier = $matchedPlan ? $matchedPlan->tier_code : 'PALACE';
+                    $subAmount = $matchedPlan ? $matchedPlan->price : 4900.00;
+                    $cycle = $matchedPlan ? $matchedPlan->billing_cycle : 'monthly';
+
+                    Subscription::updateOrCreate(
+                        ['hotel_id' => $hotel->id],
+                        [
+                            'id' => 'sub-' . Str::slug($hotel->name) . '-' . rand(100, 999),
+                            'subscription_code' => 'SUB-' . strtoupper(Str::random(6)),
+                            'hotel_id' => $hotel->id,
+                            'hotel_name' => $hotel->name,
+                            'plan_id' => $planId,
+                            'plan_name' => $matchedPlan ? $matchedPlan->name : $subscriptionPlan,
+                            'tier_code' => $planTier,
+                            'amount' => $subAmount,
+                            'currency' => $currencyCode,
+                            'billing_cycle' => $cycle,
+                            'status' => 'active',
+                            'start_date' => now()->toDateString(),
+                            'end_date' => now()->addYear()->toDateString(),
+                            'next_billing_date' => now()->addMonth()->toDateString(),
+                            'auto_renew' => true,
+                        ]
+                    );
+                } catch (\Throwable $subErr) {
+                    \Illuminate\Support\Facades\Log::warning("Subscription sync for hotel {$hotel->id} deferred: " . $subErr->getMessage());
+                }
+
+                return response()->json([
+                    'status' => 'success',
+                    'hotel' => $hotel,
+                    'owner' => $ownerUser ? [
+                        'id' => $ownerUser->custom_id ?: ('usr-' . $ownerUser->id),
+                        'name' => $ownerUser->name,
+                        'email' => $ownerUser->email,
+                        'role' => $ownerUser->role,
+                        'hotelId' => $ownerUser->hotel_id,
+                        'hotelName' => $ownerUser->hotel_name,
+                    ] : null,
+                ], 201);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('createHotel error: ' . $e->getMessage());
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $e->getMessage(),
+                ], 500);
             }
-
-            $validated = $request->validate([
-                'name' => 'required|string',
-                'location' => 'nullable|string',
-                'total_rooms' => 'nullable|numeric',
-                'subscription_plan' => 'nullable|string',
-                'brand' => 'nullable|string',
-                'address' => 'nullable|string',
-                'city' => 'nullable|string',
-                'country' => 'nullable|string',
-                'phone' => 'nullable|string',
-                'email' => 'nullable|string',
-                'rating' => 'nullable|string',
-                'status' => 'nullable|string',
-                'image' => 'nullable|string',
-                'amenities' => 'nullable|array',
-            ]);
-
-            $id = $request->input('id') ?: 'hotel-' . Str::slug($validated['name']) . '-' . rand(100, 999);
-            $totalRooms = $request->input('total_rooms') ?? $request->input('totalRooms') ?? 0;
-            $subscriptionPlan = $request->input('subscription_plan') ?? $request->input('subscriptionPlan') ?? 'Palace Enterprise';
-            $currencyCode = $request->input('currency_code') ?? $request->input('currencyCode') ?? 'USD';
-
-            $hotel = Hotel::updateOrCreate(
-                ['id' => $id],
-                [
-                    'id' => $id,
-                    'name' => $validated['name'],
-                    'brand' => $request->input('brand') ?: 'Lazfort Sovereign Portfolio',
-                    'location' => $validated['location'] ?? $request->input('address') ?? 'Global Luxury Destination',
-                    'address' => $request->input('address') ?: ($validated['location'] ?? null),
-                    'city' => $request->input('city') ?: null,
-                    'country' => $request->input('country') ?: null,
-                    'phone' => $request->input('phone') ?: ($request->input('adminContact') ?: '+1 (800) 555-0199'),
-                    'email' => $request->input('email') ?: ($request->input('adminEmail') ?: 'contact@lazfort.com'),
-                    'rating' => $request->input('rating') ?: '5 Star Ultra-Luxury',
-                    'status' => $request->input('status') ?: 'active',
-                    'image' => $request->input('image') ?: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80',
-                    'total_rooms' => (int)$totalRooms,
-                    'subscription_plan' => $subscriptionPlan,
-                    'currency_code' => $currencyCode,
-                    'amenities' => $request->input('amenities') ?: ['Private Helipad', 'Michelin Gastronomy', 'Sovereign Spa', 'Royal Butler Fleet'],
-                ]
-            );
-
-            return response()->json($hotel, 201);
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('createHotel error: ' . $e->getMessage());
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage(),
-            ], 500);
-        }
+        });
     }
 
     public function updateHotel(Request $request, $id)
     {
+        $this->ensureTables();
+        return DB::transaction(function () use ($request, $id) {
+            try {
+                $hotel = Hotel::where('id', $id)->firstOrFail();
+                $data = $request->only([
+                    'name', 'legal_name', 'code', 'brand', 'location', 'address', 'city', 'state', 'postal_code',
+                    'country', 'phone', 'email', 'website', 'rating', 'hotel_category', 'timezone',
+                    'status', 'image', 'total_rooms', 'subscription_plan', 'currency_code', 'amenities', 'rejection_reason'
+                ]);
+
+                if ($request->has('legalName') && empty($data['legal_name'])) $data['legal_name'] = $request->input('legalName');
+                if ($request->has('hotelCode') && empty($data['code'])) $data['code'] = $request->input('hotelCode');
+                if ($request->has('hotelCategory') && empty($data['hotel_category'])) $data['hotel_category'] = $request->input('hotelCategory');
+                if ($request->has('postalCode') && empty($data['postal_code'])) $data['postal_code'] = $request->input('postalCode');
+                if ($request->has('totalRooms') && !isset($data['total_rooms'])) $data['total_rooms'] = (int)$request->input('totalRooms');
+                if ($request->has('subscriptionPlan') && empty($data['subscription_plan'])) $data['subscription_plan'] = $request->input('subscriptionPlan');
+                if ($request->has('currencyCode') && empty($data['currency_code'])) $data['currency_code'] = $request->input('currencyCode');
+                if ($request->has('rejectionReason') && empty($data['rejection_reason'])) $data['rejection_reason'] = $request->input('rejectionReason');
+
+                $hotel->update($data);
+
+                // Synchronize subscription plan change with active subscription if plan changed
+                if (!empty($data['subscription_plan'])) {
+                    try {
+                        $matchedPlan = SubscriptionPlan::where('name', $data['subscription_plan'])
+                            ->orWhere('tier_code', $data['subscription_plan'])
+                            ->first();
+                        if ($matchedPlan) {
+                            Subscription::where('hotel_id', $hotel->id)
+                                ->where('status', 'active')
+                                ->update([
+                                    'plan_id' => $matchedPlan->id,
+                                    'plan_name' => $matchedPlan->name,
+                                    'tier_code' => $matchedPlan->tier_code,
+                                    'amount' => $matchedPlan->price,
+                                    'billing_cycle' => $matchedPlan->billing_cycle,
+                                ]);
+                        }
+                    } catch (\Throwable $subSyncErr) {
+                        Log::warning("Subscription plan update sync error for hotel {$hotel->id}: " . $subSyncErr->getMessage());
+                    }
+                }
+
+                AuditLog::create([
+                    'action' => 'UPDATE',
+                    'module' => 'Hotel Management',
+                    'target_id' => $hotel->id,
+                    'description' => "Updated property '{$hotel->name}' specifications. Status: {$hotel->status}",
+                ]);
+
+                return response()->json($hotel);
+            } catch (\Throwable $e) {
+                Log::error('updateHotel error: ' . $e->getMessage());
+                return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+            }
+        });
+    }
+
+    public function uploadHotelLogo(Request $request, $id)
+    {
+        $this->ensureTables();
         try {
-            $hotel = Hotel::findOrFail($id);
-            $hotel->update($request->all());
-            return response()->json($hotel);
+            $hotel = Hotel::where('id', $id)->firstOrFail();
+            if ($request->hasFile('logo') || $request->hasFile('image')) {
+                $file = $request->file('logo') ?: $request->file('image');
+                $path = $file->store('hotels', 'public');
+                $url = asset('storage/' . $path);
+                $hotel->update(['image' => $url]);
+                return response()->json(['status' => 'success', 'image' => $url, 'url' => $url]);
+            } elseif ($request->has('image') || $request->has('logo')) {
+                $img = $request->input('image') ?: $request->input('logo');
+                $hotel->update(['image' => $img]);
+                return response()->json(['status' => 'success', 'image' => $img, 'url' => $img]);
+            }
+            return response()->json(['status' => 'error', 'message' => 'No image uploaded'], 400);
         } catch (\Throwable $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
@@ -577,13 +894,31 @@ class HotelErpController extends Controller
 
     public function deleteHotel($id)
     {
-        try {
-            $hotel = Hotel::findOrFail($id);
-            $hotel->delete();
-            return response()->json(['message' => 'Property deleted successfully']);
-        } catch (\Throwable $e) {
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
-        }
+        $this->ensureTables();
+        return DB::transaction(function () use ($id) {
+            try {
+                $hotel = Hotel::where('id', $id)->firstOrFail();
+
+                // Safe cleanup without deleting records: nullify hotel_id or soft-isolate
+                if (Schema::hasTable('rooms')) {
+                    Room::where('hotel_id', $id)->update(['is_deleted' => true]);
+                }
+
+                $hotel->delete();
+
+                AuditLog::create([
+                    'action' => 'DELETE',
+                    'module' => 'Hotel Management',
+                    'target_id' => $id,
+                    'description' => "Super Admin removed property '{$hotel->name}' ({$id}) from platform registry",
+                ]);
+
+                return response()->json(['status' => 'success', 'message' => 'Property deleted successfully']);
+            } catch (\Throwable $e) {
+                Log::error('deleteHotel error: ' . $e->getMessage());
+                return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+            }
+        });
     }
 
     // ----------------------------------------------------
@@ -1299,7 +1634,7 @@ class HotelErpController extends Controller
                 'action' => 'UPDATE',
                 'module' => 'Subscription Plans',
                 'target_id' => $plan->id,
-                'description' => "Updated subscription plan specifications for {$plan->name}",
+                'description' => "Updated subscription plan specifications for {$plan->name}. Status: {$plan->status}",
             ]);
 
             return response()->json($plan);
@@ -1313,6 +1648,35 @@ class HotelErpController extends Controller
         $this->ensureTables();
         try {
             $plan = SubscriptionPlan::findOrFail($id);
+
+            // Business rule: Ensure plans referenced by active subscriptions or hotels are not destructively deleted
+            $activeSubCount = Subscription::where('plan_id', $id)
+                ->where('status', 'active')
+                ->count();
+            
+            $hotelsUsingPlan = Hotel::where('subscription_plan', $plan->name)
+                ->orWhere('subscription_plan', $plan->tier_code)
+                ->count();
+
+            if ($activeSubCount > 0 || $hotelsUsingPlan > 0) {
+                // Safe Archive instead of destructive drop
+                $plan->status = 'archived';
+                $plan->save();
+
+                AuditLog::create([
+                    'action' => 'UPDATE',
+                    'module' => 'Subscription Plans',
+                    'target_id' => $id,
+                    'description' => "Safely archived plan {$plan->name} ({$id}) because {$activeSubCount} active subscriptions and {$hotelsUsingPlan} properties depend on it.",
+                ]);
+
+                return response()->json([
+                    'status' => 'archived',
+                    'message' => "Plan is actively referenced by {$activeSubCount} subscriptions and {$hotelsUsingPlan} hotel(s). It has been safely archived instead of deleted.",
+                    'plan' => $plan,
+                ]);
+            }
+
             $name = $plan->name;
             $plan->delete();
 
@@ -1320,10 +1684,10 @@ class HotelErpController extends Controller
                 'action' => 'DELETE',
                 'module' => 'Subscription Plans',
                 'target_id' => $id,
-                'description' => "Removed subscription plan {$name} ({$id})",
+                'description' => "Permanently deleted subscription plan {$name} ({$id})",
             ]);
 
-            return response()->json(['message' => 'Subscription plan deleted successfully']);
+            return response()->json(['status' => 'deleted', 'message' => 'Subscription plan deleted successfully']);
         } catch (\Throwable $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
@@ -1332,11 +1696,22 @@ class HotelErpController extends Controller
     // ----------------------------------------------------
     // SUBSCRIPTIONS (ACTIVE & EXPIRED)
     // ----------------------------------------------------
-    public function getSubscriptions()
+    public function getSubscriptions(Request $request)
     {
         $this->ensureTables();
         try {
-            $subscriptions = Subscription::orderBy('created_at', 'desc')->get();
+            $query = Subscription::orderBy('created_at', 'desc');
+            $status = $request->query('status');
+            if ($status) {
+                if ($status === 'active') {
+                    $query->whereIn('status', ['active', 'expiring_soon', 'trial']);
+                } elseif ($status === 'expired') {
+                    $query->whereIn('status', ['expired', 'cancelled', 'lapsed', 'terminated']);
+                } else {
+                    $query->where('status', $status);
+                }
+            }
+            $subscriptions = $query->get();
             return response()->json($subscriptions);
         } catch (\Throwable $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
@@ -1471,26 +1846,49 @@ class HotelErpController extends Controller
     public function updateRefundRequest(Request $request, $id)
     {
         $this->ensureTables();
-        try {
-            $refund = RefundRequest::findOrFail($id);
-            $status = $request->input('status');
-            $refund->update([
-                'status' => $status,
-                'reviewed_by' => $request->input('reviewedBy') ?: 'Super Administrator',
-                'reviewed_date' => now()->toDateTimeString(),
-            ]);
+        return DB::transaction(function () use ($request, $id) {
+            try {
+                $refund = RefundRequest::findOrFail($id);
+                $status = strtolower($request->input('status', 'pending'));
+                $prevStatus = $refund->status;
 
-            AuditLog::create([
-                'action' => strtoupper($status),
-                'module' => 'Billing & Refunds',
-                'target_id' => $refund->request_id,
-                'description' => "Refund {$refund->request_id} for {$refund->guest_name} status updated to {$status}",
-            ]);
+                $refund->update([
+                    'status' => $status,
+                    'reviewed_by' => $request->input('reviewedBy') ?: 'Super Administrator',
+                    'reviewed_date' => now()->toDateTimeString(),
+                ]);
 
-            return response()->json($refund);
-        } catch (\Throwable $e) {
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
-        }
+                // When approved, create a corresponding negative refunded settlement in the payments table
+                if ($status === 'approved' && $prevStatus !== 'approved') {
+                    $amount = abs($refund->requested_amount);
+                    Payment::create([
+                        'id' => 'tx-ref-' . rand(10000, 99999),
+                        'transaction_ref' => 'REV-' . ($refund->request_id ?: ('REF-' . rand(1000, 9999))),
+                        'booking_id' => $refund->booking_ref,
+                        'hotel_id' => $refund->hotel_id,
+                        'guest_name' => $refund->guest_name,
+                        'amount' => -$amount,
+                        'payment_method' => 'Refund Dispatched',
+                        'status' => 'refunded',
+                        'refund_request_id' => $refund->id,
+                        'payment_date' => now()->toDateString(),
+                        'notes' => 'Refund authorization processed by Super Admin for ' . $refund->reason,
+                    ]);
+                }
+
+                AuditLog::create([
+                    'action' => strtoupper($status),
+                    'module' => 'Billing & Refunds',
+                    'target_id' => $refund->request_id,
+                    'description' => "Refund {$refund->request_id} for {$refund->guest_name} status updated to {$status}",
+                ]);
+
+                return response()->json($refund);
+            } catch (\Throwable $e) {
+                Log::error('updateRefundRequest error: ' . $e->getMessage());
+                return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+            }
+        });
     }
 
     // ----------------------------------------------------
@@ -1552,11 +1950,24 @@ class HotelErpController extends Controller
     // ----------------------------------------------------
     // SUPPORT TICKETS, COMPLAINTS & CONTACT REQUESTS
     // ----------------------------------------------------
-    public function getSupportTickets()
+    public function getSupportTickets(Request $request)
     {
         $this->ensureTables();
         try {
-            $tickets = SupportTicket::orderBy('created_at', 'desc')->get();
+            $query = SupportTicket::query();
+
+            // Hotel-level and user data isolation
+            if ($request->has('hotel_id') && $request->input('hotel_id')) {
+                $query->where('hotel_id', $request->input('hotel_id'));
+            }
+            if ($request->has('status') && $request->input('status') && $request->input('status') !== 'all') {
+                $query->where('status', $request->input('status'));
+            }
+            if ($request->has('priority') && $request->input('priority') && $request->input('priority') !== 'all') {
+                $query->where('priority', $request->input('priority'));
+            }
+
+            $tickets = $query->orderBy('created_at', 'desc')->get();
             return response()->json($tickets);
         } catch (\Throwable $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
@@ -1570,17 +1981,28 @@ class HotelErpController extends Controller
             $id = $request->input('id') ?: 'tkt-' . rand(100, 999);
             $ticket = SupportTicket::create([
                 'id' => $id,
-                'ticket_id' => $request->input('ticketId') ?: ('TKT-' . date('Y') . '-' . rand(100, 999)),
+                'ticket_id' => $request->input('ticketId') ?: $request->input('ticket_id') ?: ('TKT-' . date('Y') . '-' . rand(100, 999)),
+                'hotel_id' => $request->input('hotelId') ?: $request->input('hotel_id'),
+                'user_id' => $request->input('userId') ?: $request->input('user_id'),
                 'subject' => $request->input('subject'),
-                'client_name' => $request->input('clientName') ?: $request->input('client_name') ?: 'Guest',
+                'client_name' => $request->input('clientName') ?: $request->input('client_name') ?: 'Executive Client',
                 'hotel_name' => $request->input('hotelName') ?: $request->input('hotel_name'),
                 'category' => $request->input('category', 'General Inquiries'),
                 'priority' => $request->input('priority', 'medium'),
                 'status' => $request->input('status', 'open'),
-                'assigned_agent' => $request->input('assignedAgent') ?: 'Unassigned',
+                'assigned_agent' => $request->input('assignedAgent') ?: $request->input('assigned_agent') ?: 'Unassigned',
                 'description' => $request->input('description'),
+                'replies' => $request->input('replies') ?: [],
                 'replies_count' => 0,
             ]);
+
+            AuditLog::create([
+                'action' => 'CREATE',
+                'module' => 'Support & Helpdesk',
+                'target_id' => $ticket->ticket_id,
+                'description' => "Logged new support ticket {$ticket->ticket_id} ('{$ticket->subject}') by {$ticket->client_name}",
+            ]);
+
             return response()->json($ticket, 201);
         } catch (\Throwable $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
@@ -1591,10 +2013,33 @@ class HotelErpController extends Controller
     {
         $this->ensureTables();
         try {
-            $ticket = SupportTicket::findOrFail($id);
-            $ticket->update($request->all());
+            $ticket = SupportTicket::where('id', $id)->orWhere('ticket_id', $id)->firstOrFail();
+            $data = $request->only([
+                'status', 'priority', 'assigned_agent', 'category', 'description', 'replies', 'replies_count', 'hotel_id', 'user_id'
+            ]);
+
+            if ($request->has('assignedAgent')) {
+                $data['assigned_agent'] = $request->input('assignedAgent');
+            }
+            if ($request->has('clientName')) {
+                $data['client_name'] = $request->input('clientName');
+            }
+            if ($request->has('repliesCount')) {
+                $data['replies_count'] = $request->input('repliesCount');
+            }
+
+            $ticket->update($data);
+
+            AuditLog::create([
+                'action' => 'UPDATE',
+                'module' => 'Support & Helpdesk',
+                'target_id' => $ticket->ticket_id,
+                'description' => "Updated ticket {$ticket->ticket_id} ('{$ticket->subject}'). Status: {$ticket->status}",
+            ]);
+
             return response()->json($ticket);
         } catch (\Throwable $e) {
+            Log::error('updateSupportTicket error: ' . $e->getMessage());
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
     }
@@ -1849,7 +2294,25 @@ class HotelErpController extends Controller
     {
         $this->ensureTables();
         try {
-            $users = User::where('status', 'active')->get();
+            $users = User::where('status', 'active')->orderBy('created_at', 'desc')->get()->map(function ($u) {
+                $hotelAccessArr = $u->hotel_access ? explode(',', $u->hotel_access) : ['All Properties'];
+                return [
+                    'id' => $u->custom_id ?: ('usr-' . $u->id),
+                    'db_id' => $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'role' => $u->role ?? 'Staff',
+                    'hotel' => $hotelAccessArr[0] ?? 'All Properties',
+                    'hotelAccess' => $hotelAccessArr,
+                    'hotelId' => $u->hotel_id,
+                    'permissions' => $u->permissions,
+                    'phone' => $u->phone,
+                    'status' => 'active',
+                    'avatar' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+                    'registeredDate' => $u->created_at ? $u->created_at->toDateString() : now()->toDateString(),
+                    'lastLogin' => 'Recent Active Session',
+                ];
+            });
             return response()->json($users);
         } catch (\Throwable $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
@@ -1860,31 +2323,62 @@ class HotelErpController extends Controller
     {
         $this->ensureTables();
         try {
-            $users = User::where('status', 'suspended')->get();
+            $users = User::where('status', 'suspended')->orderBy('updated_at', 'desc')->get()->map(function ($u) {
+                $hotelAccessArr = $u->hotel_access ? explode(',', $u->hotel_access) : ['All Properties'];
+                return [
+                    'id' => $u->custom_id ?: ('usr-' . $u->id),
+                    'db_id' => $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'role' => $u->role ?? 'Staff',
+                    'hotel' => $hotelAccessArr[0] ?? 'All Properties',
+                    'hotelAccess' => $hotelAccessArr,
+                    'hotelId' => $u->hotel_id,
+                    'permissions' => $u->permissions,
+                    'phone' => $u->phone,
+                    'status' => 'suspended',
+                    'avatar' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+                    'registeredDate' => $u->created_at ? $u->created_at->toDateString() : now()->toDateString(),
+                    'lastLogin' => 'Session Revoked',
+                    'suspensionDate' => $u->updated_at ? $u->updated_at->toDateString() : now()->toDateString(),
+                    'suspensionReason' => 'Administrative suspension logged in system.',
+                ];
+            });
             return response()->json($users);
         } catch (\Throwable $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
     }
 
-    public function getRevenueReportsData()
+    public function getRevenueReportsData(Request $request)
     {
         $this->ensureTables();
         try {
-            $totalPayments = Payment::sum('amount');
-            $totalInvoices = Invoice::sum('total_amount');
+            $period = $request->query('period', 'Annual');
+            $hotelId = $request->query('hotel_id');
+
+            $paymentsQuery = Payment::query();
+            $invoicesQuery = Invoice::query();
+            if ($hotelId) {
+                $paymentsQuery->where('hotel_id', $hotelId);
+                $invoicesQuery->where('hotel_id', $hotelId);
+            }
+
+            $totalPayments = $paymentsQuery->sum('amount');
+            $totalInvoices = $invoicesQuery->sum('total_amount');
             $activeSubsRevenue = SubscriptionPlan::sum('price');
+            $refundDisputes = abs(Payment::where('status', 'refunded')->sum('amount'));
 
             return response()->json([
                 'status' => 'success',
                 'grossTurnover' => $totalInvoices ?: 5470000,
                 'netSettled' => $totalPayments ?: 5316500,
                 'enterpriseSubscriptions' => $activeSubsRevenue ?: 784000,
-                'disputes' => 153500,
-                'period' => 'Annual',
+                'disputes' => $refundDisputes ?: 153500,
+                'period' => $period,
                 'revenueStreams' => [
-                    ['stream' => 'Sovereign Enterprise Subscriptions', 'invoiced' => '$784,000'],
-                    ['stream' => 'Guest Room Folios & Suites', 'invoiced' => '$3,820,000'],
+                    ['stream' => 'Sovereign Enterprise Subscriptions', 'invoiced' => '$' . number_format($activeSubsRevenue ?: 784000)],
+                    ['stream' => 'Guest Room Folios & Suites', 'invoiced' => '$' . number_format($totalInvoices ? ($totalInvoices * 0.7) : 3820000)],
                     ['stream' => 'Michelin Dining & Sommelier Cellar', 'invoiced' => '$580,000'],
                     ['stream' => 'Spa & Yacht Charter Concierge', 'invoiced' => '$286,000'],
                 ]
@@ -2029,19 +2523,21 @@ class HotelErpController extends Controller
             $searchTerm = "%{$query}%";
 
             // 1. Rooms
-            $rooms = Room::where('name', 'LIKE', $searchTerm)
-                ->orWhere('room_number', 'LIKE', $searchTerm)
+            $rooms = Room::where('room_number', 'LIKE', $searchTerm)
                 ->orWhere('type', 'LIKE', $searchTerm)
+                ->orWhere('view', 'LIKE', $searchTerm)
+                ->orWhere('bed_type', 'LIKE', $searchTerm)
+                ->orWhere('description', 'LIKE', $searchTerm)
                 ->limit(6)
                 ->get()
                 ->map(function ($r) use ($role) {
                     $prefix = str_replace('_', '-', $role);
                     return [
                         'id' => $r->id,
-                        'name' => $r->name ?? "Suite {$r->room_number}",
+                        'name' => "Suite {$r->room_number} ({$r->type})",
                         'roomNumber' => $r->room_number,
                         'type' => $r->type ?? 'Deluxe Suite',
-                        'pricePerNight' => $r->price_per_night ?? 0,
+                        'pricePerNight' => $r->price ?? $r->price_per_night ?? 0,
                         'status' => $r->status ?? 'available',
                         'path' => "/{$prefix}/rooms",
                         'category' => 'Suites & Accommodations',

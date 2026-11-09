@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { PageHeader, Button } from '../../components/ui';
+import { PageHeader, Button, ViewToggle } from '../../components/ui';
 import { RoomCard } from '../../components/hotel/RoomCard';
 import { RoomSearchForm } from '../../components/booking/RoomSearchForm';
 import { useERP } from '../../context/ERPContext';
@@ -11,6 +11,10 @@ import {
   Calendar,
   ArrowUpDown,
   Filter,
+  Users,
+  Eye,
+  CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 
 export const CustomerBrowseRoomsPage = () => {
@@ -18,6 +22,21 @@ export const CustomerBrowseRoomsPage = () => {
   const navigate = useNavigate();
   const { rooms, checkRoomAvailability } = useERP();
   const { showToast } = useToast();
+
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('lazfort_view_customer_rooms') || 'grid';
+    } catch {
+      return 'grid';
+    }
+  });
+
+  const handleViewChange = (mode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('lazfort_view_customer_rooms', mode);
+    } catch {}
+  };
 
   const today = new Date();
   const defaultIn = new Date(today);
@@ -216,25 +235,28 @@ export const CustomerBrowseRoomsPage = () => {
           ))}
         </div>
 
-        {/* Sort Dropdown */}
-        <div className="flex items-center gap-2 self-end md:self-auto flex-shrink-0">
-          <span className="text-xs text-charcoal-muted dark:text-gray-400 flex items-center gap-1 font-mono">
-            <ArrowUpDown className="w-3.5 h-3.5 text-accent" />
-            Sort by:
-          </span>
-          <select
-            value={sortBy}
-            onChange={e => setSortBy(e.target.value)}
-            className="px-3 py-1.5 rounded-xl bg-white dark:bg-primary-900 border border-border dark:border-white/10 text-xs font-semibold text-primary dark:text-white focus:outline-none focus:border-accent"
-          >
-            <option value="rating">Rating (Highest First)</option>
-            <option value="price_asc">Tariff (Low to High)</option>
-            <option value="price_desc">Tariff (High to Low)</option>
-          </select>
+        {/* Sort Dropdown & View Toggle */}
+        <div className="flex items-center gap-3 self-end md:self-auto flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-charcoal-muted dark:text-gray-400 flex items-center gap-1 font-mono">
+              <ArrowUpDown className="w-3.5 h-3.5 text-accent" />
+              Sort by:
+            </span>
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value)}
+              className="px-3 py-1.5 rounded-xl bg-white dark:bg-primary-900 border border-border dark:border-white/10 text-xs font-semibold text-primary dark:text-white focus:outline-none focus:border-accent"
+            >
+              <option value="rating">Rating (Highest First)</option>
+              <option value="price_asc">Tariff (Low to High)</option>
+              <option value="price_desc">Tariff (High to Low)</option>
+            </select>
+          </div>
+          <ViewToggle viewMode={viewMode} onViewChange={handleViewChange} />
         </div>
       </div>
 
-      {/* Available Suites Grid */}
+      {/* Available Suites Display: Grid or List */}
       {filteredRooms.length === 0 ? (
         <div className="p-12 text-center rounded-3xl bg-white/60 dark:bg-surface-dark/60 border border-dashed border-border dark:border-white/10 space-y-4">
           <BedDouble className="w-12 h-12 text-accent/50 mx-auto" />
@@ -254,7 +276,7 @@ export const CustomerBrowseRoomsPage = () => {
             Reset All Filters
           </Button>
         </div>
-      ) : (
+      ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {filteredRooms.map(room => (
             <RoomCard
@@ -266,6 +288,76 @@ export const CustomerBrowseRoomsPage = () => {
               onBookNow={handleBookNow}
               onViewDetails={handleViewDetails}
             />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredRooms.map(room => (
+            <div
+              key={room.id}
+              className="card-luxury p-5 rounded-3xl border border-border/80 dark:border-white/10 flex flex-col md:flex-row items-center justify-between gap-5 hover:border-accent/40 transition-all group"
+            >
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                <img
+                  src={room.image || 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&q=80&w=400'}
+                  alt={room.name || room.type}
+                  className="w-full sm:w-44 h-28 rounded-2xl object-cover ring-1 ring-accent/20 group-hover:scale-102 transition-transform"
+                />
+                <div className="space-y-1.5 text-center sm:text-left">
+                  <div className="flex items-center justify-center sm:justify-start gap-2">
+                    <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-accent/15 text-accent font-bold">
+                      {room.category || room.type}
+                    </span>
+                    <span className="text-xs text-amber-500 font-semibold flex items-center gap-0.5">
+                      ★ {room.rating || '4.95'}
+                    </span>
+                  </div>
+                  <h4 className="font-serif font-bold text-base text-primary dark:text-white">
+                    {room.name || `${room.type} Suite`}
+                  </h4>
+                  <div className="flex items-center justify-center sm:justify-start gap-3 text-xs text-charcoal-muted dark:text-gray-400">
+                    <span className="flex items-center gap-1">
+                      <Users className="w-3.5 h-3.5 text-accent" />
+                      Up to {room.capacity || 2} VIPs
+                    </span>
+                    <span>•</span>
+                    <span>{room.bedType || 'Imperial King'}</span>
+                    <span>•</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      {room.isFreeForDates ? 'Available Instant' : 'Reserved Dates'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between w-full md:w-auto md:flex-col md:items-end gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-border/70 dark:border-white/10 shrink-0">
+                <div className="text-left md:text-right">
+                  <span className="text-[11px] text-charcoal-muted block">Tariff per night:</span>
+                  <span className="font-serif font-bold text-lg text-primary dark:text-accent">
+                    ${Number(room.pricePerNight || 850).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleViewDetails(room)}
+                    className="text-xs px-3 py-1.5 border-accent/30 text-accent hover:bg-accent/10"
+                  >
+                    <Eye className="w-3.5 h-3.5 mr-1" />
+                    Details
+                  </Button>
+                  <Button
+                    variant="gold"
+                    onClick={() => handleBookNow(room)}
+                    disabled={!room.isFreeForDates}
+                    className="text-xs px-4 py-1.5"
+                  >
+                    Reserve
+                  </Button>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       )}

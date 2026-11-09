@@ -6,7 +6,6 @@ import { DataTable } from '../../../components/data-display/DataTable';
 import { Modal } from '../../../components/ui/Modal';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
-import { initialComplaints } from '../../../data/mockSuperAdminModules';
 import { useToast } from '../../../context/ToastContext';
 import { useERP } from '../../../context/ERPContext';
 import { hotelApi } from '../../../services/hotelApi';
@@ -37,16 +36,16 @@ export const ComplaintsPage = () => {
     } catch (e) {
       console.warn('Failed to load complaints', e);
     }
-    return initialComplaints || [];
+    return [];
   });
 
   useEffect(() => {
     let isMounted = true;
     hotelApi.getComplaints().then(data => {
-      if (isMounted && Array.isArray(data) && data.length > 0) {
+      if (isMounted && Array.isArray(data)) {
         setComplaints(data);
       }
-    }).catch(() => {});
+    }).catch(() => { });
 
     return () => { isMounted = false; };
   }, []);
@@ -120,10 +119,10 @@ export const ComplaintsPage = () => {
     const updated = complaints.map(c =>
       c.id === resolveTarget.id
         ? {
-            ...c,
-            status: 'resolved',
-            resolutionSummary: resolutionSummaryInput || 'Amicably resolved with guest satisfaction confirmation.',
-          }
+          ...c,
+          status: 'resolved',
+          resolutionSummary: resolutionSummaryInput || 'Amicably resolved with guest satisfaction confirmation.',
+        }
         : c
     );
     persistComplaints(updated);
@@ -138,9 +137,9 @@ export const ComplaintsPage = () => {
     const updated = complaints.map(c =>
       c.id === rejectTargetId
         ? {
-            ...c,
-            status: 'dismissed',
-          }
+          ...c,
+          status: 'dismissed',
+        }
         : c
     );
     persistComplaints(updated);

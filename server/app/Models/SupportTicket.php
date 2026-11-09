@@ -13,6 +13,8 @@ class SupportTicket extends Model
     protected $fillable = [
         'id',
         'ticket_id',
+        'hotel_id',
+        'user_id',
         'subject',
         'client_name',
         'hotel_name',

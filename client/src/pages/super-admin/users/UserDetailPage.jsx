@@ -24,7 +24,7 @@ export const UserDetailPage = () => {
   const { users, suspendUser, reactivateUser } = useSuperAdminUsers();
   const { showToast } = useToast();
 
-  const user = (users || []).find(u => u.id === id) || users[0];
+  const user = (users || []).find(u => u.id === id || String(u.db_id) === String(id)) || null;
 
   if (!user) {
     return (
@@ -140,7 +140,7 @@ export const UserDetailPage = () => {
                 </span>
                 <div className="flex items-center gap-2 text-primary dark:text-white font-semibold text-xs">
                   <Building2 className="w-4 h-4 text-accent" />
-                  <span>{user.hotel}</span>
+                  <span>{user.hotel || (Array.isArray(user.hotelAccess) ? user.hotelAccess.join(', ') : user.hotelAccess) || 'All Properties'}</span>
                 </div>
               </div>
             </div>

@@ -25,7 +25,11 @@ import {
   Phone,
   ShieldCheck,
   CheckCircle,
+  LayoutGrid,
+  List,
 } from 'lucide-react';
+import { UserAvatar } from '../../../components/common/UserAvatar';
+import { ViewToggle } from '../../../components/ui/ViewToggle';
 
 export const AllUsersPage = () => {
   const navigate = useNavigate();
@@ -36,6 +40,20 @@ export const AllUsersPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('lazfort_view_users') || 'list';
+    } catch {
+      return 'list';
+    }
+  });
+
+  const handleViewChange = (mode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('lazfort_view_users', mode);
+    } catch {}
+  };
 
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -51,11 +69,11 @@ export const AllUsersPage = () => {
   useEffect(() => {
     let isMounted = true;
     if (location.pathname.includes('/permissions')) {
-      hotelApi.getHotelAdminPermissionsData().catch(() => {});
+      hotelApi.getHotelAdminPermissionsData().catch(() => { });
     } else if (location.pathname.startsWith('/super-admin/users')) {
-      hotelApi.getUsersAllData().catch(() => {});
+      hotelApi.getUsersAllData().catch(() => { });
     } else {
-      hotelApi.getUsers().catch(() => {});
+      hotelApi.getUsers().catch(() => { });
     }
     return () => { isMounted = false; };
   }, [location.pathname]);
@@ -65,7 +83,24 @@ export const AllUsersPage = () => {
   const [formEmail, setFormEmail] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formRole, setFormRole] = useState('Hotel Admin (GM)');
-  const [formHotel, setFormHotel] = useState('Lazfort Grand Palace Monaco');
+  const [formHotel, setFormHotel] = useState('');
+  const [hotelOptions, setHotelOptions] = useState([]);
+
+  // Fetch real hotels from backend MySQL database
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getHotels()
+      .then(hotels => {
+        if (isMounted && Array.isArray(hotels) && hotels.length > 0) {
+          setHotelOptions(hotels);
+          if (!formHotel) {
+            setFormHotel(hotels[0]?.name || 'All Properties');
+          }
+        }
+      })
+      .catch(() => { });
+    return () => { isMounted = false; };
+  }, []);
 
   // Metrics
   const activeCount = useMemo(() => (users || []).filter(u => u.status === 'active').length, [users]);
@@ -75,12 +110,25 @@ export const AllUsersPage = () => {
   // Filtering
   const filteredUsers = useMemo(() => {
     return (users || []).filter(user => {
-      const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-      const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
+      const userRole = (user.role || '').toLowerCase();
+      const userStatus = (user.status || '').toLowerCase();
+      const targetRole = roleFilter.toLowerCase();
+      const targetStatus = statusFilter.toLowerCase();
 
-      return matchesRole && matchesStatus;
+      const matchesRole = targetRole === 'all' || userRole === targetRole || userRole.includes(targetRole);
+      const matchesStatus = targetStatus === 'all' || userStatus === targetStatus;
+
+      const q = searchQuery.toLowerCase().trim();
+      const matchesSearch = !q ||
+        (user.name && user.name.toLowerCase().includes(q)) ||
+        (user.email && user.email.toLowerCase().includes(q)) ||
+        (user.phone && user.phone.toLowerCase().includes(q)) ||
+        (user.hotel && user.hotel.toLowerCase().includes(q)) ||
+        (user.role && user.role.toLowerCase().includes(q));
+
+      return matchesRole && matchesStatus && matchesSearch;
     });
-  }, [users, roleFilter, statusFilter]);
+  }, [users, roleFilter, statusFilter, searchQuery]);
 
   const handleCreateUser = (e) => {
     e.preventDefault();
@@ -142,10 +190,12 @@ export const AllUsersPage = () => {
       header: 'User & Credentials',
       render: (u) => (
         <div className="flex items-center gap-3">
-          <img
+          <UserAvatar
             src={u.avatar}
             alt={u.name}
-            className="w-9 h-9 rounded-full object-cover border border-accent/40 shadow-sm flex-shrink-0"
+            fallbackName={u.name}
+            size="sm"
+            ring={true}
           />
           <div>
             <div className="font-semibold text-xs text-primary dark:text-white">{u.name}</div>
@@ -260,25 +310,31 @@ export const AllUsersPage = () => {
       />
 
       <StatsGrid cols={4}>
-        <StatCard
-          title="Total Platform Users"
-          value={users?.length || 0}
-          change="+8.3%"
-          isPositive={true}
-          icon={<Users className="w-5 h-5 text-accent" />}
-        />
-        <StatCard
-          title="Active Clearances"
-          value={activeCount}
-          subtitle="verified sessions"
-          icon={<UserCheck className="w-5 h-5 text-emerald-500" />}
-        />
-        <StatCard
-          title="Suspended Credentials"
-          value={suspendedCount}
-          subtitle="audit locked"
-          icon={<UserX className="w-5 h-5 text-rose-500" />}
-        />
+        <div onClick={() => setStatusFilter('all')} className="cursor-pointer transition-transform hover:scale-[1.02]">
+          <StatCard
+            title="Total Platform Users"
+            value={users?.length || 0}
+            change="+8.3%"
+            isPositive={true}
+            icon={<Users className="w-5 h-5 text-accent" />}
+          />
+        </div>
+        <div onClick={() => setStatusFilter('active')} className="cursor-pointer transition-transform hover:scale-[1.02]">
+          <StatCard
+            title="Active Clearances"
+            value={activeCount}
+            subtitle="verified sessions"
+            icon={<UserCheck className="w-5 h-5 text-emerald-500" />}
+          />
+        </div>
+        <div onClick={() => setStatusFilter('suspended')} className="cursor-pointer transition-transform hover:scale-[1.02]">
+          <StatCard
+            title="Suspended Credentials"
+            value={suspendedCount}
+            subtitle="audit locked"
+            icon={<UserX className="w-5 h-5 text-rose-500" />}
+          />
+        </div>
         <StatCard
           title="Registered Properties"
           value={uniqueHotels}
@@ -287,44 +343,146 @@ export const AllUsersPage = () => {
         />
       </StatsGrid>
 
-      {/* Filter and Table Container */}
+      {/* Filter and Table/Grid Container */}
       <div className="card-luxury p-6 rounded-2xl border border-border/80 dark:border-white/10 space-y-4">
-        <DataTable
-          columns={columns}
-          data={filteredUsers}
-          keyExtractor={(u) => u.id}
-          searchPlaceholder="Search by name, email, phone or hotel..."
-          showSearch={true}
-          actions={
-            <div className="flex items-center gap-2 text-xs">
-              <Filter className="w-4 h-4 text-accent" />
-              <select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="input-luxury text-xs py-1.5 px-3 min-w-[140px]"
-              >
-                <option value="all">All Roles</option>
-                <option value="Super Admin">Super Admin</option>
-                <option value="Hotel Admin (GM)">Hotel Admin (GM)</option>
-                <option value="Receptionist">Receptionist</option>
-                <option value="Housekeeping Lead">Housekeeping Lead</option>
-                <option value="Staff Specialist">Staff Specialist</option>
-              </select>
+        {/* Toolbar: Filters & View Toggle */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 pb-2 border-b border-border/60 dark:border-white/10">
+          <div className="flex-1 relative">
+            <Search className="w-4 h-4 text-accent absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by name, email, phone or hotel..."
+              className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-ivory dark:bg-white/5 border border-border dark:border-white/10 text-primary dark:text-white placeholder:text-charcoal-muted focus:outline-none focus:border-accent"
+            />
+          </div>
 
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="input-luxury text-xs py-1.5 px-3 min-w-[120px]"
-              >
-                <option value="all">All Statuses</option>
-                <option value="active">Active</option>
-                <option value="suspended">Suspended</option>
-              </select>
+          <div className="flex items-center gap-2 text-xs self-end md:self-auto">
+            <Filter className="w-4 h-4 text-accent shrink-0" />
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="input-luxury text-xs py-1.5 px-3 min-w-[140px]"
+            >
+              <option value="all">All Roles</option>
+              <option value="Super Admin">Super Admin</option>
+              <option value="Hotel Admin (GM)">Hotel Admin (GM)</option>
+              <option value="Receptionist">Receptionist</option>
+              <option value="Housekeeping Lead">Housekeeping Lead</option>
+              <option value="Staff Specialist">Staff Specialist</option>
+            </select>
+
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="input-luxury text-xs py-1.5 px-3 min-w-[120px]"
+            >
+              <option value="all">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="suspended">Suspended</option>
+            </select>
+
+            <ViewToggle viewMode={viewMode} onViewChange={handleViewChange} className="ml-2" />
+          </div>
+        </div>
+
+        {/* View Mode Switch: Table vs Card Grid */}
+        {viewMode === 'list' ? (
+          <DataTable
+            columns={columns}
+            data={filteredUsers}
+            keyExtractor={(u, idx) => `user-row-${u.db_id || u.id || idx}-${idx}`}
+            showSearch={false}
+            pageSize={10}
+            emptyMessage="No user profiles found matching current filters."
+          />
+        ) : (
+          filteredUsers.length === 0 ? (
+            <div className="py-16 text-center text-charcoal-muted">
+              <Users className="w-10 h-10 text-accent/40 mx-auto mb-2" />
+              <p className="font-serif font-bold text-sm text-primary dark:text-white">No user profiles found</p>
+              <p className="text-xs">Adjust your search or filter options.</p>
             </div>
-          }
-          pageSize={10}
-          emptyMessage="No user profiles found matching current filters."
-        />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+              {filteredUsers.map((u, idx) => (
+                <div
+                  key={`user-card-${u.db_id || u.id || idx}-${idx}`}
+                  className="card-luxury p-5 rounded-2xl border border-border/80 dark:border-white/10 space-y-4 hover:border-accent/40 transition-all group flex flex-col justify-between"
+                >
+                  <div className="flex items-start gap-3.5">
+                    <UserAvatar
+                      src={u.avatar}
+                      alt={u.name}
+                      fallbackName={u.name}
+                      size="md"
+                      ring={true}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-1">
+                        <h4 className="font-serif font-bold text-sm text-primary dark:text-white truncate">
+                          {u.name}
+                        </h4>
+                        <StatusBadge status={u.status} />
+                      </div>
+                      <span className="inline-block mt-0.5 text-[10px] font-mono px-2 py-0.5 rounded-md bg-accent/15 text-accent border border-accent/25 uppercase font-bold">
+                        {u.role}
+                      </span>
+                      <p className="text-[11px] text-charcoal-muted dark:text-gray-400 truncate mt-1">
+                        {u.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-border/60 dark:border-white/10 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1.5 text-charcoal-muted dark:text-gray-300 truncate max-w-[150px]">
+                      <Building2 className="w-3.5 h-3.5 text-accent shrink-0" />
+                      <span className="truncate">{u.hotel || 'Platform Core'}</span>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => navigate(`/super-admin/users/details/${u.id}`)}
+                        className="p-1.5 rounded-lg border border-border dark:border-white/10 hover:bg-ivory dark:hover:bg-white/5 text-charcoal-muted hover:text-accent transition-colors"
+                        title="Inspect User Details"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => navigate(`/super-admin/users/edit/${u.id}`)}
+                        className="p-1.5 rounded-lg border border-border dark:border-white/10 hover:bg-ivory dark:hover:bg-white/5 text-charcoal-muted hover:text-accent transition-colors"
+                        title="Edit User Credentials"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+                      {u.status === 'active' ? (
+                        <button
+                          onClick={() => setSuspendingUser(u)}
+                          className="p-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 transition-colors"
+                          title="Suspend Clearance"
+                        >
+                          <ShieldAlert className="w-3.5 h-3.5" />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            reactivateUser(u.id);
+                            showToast('User Reactivated', `${u.name} has been reactivated.`, 'success');
+                          }}
+                          className="p-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 transition-colors"
+                          title="Reactivate Clearance"
+                        >
+                          <UserCheck className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
       </div>
 
       {/* Suspend Confirmation Dialog */}

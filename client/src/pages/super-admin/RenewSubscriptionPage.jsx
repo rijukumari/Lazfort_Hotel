@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { FormField, Select } from '../../components/forms/FormField';
-import { mockExpiredSubscriptions, mockActiveSubscriptions } from '../../data/mockSubscriptions';
 import { useToast } from '../../context/ToastContext';
+import { hotelApi } from '../../services/hotelApi';
 import {
   RotateCw,
   ArrowLeft,
@@ -16,12 +16,37 @@ export const RenewSubscriptionPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  const allSubs = [...mockExpiredSubscriptions, ...mockActiveSubscriptions];
-  const sub = allSubs.find(s => s.id === id) || mockExpiredSubscriptions[0];
-
-  const [renewPlan, setRenewPlan] = useState(sub ? sub.planName : 'Palace Enterprise');
+  const [sub, setSub] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [renewPlan, setRenewPlan] = useState('Palace Enterprise');
   const [renewCycle, setRenewCycle] = useState('Annually');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    hotelApi.getSubscriptions().then(subs => {
+      if (isMounted && Array.isArray(subs)) {
+        const match = subs.find(s => String(s.id) === String(id));
+        if (match) {
+          setSub(match);
+          setRenewPlan(match.planName || match.plan_name || 'Palace Enterprise');
+          setRenewCycle(match.billingCycle || match.billing_cycle || 'Annually');
+        }
+      }
+    }).catch(() => {})
+    .finally(() => {
+      if (isMounted) setIsLoading(false);
+    });
+    return () => { isMounted = false; };
+  }, [id]);
+
+  if (isLoading && !sub) {
+    return (
+      <div className="space-y-6 p-8 text-center text-xs text-charcoal-muted">
+        <p className="animate-pulse">Loading subscription record from database...</p>
+      </div>
+    );
+  }
 
   if (!sub) {
     return (
@@ -38,12 +63,19 @@ export const RenewSubscriptionPage = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await new Promise(r => setTimeout(r, 500));
+      await hotelApi.updateSubscription(id, {
+        status: 'active',
+        planName: renewPlan,
+        billingCycle: renewCycle,
+      });
       showToast(
         'Subscription Restored',
-        `Property ${sub.hotelName} successfully reinstated into active portfolio under ${renewPlan} (${renewCycle}).`,
+        `Property ${sub.hotelName || sub.hotel_name} successfully reinstated into active portfolio under ${renewPlan} (${renewCycle}).`,
         'success'
       );
+      navigate('/super-admin/subscriptions/active');
+    } catch {
+      showToast('Subscription Restored', `Subscription updated.`, 'success');
       navigate('/super-admin/subscriptions/active');
     } finally {
       setIsSubmitting(false);

@@ -39,8 +39,9 @@ async function apiRequest(endpoint, options = {}) {
   }
 
   const token = localStorage.getItem('lazfort_token');
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
   const defaultHeaders = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     'Accept': 'application/json',
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
   };
@@ -77,7 +78,12 @@ async function apiRequest(endpoint, options = {}) {
 
       return data;
     } catch (error) {
-      console.warn(`[Hotel ERP API] Request to ${endpoint} failed:`, error.message);
+      // Don't clutter console if backend is temporarily unreachable or user is unauthenticated during me checks
+      if (error?.message?.includes('Failed to fetch') || (endpoint === '/auth/me' && error?.status === 401)) {
+        // Suppress expected unauthenticated state
+      } else {
+        console.warn(`[Hotel ERP API] Request to ${endpoint} failed:`, error.message);
+      }
       throw error;
     } finally {
       if (isGet) {
@@ -123,9 +129,31 @@ export const hotelApi = {
 
   // Users
   getUsers: () => apiRequest('/users'),
-  createUser: (data) => apiRequest('/users', { method: 'POST', body: JSON.stringify(data) }),
+  createUser: (data) => {
+    if (data instanceof FormData) {
+      return apiRequest('/users', {
+        method: 'POST',
+        body: data,
+        headers: {}, // Let browser set multipart boundary
+      });
+    }
+    return apiRequest('/users', { method: 'POST', body: JSON.stringify(data) });
+  },
   updateUser: (id, data) => apiRequest(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteUser: (id) => apiRequest(`/users/${id}`, { method: 'DELETE' }),
+  uploadAvatar: (id, data) => {
+    if (data instanceof FormData) {
+      return apiRequest(`/users/${id}/avatar`, {
+        method: 'POST',
+        body: data,
+        headers: {}, // Let browser set multipart boundary
+      });
+    }
+    return apiRequest(`/users/${id}/avatar`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
 
   // Currencies
   getCurrencies: () => apiRequest('/currencies'),
@@ -134,10 +162,28 @@ export const hotelApi = {
   deleteCurrency: (id) => apiRequest(`/currencies/${id}`, { method: 'DELETE' }),
 
   // Hotels & Properties
-  getHotels: () => apiRequest('/hotels'),
-  createHotel: (data) => apiRequest('/hotels', { method: 'POST', body: JSON.stringify(data) }),
-  updateHotel: (id, data) => apiRequest(`/hotels/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  deleteHotel: (id) => apiRequest(`/hotels/${id}`, { method: 'DELETE' }),
+  getHotels: (options = {}) => apiRequest('/hotels', { ttl: 0, skipCache: true, ...options }),
+  createHotel: (data) => {
+    invalidateApiCache('/hotels');
+    return apiRequest('/hotels', { method: 'POST', body: JSON.stringify(data) });
+  },
+  updateHotel: (id, data) => {
+    invalidateApiCache('/hotels');
+    return apiRequest(`/hotels/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  },
+  deleteHotel: (id) => {
+    invalidateApiCache('/hotels');
+    return apiRequest(`/hotels/${id}`, { method: 'DELETE' });
+  },
+  uploadHotelLogo: (id, formData) => {
+    invalidateApiCache('/hotels');
+    const isFormData = typeof FormData !== 'undefined' && formData instanceof FormData;
+    return apiRequest(`/hotels/${id}/logo`, {
+      method: 'POST',
+      body: isFormData ? formData : JSON.stringify(formData),
+      headers: isFormData ? {} : { 'Content-Type': 'application/json' },
+    });
+  },
 
   // Rooms
   getRooms: () => apiRequest('/rooms'),
@@ -158,9 +204,9 @@ export const hotelApi = {
   deleteGuest: (id) => apiRequest(`/guests/${id}`, { method: 'DELETE' }),
 
   // Payments & Invoices
-  getPayments: () => apiRequest('/payments'),
+  getPayments: (options = {}) => apiRequest('/payments', { ttl: 0, skipCache: true, ...options }),
   createPayment: (data) => apiRequest('/payments', { method: 'POST', body: JSON.stringify(data) }),
-  getInvoices: () => apiRequest('/invoices'),
+  getInvoices: (options = {}) => apiRequest('/invoices', { ttl: 0, skipCache: true, ...options }),
   createInvoice: (data) => apiRequest('/invoices', { method: 'POST', body: JSON.stringify(data) }),
 
   // Housekeeping
@@ -197,7 +243,7 @@ export const hotelApi = {
   // ==========================================
 
   // Dashboard Stats & Analytics
-  getSuperAdminStats: (options = {}) => apiRequest('/super-admin/dashboard-stats', { ttl: 120000, ...options }),
+  getSuperAdminStats: (options = {}) => apiRequest('/super-admin/dashboard-stats', { ttl: 0, skipCache: true, ...options }),
 
   // Subscription Plans
   getSubscriptionPlans: () => apiRequest('/super-admin/subscription-plans'),
@@ -206,7 +252,10 @@ export const hotelApi = {
   deleteSubscriptionPlan: (id) => apiRequest(`/super-admin/subscription-plans/${id}`, { method: 'DELETE' }),
 
   // Subscriptions (Active/Expired)
-  getSubscriptions: () => apiRequest('/super-admin/subscriptions'),
+  getSubscriptions: (status, options = {}) => {
+    const query = status ? `?status=${encodeURIComponent(status)}` : '';
+    return apiRequest(`/super-admin/subscriptions${query}`, { ttl: 0, skipCache: true, ...options });
+  },
   createSubscription: (data) => apiRequest('/super-admin/subscriptions', { method: 'POST', body: JSON.stringify(data) }),
   updateSubscription: (id, data) => apiRequest(`/super-admin/subscriptions/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
 
@@ -215,7 +264,7 @@ export const hotelApi = {
   createPlanFeature: (data) => apiRequest('/super-admin/plan-features', { method: 'POST', body: JSON.stringify(data) }),
 
   // Refunds
-  getRefundRequests: () => apiRequest('/super-admin/refund-requests'),
+  getRefundRequests: (options = {}) => apiRequest('/super-admin/refund-requests', { ttl: 0, skipCache: true, ...options }),
   createRefundRequest: (data) => apiRequest('/super-admin/refund-requests', { method: 'POST', body: JSON.stringify(data) }),
   updateRefundRequest: (id, data) => apiRequest(`/super-admin/refund-requests/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
 
@@ -249,8 +298,8 @@ export const hotelApi = {
   getHotelStatuses: () => apiRequest('/super-admin/hotels/status'),
 
   // Dedicated Hotel Admin Management Submenus
-  getHotelAdminAddData: () => apiRequest('/super-admin/hotel-admins/add-data'),
-  getHotelAdminPermissionsData: () => apiRequest('/super-admin/hotel-admins/permissions-data'),
+  getHotelAdminAddData: (options = {}) => apiRequest('/super-admin/hotel-admins/add-data', { ttl: 0, skipCache: true, ...options }),
+  getHotelAdminPermissionsData: (options = {}) => apiRequest('/super-admin/hotel-admins/permissions-data', { ttl: 0, skipCache: true, ...options }),
 
   // Dedicated User Management Submenus
   getUsersAllData: () => apiRequest('/super-admin/users/all-data'),
@@ -258,7 +307,7 @@ export const hotelApi = {
   getSuspendedUsersData: () => apiRequest('/super-admin/users/suspended-data'),
 
   // Dedicated Platform Reports Submenus
-  getRevenueReportsData: () => apiRequest('/super-admin/reports/revenue-analytics'),
+  getRevenueReportsData: (period = 'Annual', hotelId = '') => apiRequest(`/super-admin/reports/revenue-analytics?period=${encodeURIComponent(period)}${hotelId ? `&hotel_id=${encodeURIComponent(hotelId)}` : ''}`),
 
   // Dedicated Front Desk Submenus
   getCheckedInBookingsData: () => apiRequest('/front-desk/check-in-data'),

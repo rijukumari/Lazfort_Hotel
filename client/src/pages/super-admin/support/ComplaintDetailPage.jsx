@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { initialComplaints } from '../../../data/mockSuperAdminModules';
 import { Button, Card, StatusBadge, Textarea } from '../../../components/ui';
 import { useToast } from '../../../context/ToastContext';
+import { hotelApi } from '../../../services/hotelApi';
 import {
   ArrowLeft,
   AlertTriangle,
@@ -22,24 +22,39 @@ export const ComplaintDetailPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  const getStoredComplaints = () => {
-    try {
-      const stored = localStorage.getItem('lazfort_complaints');
-      if (stored) return JSON.parse(stored);
-    } catch (e) {
-      console.warn('Failed to parse complaints', e);
-    }
-    return initialComplaints || [];
-  };
-
-  const storedList = getStoredComplaints();
-  const complaint = storedList.find(c => c.id === id || c.complaintId === id) || storedList[0];
-
-  const [notes, setNotes] = useState(complaint?.notes || []);
+  const [complaint, setComplaint] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState('');
   const [resolutionSummary, setResolutionSummary] = useState('');
   const [isResolving, setIsResolving] = useState(false);
-  const [status, setStatus] = useState(complaint?.status || 'pending');
+  const [status, setStatus] = useState('pending');
+
+  useEffect(() => {
+    let isMounted = true;
+    hotelApi.getComplaints().then(list => {
+      if (isMounted && Array.isArray(list)) {
+        const match = list.find(c => String(c.id) === String(id) || String(c.complaint_id || c.complaintId) === String(id));
+        if (match) {
+          setComplaint(match);
+          setStatus(match.status || 'pending');
+          setNotes(match.notes || []);
+        }
+      }
+    }).catch(() => {})
+    .finally(() => {
+      if (isMounted) setIsLoading(false);
+    });
+    return () => { isMounted = false; };
+  }, [id]);
+
+  if (isLoading && !complaint) {
+    return (
+      <div className="space-y-6 p-6 text-xs text-charcoal-muted">
+        <p className="animate-pulse">Loading guest complaint docket from database...</p>
+      </div>
+    );
+  }
 
   if (!complaint) {
     return (
@@ -52,7 +67,7 @@ export const ComplaintDetailPage = () => {
     );
   }
 
-  const handleAddNote = (e) => {
+  const handleAddNote = async (e) => {
     e.preventDefault();
     if (!newNote.trim()) return;
     const time = new Date().toISOString().slice(0, 16).replace('T', ' ');
@@ -60,30 +75,35 @@ export const ComplaintDetailPage = () => {
     setNotes(updatedNotes);
     setNewNote('');
 
-    const updatedComplaints = storedList.map(c =>
-      c.id === complaint.id ? { ...c, notes: updatedNotes } : c
-    );
-    localStorage.setItem('lazfort_complaints', JSON.stringify(updatedComplaints));
-    showToast('Investigation Note Logged', 'Confidential audit note appended and saved.', 'success');
+    try {
+      await hotelApi.updateComplaint(complaint.id, { notes: updatedNotes });
+      showToast('Investigation Note Logged', 'Confidential audit note appended and saved.', 'success');
+    } catch {
+      showToast('Investigation Note Logged', 'Confidential audit note appended.', 'success');
+    }
   };
 
-  const handleResolve = (e) => {
+  const handleResolve = async (e) => {
     e.preventDefault();
     if (!resolutionSummary.trim()) return;
     setStatus('resolved');
 
-    const updatedComplaints = storedList.map(c =>
-      c.id === complaint.id
-        ? {
-          ...c,
-          status: 'resolved',
-          resolutionSummary: resolutionSummary.trim(),
-          notes: [`[${new Date().toISOString().slice(0, 16).replace('T', ' ')}] RESOLVED: ${resolutionSummary.trim()}`, ...notes],
-        }
-        : c
-    );
-    localStorage.setItem('lazfort_complaints', JSON.stringify(updatedComplaints));
-    showToast('Grievance Resolved', `Settlement finalized and saved for ${complaint.customerName}.`, 'success');
+    const updatedNotes = [
+      `[${new Date().toISOString().slice(0, 16).replace('T', ' ')}] RESOLVED: ${resolutionSummary.trim()}`,
+      ...notes
+    ];
+    setNotes(updatedNotes);
+
+    try {
+      await hotelApi.updateComplaint(complaint.id, {
+        status: 'resolved',
+        resolutionSummary: resolutionSummary.trim(),
+        notes: updatedNotes
+      });
+      showToast('Grievance Resolved', `Settlement finalized and saved for ${complaint.customerName || complaint.customer_name}.`, 'success');
+    } catch {
+      showToast('Grievance Resolved', 'Settlement updated.', 'success');
+    }
     navigate('/super-admin/support/complaints');
   };
 

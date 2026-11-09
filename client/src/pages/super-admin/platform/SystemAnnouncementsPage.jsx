@@ -4,7 +4,6 @@ import { PageHeader } from '../../../components/layout/PageHeader';
 import { StatCard, StatsGrid } from '../../../components/ui/StatCard';
 import { DataTable } from '../../../components/data-display/DataTable';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
-import { initialAnnouncements } from '../../../data/mockSuperAdminModules';
 import { useToast } from '../../../context/ToastContext';
 import { useERP } from '../../../context/ERPContext';
 import { hotelApi } from '../../../services/hotelApi';
@@ -36,16 +35,16 @@ export const SystemAnnouncementsPage = () => {
     } catch (e) {
       console.warn('Failed to load announcements', e);
     }
-    return initialAnnouncements || [];
+    return [];
   });
 
   useEffect(() => {
     let isMounted = true;
     hotelApi.getAnnouncements().then(data => {
-      if (isMounted && Array.isArray(data) && data.length > 0) {
+      if (isMounted && Array.isArray(data)) {
         setAnnouncements(data);
       }
-    }).catch(() => {});
+    }).catch(() => { });
 
     return () => { isMounted = false; };
   }, []);

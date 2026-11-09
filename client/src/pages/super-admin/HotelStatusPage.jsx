@@ -17,39 +17,6 @@ import {
   Key,
 } from 'lucide-react';
 
-const INITIAL_STATUS_HISTORY = [
-  {
-    id: 'sh-01',
-    hotelId: 'hotel-001',
-    hotelName: 'Lazfort Grand Palace & Royal Spa',
-    previousStatus: 'pending_approval',
-    newStatus: 'active',
-    changedBy: 'Super Admin Directorate',
-    timestamp: '2026-10-28 14:32',
-    reason: 'Final fire safety and sovereign gaming clearance verified.',
-  },
-  {
-    id: 'sh-02',
-    hotelId: 'hotel-005',
-    hotelName: 'Villa Bellissima Bellagio',
-    previousStatus: 'active',
-    newStatus: 'pending_approval',
-    changedBy: 'Compliance Officer',
-    timestamp: '2026-10-25 09:15',
-    reason: 'Annual maritime safety license renewal pending.',
-  },
-  {
-    id: 'sh-03',
-    hotelId: 'hotel-003',
-    hotelName: 'Château de Lazfort Versailles',
-    previousStatus: 'suspended',
-    newStatus: 'active',
-    changedBy: 'Platform Director',
-    timestamp: '2026-10-20 18:00',
-    reason: 'Escrow account replenishing completed.',
-  },
-];
-
 export const HotelStatusPage = () => {
   const { hotels, updateHotel } = useERP();
   const { showToast } = useToast();
@@ -63,8 +30,8 @@ export const HotelStatusPage = () => {
   // Status Change Confirmation Dialog State
   const [pendingChange, setPendingChange] = useState(null);
 
-  // Status Change Audit History
-  const [statusHistory, setStatusHistory] = useState(INITIAL_STATUS_HISTORY);
+  // Status Change Audit History (dynamic state)
+  const [statusHistory, setStatusHistory] = useState([]);
 
   // Trigger dedicated Hotel Status API on mount
   useEffect(() => {
